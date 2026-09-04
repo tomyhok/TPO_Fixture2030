@@ -1,0 +1,29 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: fixture2030-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: fixture2030
+    volumes:
+      # Persistencia: los datos sobreviven al reinicio del contenedor.
+      - mongodb_data:/data/db
+      # Los scripts de esta carpeta se ejecutan solos la primera vez que se
+      # levanta el contenedor, y tambien se pueden volver a ejecutar a mano.
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      # Esquemas de validacion y consultas, accesibles desde el contenedor.
+      - ./schemas:/schemas:ro
+      - ./queries:/queries:ro
+    networks:
+      - mongodb-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  mongodb-network:
+    driver: bridge

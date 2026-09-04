@@ -1,0 +1,578 @@
+[
+  {
+    "_id": "ARG",
+    "codigo_iso": "ARG",
+    "nombre": "Argentina",
+    "confederacion": "CONMEBOL",
+    "grupo": "A",
+    "director_tecnico": "Martinez",
+    "ranking_fifa": 1
+  },
+  {
+    "_id": "BRA",
+    "codigo_iso": "BRA",
+    "nombre": "Brasil",
+    "confederacion": "CONMEBOL",
+    "grupo": "B",
+    "director_tecnico": "Silva",
+    "ranking_fifa": 2
+  },
+  {
+    "_id": "URU",
+    "codigo_iso": "URU",
+    "nombre": "Uruguay",
+    "confederacion": "CONMEBOL",
+    "grupo": "C",
+    "director_tecnico": "Dubois",
+    "ranking_fifa": 3
+  },
+  {
+    "_id": "COL",
+    "codigo_iso": "COL",
+    "nombre": "Colombia",
+    "confederacion": "CONMEBOL",
+    "grupo": "D",
+    "director_tecnico": "Smith",
+    "ranking_fifa": 4
+  },
+  {
+    "_id": "ECU",
+    "codigo_iso": "ECU",
+    "nombre": "Ecuador",
+    "confederacion": "CONMEBOL",
+    "grupo": "E",
+    "director_tecnico": "Muller",
+    "ranking_fifa": 5
+  },
+  {
+    "_id": "CHI",
+    "codigo_iso": "CHI",
+    "nombre": "Chile",
+    "confederacion": "CONMEBOL",
+    "grupo": "F",
+    "director_tecnico": "Rossi",
+    "ranking_fifa": 6
+  },
+  {
+    "_id": "PAR",
+    "codigo_iso": "PAR",
+    "nombre": "Paraguay",
+    "confederacion": "CONMEBOL",
+    "grupo": "G",
+    "director_tecnico": "De Boer",
+    "ranking_fifa": 7
+  },
+  {
+    "_id": "PER",
+    "codigo_iso": "PER",
+    "nombre": "Peru",
+    "confederacion": "CONMEBOL",
+    "grupo": "H",
+    "director_tecnico": "Peeters",
+    "ranking_fifa": 8
+  },
+  {
+    "_id": "BOL",
+    "codigo_iso": "BOL",
+    "nombre": "Bolivia",
+    "confederacion": "CONMEBOL",
+    "grupo": "I",
+    "director_tecnico": "Horvat",
+    "ranking_fifa": 9
+  },
+  {
+    "_id": "VEN",
+    "codigo_iso": "VEN",
+    "nombre": "Venezuela",
+    "confederacion": "CONMEBOL",
+    "grupo": "J",
+    "director_tecnico": "Nielsen",
+    "ranking_fifa": 10
+  },
+  {
+    "_id": "ESP",
+    "codigo_iso": "ESP",
+    "nombre": "Espana",
+    "confederacion": "UEFA",
+    "grupo": "K",
+    "director_tecnico": "Keller",
+    "ranking_fifa": 11
+  },
+  {
+    "_id": "POR",
+    "codigo_iso": "POR",
+    "nombre": "Portugal",
+    "confederacion": "UEFA",
+    "grupo": "L",
+    "director_tecnico": "Gruber",
+    "ranking_fifa": 12
+  },
+  {
+    "_id": "FRA",
+    "codigo_iso": "FRA",
+    "nombre": "Francia",
+    "confederacion": "UEFA",
+    "grupo": "M",
+    "director_tecnico": "Kowalski",
+    "ranking_fifa": 13
+  },
+  {
+    "_id": "ENG",
+    "codigo_iso": "ENG",
+    "nombre": "Inglaterra",
+    "confederacion": "UEFA",
+    "grupo": "N",
+    "director_tecnico": "Shevchenko",
+    "ranking_fifa": 14
+  },
+  {
+    "_id": "GER",
+    "codigo_iso": "GER",
+    "nombre": "Alemania",
+    "confederacion": "UEFA",
+    "grupo": "O",
+    "director_tecnico": "Andersson",
+    "ranking_fifa": 15
+  },
+  {
+    "_id": "ITA",
+    "codigo_iso": "ITA",
+    "nombre": "Italia",
+    "confederacion": "UEFA",
+    "grupo": "P",
+    "director_tecnico": "Hansen",
+    "ranking_fifa": 16
+  },
+  {
+    "_id": "NED",
+    "codigo_iso": "NED",
+    "nombre": "Paises Bajos",
+    "confederacion": "UEFA",
+    "grupo": "A",
+    "director_tecnico": "Jovanovic",
+    "ranking_fifa": 17
+  },
+  {
+    "_id": "BEL",
+    "codigo_iso": "BEL",
+    "nombre": "Belgica",
+    "confederacion": "UEFA",
+    "grupo": "B",
+    "director_tecnico": "Yilmaz",
+    "ranking_fifa": 18
+  },
+  {
+    "_id": "CRO",
+    "codigo_iso": "CRO",
+    "nombre": "Croacia",
+    "confederacion": "UEFA",
+    "grupo": "C",
+    "director_tecnico": "Campbell",
+    "ranking_fifa": 19
+  },
+  {
+    "_id": "DEN",
+    "codigo_iso": "DEN",
+    "nombre": "Dinamarca",
+    "confederacion": "UEFA",
+    "grupo": "D",
+    "director_tecnico": "Novak",
+    "ranking_fifa": 20
+  },
+  {
+    "_id": "SUI",
+    "codigo_iso": "SUI",
+    "nombre": "Suiza",
+    "confederacion": "UEFA",
+    "grupo": "E",
+    "director_tecnico": "Nagy",
+    "ranking_fifa": 21
+  },
+  {
+    "_id": "AUT",
+    "codigo_iso": "AUT",
+    "nombre": "Austria",
+    "confederacion": "UEFA",
+    "grupo": "F",
+    "director_tecnico": "Evans",
+    "ranking_fifa": 22
+  },
+  {
+    "_id": "POL",
+    "codigo_iso": "POL",
+    "nombre": "Polonia",
+    "confederacion": "UEFA",
+    "grupo": "G",
+    "director_tecnico": "Popescu",
+    "ranking_fifa": 23
+  },
+  {
+    "_id": "UKR",
+    "codigo_iso": "UKR",
+    "nombre": "Ucrania",
+    "confederacion": "UEFA",
+    "grupo": "H",
+    "director_tecnico": "Papadopoulos",
+    "ranking_fifa": 24
+  },
+  {
+    "_id": "SWE",
+    "codigo_iso": "SWE",
+    "nombre": "Suecia",
+    "confederacion": "UEFA",
+    "grupo": "I",
+    "director_tecnico": "Benali",
+    "ranking_fifa": 25
+  },
+  {
+    "_id": "NOR",
+    "codigo_iso": "NOR",
+    "nombre": "Noruega",
+    "confederacion": "UEFA",
+    "grupo": "J",
+    "director_tecnico": "Diop",
+    "ranking_fifa": 26
+  },
+  {
+    "_id": "SRB",
+    "codigo_iso": "SRB",
+    "nombre": "Serbia",
+    "confederacion": "UEFA",
+    "grupo": "K",
+    "director_tecnico": "Hassan",
+    "ranking_fifa": 27
+  },
+  {
+    "_id": "TUR",
+    "codigo_iso": "TUR",
+    "nombre": "Turquia",
+    "confederacion": "UEFA",
+    "grupo": "L",
+    "director_tecnico": "Bouzid",
+    "ranking_fifa": 28
+  },
+  {
+    "_id": "SCO",
+    "codigo_iso": "SCO",
+    "nombre": "Escocia",
+    "confederacion": "UEFA",
+    "grupo": "M",
+    "director_tecnico": "Okafor",
+    "ranking_fifa": 29
+  },
+  {
+    "_id": "CZE",
+    "codigo_iso": "CZE",
+    "nombre": "Republica Checa",
+    "confederacion": "UEFA",
+    "grupo": "N",
+    "director_tecnico": "Trabelsi",
+    "ranking_fifa": 30
+  },
+  {
+    "_id": "HUN",
+    "codigo_iso": "HUN",
+    "nombre": "Hungria",
+    "confederacion": "UEFA",
+    "grupo": "O",
+    "director_tecnico": "Mbarga",
+    "ranking_fifa": 31
+  },
+  {
+    "_id": "WAL",
+    "codigo_iso": "WAL",
+    "nombre": "Gales",
+    "confederacion": "UEFA",
+    "grupo": "P",
+    "director_tecnico": "Kone",
+    "ranking_fifa": 32
+  },
+  {
+    "_id": "ROU",
+    "codigo_iso": "ROU",
+    "nombre": "Rumania",
+    "confederacion": "UEFA",
+    "grupo": "A",
+    "director_tecnico": "Mensah",
+    "ranking_fifa": 33
+  },
+  {
+    "_id": "GRE",
+    "codigo_iso": "GRE",
+    "nombre": "Grecia",
+    "confederacion": "UEFA",
+    "grupo": "B",
+    "director_tecnico": "Traore",
+    "ranking_fifa": 34
+  },
+  {
+    "_id": "MAR",
+    "codigo_iso": "MAR",
+    "nombre": "Marruecos",
+    "confederacion": "CAF",
+    "grupo": "C",
+    "director_tecnico": "Van Wyk",
+    "ranking_fifa": 35
+  },
+  {
+    "_id": "SEN",
+    "codigo_iso": "SEN",
+    "nombre": "Senegal",
+    "confederacion": "CAF",
+    "grupo": "D",
+    "director_tecnico": "Kabila",
+    "ranking_fifa": 36
+  },
+  {
+    "_id": "EGY",
+    "codigo_iso": "EGY",
+    "nombre": "Egipto",
+    "confederacion": "CAF",
+    "grupo": "E",
+    "director_tecnico": "Tanaka",
+    "ranking_fifa": 37
+  },
+  {
+    "_id": "ALG",
+    "codigo_iso": "ALG",
+    "nombre": "Argelia",
+    "confederacion": "CAF",
+    "grupo": "F",
+    "director_tecnico": "Kim",
+    "ranking_fifa": 38
+  },
+  {
+    "_id": "NGA",
+    "codigo_iso": "NGA",
+    "nombre": "Nigeria",
+    "confederacion": "CAF",
+    "grupo": "G",
+    "director_tecnico": "Ahmadi",
+    "ranking_fifa": 39
+  },
+  {
+    "_id": "TUN",
+    "codigo_iso": "TUN",
+    "nombre": "Tunez",
+    "confederacion": "CAF",
+    "grupo": "H",
+    "director_tecnico": "Wilson",
+    "ranking_fifa": 40
+  },
+  {
+    "_id": "CMR",
+    "codigo_iso": "CMR",
+    "nombre": "Camerun",
+    "confederacion": "CAF",
+    "grupo": "I",
+    "director_tecnico": "Al Harbi",
+    "ranking_fifa": 41
+  },
+  {
+    "_id": "CIV",
+    "codigo_iso": "CIV",
+    "nombre": "Costa de Marfil",
+    "confederacion": "CAF",
+    "grupo": "J",
+    "director_tecnico": "Al Thani",
+    "ranking_fifa": 42
+  },
+  {
+    "_id": "GHA",
+    "codigo_iso": "GHA",
+    "nombre": "Ghana",
+    "confederacion": "CAF",
+    "grupo": "K",
+    "director_tecnico": "Al Zahra",
+    "ranking_fifa": 43
+  },
+  {
+    "_id": "MLI",
+    "codigo_iso": "MLI",
+    "nombre": "Mali",
+    "confederacion": "CAF",
+    "grupo": "L",
+    "director_tecnico": "Rashidov",
+    "ranking_fifa": 44
+  },
+  {
+    "_id": "RSA",
+    "codigo_iso": "RSA",
+    "nombre": "Sudafrica",
+    "confederacion": "CAF",
+    "grupo": "M",
+    "director_tecnico": "Al Masri",
+    "ranking_fifa": 45
+  },
+  {
+    "_id": "COD",
+    "codigo_iso": "COD",
+    "nombre": "RD del Congo",
+    "confederacion": "CAF",
+    "grupo": "N",
+    "director_tecnico": "Zhang",
+    "ranking_fifa": 46
+  },
+  {
+    "_id": "JPN",
+    "codigo_iso": "JPN",
+    "nombre": "Japon",
+    "confederacion": "AFC",
+    "grupo": "O",
+    "director_tecnico": "Johnson",
+    "ranking_fifa": 47
+  },
+  {
+    "_id": "KOR",
+    "codigo_iso": "KOR",
+    "nombre": "Corea del Sur",
+    "confederacion": "AFC",
+    "grupo": "P",
+    "director_tecnico": "Ramirez",
+    "ranking_fifa": 48
+  },
+  {
+    "_id": "IRN",
+    "codigo_iso": "IRN",
+    "nombre": "Iran",
+    "confederacion": "AFC",
+    "grupo": "A",
+    "director_tecnico": "Tremblay",
+    "ranking_fifa": 49
+  },
+  {
+    "_id": "AUS",
+    "codigo_iso": "AUS",
+    "nombre": "Australia",
+    "confederacion": "AFC",
+    "grupo": "B",
+    "director_tecnico": "Vargas",
+    "ranking_fifa": 50
+  },
+  {
+    "_id": "KSA",
+    "codigo_iso": "KSA",
+    "nombre": "Arabia Saudita",
+    "confederacion": "AFC",
+    "grupo": "C",
+    "director_tecnico": "Brown",
+    "ranking_fifa": 51
+  },
+  {
+    "_id": "QAT",
+    "codigo_iso": "QAT",
+    "nombre": "Qatar",
+    "confederacion": "AFC",
+    "grupo": "D",
+    "director_tecnico": "Cardenas",
+    "ranking_fifa": 52
+  },
+  {
+    "_id": "IRQ",
+    "codigo_iso": "IRQ",
+    "nombre": "Irak",
+    "confederacion": "AFC",
+    "grupo": "E",
+    "director_tecnico": "Wright",
+    "ranking_fifa": 53
+  },
+  {
+    "_id": "UZB",
+    "codigo_iso": "UZB",
+    "nombre": "Uzbekistan",
+    "confederacion": "AFC",
+    "grupo": "F",
+    "director_tecnico": "Leroy",
+    "ranking_fifa": 54
+  },
+  {
+    "_id": "JOR",
+    "codigo_iso": "JOR",
+    "nombre": "Jordania",
+    "confederacion": "AFC",
+    "grupo": "G",
+    "director_tecnico": "Gomez",
+    "ranking_fifa": 55
+  },
+  {
+    "_id": "CHN",
+    "codigo_iso": "CHN",
+    "nombre": "China",
+    "confederacion": "AFC",
+    "grupo": "H",
+    "director_tecnico": "Costa",
+    "ranking_fifa": 56
+  },
+  {
+    "_id": "USA",
+    "codigo_iso": "USA",
+    "nombre": "Estados Unidos",
+    "confederacion": "CONCACAF",
+    "grupo": "I",
+    "director_tecnico": "Ferreira",
+    "ranking_fifa": 57
+  },
+  {
+    "_id": "MEX",
+    "codigo_iso": "MEX",
+    "nombre": "Mexico",
+    "confederacion": "CONCACAF",
+    "grupo": "J",
+    "director_tecnico": "Sosa",
+    "ranking_fifa": 58
+  },
+  {
+    "_id": "CAN",
+    "codigo_iso": "CAN",
+    "nombre": "Canada",
+    "confederacion": "CONCACAF",
+    "grupo": "K",
+    "director_tecnico": "Ibarra",
+    "ranking_fifa": 59
+  },
+  {
+    "_id": "CRC",
+    "codigo_iso": "CRC",
+    "nombre": "Costa Rica",
+    "confederacion": "CONCACAF",
+    "grupo": "L",
+    "director_tecnico": "Quispe",
+    "ranking_fifa": 60
+  },
+  {
+    "_id": "JAM",
+    "codigo_iso": "JAM",
+    "nombre": "Jamaica",
+    "confederacion": "CONCACAF",
+    "grupo": "M",
+    "director_tecnico": "Rojas",
+    "ranking_fifa": 61
+  },
+  {
+    "_id": "PAN",
+    "codigo_iso": "PAN",
+    "nombre": "Panama",
+    "confederacion": "CONCACAF",
+    "grupo": "N",
+    "director_tecnico": "Medina",
+    "ranking_fifa": 62
+  },
+  {
+    "_id": "NZL",
+    "codigo_iso": "NZL",
+    "nombre": "Nueva Zelanda",
+    "confederacion": "OFC",
+    "grupo": "O",
+    "director_tecnico": "Castro",
+    "ranking_fifa": 63
+  },
+  {
+    "_id": "NCL",
+    "codigo_iso": "NCL",
+    "nombre": "Nueva Caledonia",
+    "confederacion": "OFC",
+    "grupo": "P",
+    "director_tecnico": "Flores",
+    "ranking_fifa": 64
+  }
+]

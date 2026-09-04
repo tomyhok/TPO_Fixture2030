@@ -1,0 +1,11 @@
+# Ignorar el volumen de la base de datos de MongoDB
+mongodb_data/
+
+# Ignorar archivos basura del sistema (quedaron algunos en el .zip)
+.DS_Store
+__MACOSX/
+
+neo4j_data/
+neo4j_logs/
+neo4j_import/
+neo4j_plugins/

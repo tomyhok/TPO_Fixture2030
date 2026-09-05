@@ -1,0 +1,50 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: fixture2030-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: fixture2030
+    volumes:
+      - mongodb_data:/data/db
+      - ./fixture2030-mongoDB/init-scripts:/docker-entrypoint-initdb.d
+      - ./fixture2030-mongoDB/schemas:/schemas:ro
+      - ./fixture2030-mongoDB/queries:/queries:ro
+
+  neo4j:
+    image: neo4j:latest
+    container_name: fixture2030-neo4j
+    restart: always
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    environment:
+      NEO4J_AUTH: neo4j/fixture2030
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_apoc_import_file_enabled: "true"
+
+volumes:
+  mongodb_data:
+    external: true
+    name: fixture_mongodb_data
+  neo4j_data:
+    external: true
+    name: fixture2030-neo4j_neo4j_data
+  neo4j_logs:
+    external: true
+    name: fixture2030-neo4j_neo4j_logs
+  neo4j_import:
+    external: true
+    name: fixture2030-neo4j_neo4j_import
+  neo4j_plugins:
+    external: true
+    name: fixture2030-neo4j_neo4j_plugins

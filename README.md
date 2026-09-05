@@ -171,3 +171,7 @@ Luego volver a ejecutar `docker compose up -d` y repetir la preparacion y carga
 de Neo4j.
 
 Los volumenes Docker son locales a cada computadora y no se versionan en Git.
+El Compose crea los volumenes automaticamente si no existen. Por eso, otro
+integrante puede ejecutar `docker compose up -d` despues de clonar el proyecto,
+pero tendra una instancia independiente y debera cargar Neo4j siguiendo los
+pasos anteriores.

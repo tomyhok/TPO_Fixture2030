@@ -6,7 +6,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "A",
     "director_tecnico": "Martinez",
-    "ranking_fifa": 1
+    "ranking_fifa": 1,
+    "pais_anfitrion": true
   },
   {
     "_id": "BRA",
@@ -15,7 +16,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "B",
     "director_tecnico": "Silva",
-    "ranking_fifa": 2
+    "ranking_fifa": 2,
+    "pais_anfitrion": false
   },
   {
     "_id": "URU",
@@ -24,7 +26,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "C",
     "director_tecnico": "Dubois",
-    "ranking_fifa": 3
+    "ranking_fifa": 3,
+    "pais_anfitrion": false
   },
   {
     "_id": "COL",
@@ -33,7 +36,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "D",
     "director_tecnico": "Smith",
-    "ranking_fifa": 4
+    "ranking_fifa": 4,
+    "pais_anfitrion": false
   },
   {
     "_id": "ECU",
@@ -42,7 +46,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "E",
     "director_tecnico": "Muller",
-    "ranking_fifa": 5
+    "ranking_fifa": 5,
+    "pais_anfitrion": false
   },
   {
     "_id": "CHI",
@@ -51,7 +56,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "F",
     "director_tecnico": "Rossi",
-    "ranking_fifa": 6
+    "ranking_fifa": 6,
+    "pais_anfitrion": false
   },
   {
     "_id": "PAR",
@@ -60,7 +66,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "G",
     "director_tecnico": "De Boer",
-    "ranking_fifa": 7
+    "ranking_fifa": 7,
+    "pais_anfitrion": false
   },
   {
     "_id": "PER",
@@ -69,7 +76,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "H",
     "director_tecnico": "Peeters",
-    "ranking_fifa": 8
+    "ranking_fifa": 8,
+    "pais_anfitrion": false
   },
   {
     "_id": "BOL",
@@ -78,7 +86,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "I",
     "director_tecnico": "Horvat",
-    "ranking_fifa": 9
+    "ranking_fifa": 9,
+    "pais_anfitrion": false
   },
   {
     "_id": "VEN",
@@ -87,7 +96,8 @@
     "confederacion": "CONMEBOL",
     "grupo": "J",
     "director_tecnico": "Nielsen",
-    "ranking_fifa": 10
+    "ranking_fifa": 10,
+    "pais_anfitrion": false
   },
   {
     "_id": "ESP",
@@ -96,7 +106,8 @@
     "confederacion": "UEFA",
     "grupo": "K",
     "director_tecnico": "Keller",
-    "ranking_fifa": 11
+    "ranking_fifa": 11,
+    "pais_anfitrion": false
   },
   {
     "_id": "POR",
@@ -105,7 +116,8 @@
     "confederacion": "UEFA",
     "grupo": "L",
     "director_tecnico": "Gruber",
-    "ranking_fifa": 12
+    "ranking_fifa": 12,
+    "pais_anfitrion": false
   },
   {
     "_id": "FRA",
@@ -114,7 +126,8 @@
     "confederacion": "UEFA",
     "grupo": "M",
     "director_tecnico": "Kowalski",
-    "ranking_fifa": 13
+    "ranking_fifa": 13,
+    "pais_anfitrion": false
   },
   {
     "_id": "ENG",
@@ -123,7 +136,8 @@
     "confederacion": "UEFA",
     "grupo": "N",
     "director_tecnico": "Shevchenko",
-    "ranking_fifa": 14
+    "ranking_fifa": 14,
+    "pais_anfitrion": false
   },
   {
     "_id": "GER",
@@ -132,7 +146,8 @@
     "confederacion": "UEFA",
     "grupo": "O",
     "director_tecnico": "Andersson",
-    "ranking_fifa": 15
+    "ranking_fifa": 15,
+    "pais_anfitrion": false
   },
   {
     "_id": "ITA",
@@ -141,7 +156,8 @@
     "confederacion": "UEFA",
     "grupo": "P",
     "director_tecnico": "Hansen",
-    "ranking_fifa": 16
+    "ranking_fifa": 16,
+    "pais_anfitrion": false
   },
   {
     "_id": "NED",
@@ -150,7 +166,8 @@
     "confederacion": "UEFA",
     "grupo": "A",
     "director_tecnico": "Jovanovic",
-    "ranking_fifa": 17
+    "ranking_fifa": 17,
+    "pais_anfitrion": false
   },
   {
     "_id": "BEL",
@@ -159,7 +176,8 @@
     "confederacion": "UEFA",
     "grupo": "B",
     "director_tecnico": "Yilmaz",
-    "ranking_fifa": 18
+    "ranking_fifa": 18,
+    "pais_anfitrion": false
   },
   {
     "_id": "CRO",
@@ -168,7 +186,8 @@
     "confederacion": "UEFA",
     "grupo": "C",
     "director_tecnico": "Campbell",
-    "ranking_fifa": 19
+    "ranking_fifa": 19,
+    "pais_anfitrion": false
   },
   {
     "_id": "DEN",
@@ -177,7 +196,8 @@
     "confederacion": "UEFA",
     "grupo": "D",
     "director_tecnico": "Novak",
-    "ranking_fifa": 20
+    "ranking_fifa": 20,
+    "pais_anfitrion": false
   },
   {
     "_id": "SUI",
@@ -186,7 +206,8 @@
     "confederacion": "UEFA",
     "grupo": "E",
     "director_tecnico": "Nagy",
-    "ranking_fifa": 21
+    "ranking_fifa": 21,
+    "pais_anfitrion": false
   },
   {
     "_id": "AUT",
@@ -195,7 +216,8 @@
     "confederacion": "UEFA",
     "grupo": "F",
     "director_tecnico": "Evans",
-    "ranking_fifa": 22
+    "ranking_fifa": 22,
+    "pais_anfitrion": false
   },
   {
     "_id": "POL",
@@ -204,7 +226,8 @@
     "confederacion": "UEFA",
     "grupo": "G",
     "director_tecnico": "Popescu",
-    "ranking_fifa": 23
+    "ranking_fifa": 23,
+    "pais_anfitrion": false
   },
   {
     "_id": "UKR",
@@ -213,7 +236,8 @@
     "confederacion": "UEFA",
     "grupo": "H",
     "director_tecnico": "Papadopoulos",
-    "ranking_fifa": 24
+    "ranking_fifa": 24,
+    "pais_anfitrion": false
   },
   {
     "_id": "SWE",
@@ -222,7 +246,8 @@
     "confederacion": "UEFA",
     "grupo": "I",
     "director_tecnico": "Benali",
-    "ranking_fifa": 25
+    "ranking_fifa": 25,
+    "pais_anfitrion": false
   },
   {
     "_id": "NOR",
@@ -231,7 +256,8 @@
     "confederacion": "UEFA",
     "grupo": "J",
     "director_tecnico": "Diop",
-    "ranking_fifa": 26
+    "ranking_fifa": 26,
+    "pais_anfitrion": false
   },
   {
     "_id": "SRB",
@@ -240,7 +266,8 @@
     "confederacion": "UEFA",
     "grupo": "K",
     "director_tecnico": "Hassan",
-    "ranking_fifa": 27
+    "ranking_fifa": 27,
+    "pais_anfitrion": false
   },
   {
     "_id": "TUR",
@@ -249,7 +276,8 @@
     "confederacion": "UEFA",
     "grupo": "L",
     "director_tecnico": "Bouzid",
-    "ranking_fifa": 28
+    "ranking_fifa": 28,
+    "pais_anfitrion": false
   },
   {
     "_id": "SCO",
@@ -258,7 +286,8 @@
     "confederacion": "UEFA",
     "grupo": "M",
     "director_tecnico": "Okafor",
-    "ranking_fifa": 29
+    "ranking_fifa": 29,
+    "pais_anfitrion": false
   },
   {
     "_id": "CZE",
@@ -267,7 +296,8 @@
     "confederacion": "UEFA",
     "grupo": "N",
     "director_tecnico": "Trabelsi",
-    "ranking_fifa": 30
+    "ranking_fifa": 30,
+    "pais_anfitrion": false
   },
   {
     "_id": "HUN",
@@ -276,7 +306,8 @@
     "confederacion": "UEFA",
     "grupo": "O",
     "director_tecnico": "Mbarga",
-    "ranking_fifa": 31
+    "ranking_fifa": 31,
+    "pais_anfitrion": false
   },
   {
     "_id": "WAL",
@@ -285,7 +316,8 @@
     "confederacion": "UEFA",
     "grupo": "P",
     "director_tecnico": "Kone",
-    "ranking_fifa": 32
+    "ranking_fifa": 32,
+    "pais_anfitrion": false
   },
   {
     "_id": "ROU",
@@ -294,7 +326,8 @@
     "confederacion": "UEFA",
     "grupo": "A",
     "director_tecnico": "Mensah",
-    "ranking_fifa": 33
+    "ranking_fifa": 33,
+    "pais_anfitrion": false
   },
   {
     "_id": "GRE",
@@ -303,7 +336,8 @@
     "confederacion": "UEFA",
     "grupo": "B",
     "director_tecnico": "Traore",
-    "ranking_fifa": 34
+    "ranking_fifa": 34,
+    "pais_anfitrion": false
   },
   {
     "_id": "MAR",
@@ -312,7 +346,8 @@
     "confederacion": "CAF",
     "grupo": "C",
     "director_tecnico": "Van Wyk",
-    "ranking_fifa": 35
+    "ranking_fifa": 35,
+    "pais_anfitrion": false
   },
   {
     "_id": "SEN",
@@ -321,7 +356,8 @@
     "confederacion": "CAF",
     "grupo": "D",
     "director_tecnico": "Kabila",
-    "ranking_fifa": 36
+    "ranking_fifa": 36,
+    "pais_anfitrion": false
   },
   {
     "_id": "EGY",
@@ -330,7 +366,8 @@
     "confederacion": "CAF",
     "grupo": "E",
     "director_tecnico": "Tanaka",
-    "ranking_fifa": 37
+    "ranking_fifa": 37,
+    "pais_anfitrion": false
   },
   {
     "_id": "ALG",
@@ -339,7 +376,8 @@
     "confederacion": "CAF",
     "grupo": "F",
     "director_tecnico": "Kim",
-    "ranking_fifa": 38
+    "ranking_fifa": 38,
+    "pais_anfitrion": false
   },
   {
     "_id": "NGA",
@@ -348,7 +386,8 @@
     "confederacion": "CAF",
     "grupo": "G",
     "director_tecnico": "Ahmadi",
-    "ranking_fifa": 39
+    "ranking_fifa": 39,
+    "pais_anfitrion": false
   },
   {
     "_id": "TUN",
@@ -357,7 +396,8 @@
     "confederacion": "CAF",
     "grupo": "H",
     "director_tecnico": "Wilson",
-    "ranking_fifa": 40
+    "ranking_fifa": 40,
+    "pais_anfitrion": false
   },
   {
     "_id": "CMR",
@@ -366,7 +406,8 @@
     "confederacion": "CAF",
     "grupo": "I",
     "director_tecnico": "Al Harbi",
-    "ranking_fifa": 41
+    "ranking_fifa": 41,
+    "pais_anfitrion": false
   },
   {
     "_id": "CIV",
@@ -375,7 +416,8 @@
     "confederacion": "CAF",
     "grupo": "J",
     "director_tecnico": "Al Thani",
-    "ranking_fifa": 42
+    "ranking_fifa": 42,
+    "pais_anfitrion": false
   },
   {
     "_id": "GHA",
@@ -384,7 +426,8 @@
     "confederacion": "CAF",
     "grupo": "K",
     "director_tecnico": "Al Zahra",
-    "ranking_fifa": 43
+    "ranking_fifa": 43,
+    "pais_anfitrion": false
   },
   {
     "_id": "MLI",
@@ -393,7 +436,8 @@
     "confederacion": "CAF",
     "grupo": "L",
     "director_tecnico": "Rashidov",
-    "ranking_fifa": 44
+    "ranking_fifa": 44,
+    "pais_anfitrion": false
   },
   {
     "_id": "RSA",
@@ -402,7 +446,8 @@
     "confederacion": "CAF",
     "grupo": "M",
     "director_tecnico": "Al Masri",
-    "ranking_fifa": 45
+    "ranking_fifa": 45,
+    "pais_anfitrion": false
   },
   {
     "_id": "COD",
@@ -411,7 +456,8 @@
     "confederacion": "CAF",
     "grupo": "N",
     "director_tecnico": "Zhang",
-    "ranking_fifa": 46
+    "ranking_fifa": 46,
+    "pais_anfitrion": false
   },
   {
     "_id": "JPN",
@@ -420,7 +466,8 @@
     "confederacion": "AFC",
     "grupo": "O",
     "director_tecnico": "Johnson",
-    "ranking_fifa": 47
+    "ranking_fifa": 47,
+    "pais_anfitrion": false
   },
   {
     "_id": "KOR",
@@ -429,7 +476,8 @@
     "confederacion": "AFC",
     "grupo": "P",
     "director_tecnico": "Ramirez",
-    "ranking_fifa": 48
+    "ranking_fifa": 48,
+    "pais_anfitrion": false
   },
   {
     "_id": "IRN",
@@ -438,7 +486,8 @@
     "confederacion": "AFC",
     "grupo": "A",
     "director_tecnico": "Tremblay",
-    "ranking_fifa": 49
+    "ranking_fifa": 49,
+    "pais_anfitrion": false
   },
   {
     "_id": "AUS",
@@ -447,7 +496,8 @@
     "confederacion": "AFC",
     "grupo": "B",
     "director_tecnico": "Vargas",
-    "ranking_fifa": 50
+    "ranking_fifa": 50,
+    "pais_anfitrion": false
   },
   {
     "_id": "KSA",
@@ -456,7 +506,8 @@
     "confederacion": "AFC",
     "grupo": "C",
     "director_tecnico": "Brown",
-    "ranking_fifa": 51
+    "ranking_fifa": 51,
+    "pais_anfitrion": false
   },
   {
     "_id": "QAT",
@@ -465,7 +516,8 @@
     "confederacion": "AFC",
     "grupo": "D",
     "director_tecnico": "Cardenas",
-    "ranking_fifa": 52
+    "ranking_fifa": 52,
+    "pais_anfitrion": false
   },
   {
     "_id": "IRQ",
@@ -474,7 +526,8 @@
     "confederacion": "AFC",
     "grupo": "E",
     "director_tecnico": "Wright",
-    "ranking_fifa": 53
+    "ranking_fifa": 53,
+    "pais_anfitrion": false
   },
   {
     "_id": "UZB",
@@ -483,7 +536,8 @@
     "confederacion": "AFC",
     "grupo": "F",
     "director_tecnico": "Leroy",
-    "ranking_fifa": 54
+    "ranking_fifa": 54,
+    "pais_anfitrion": false
   },
   {
     "_id": "JOR",
@@ -492,7 +546,8 @@
     "confederacion": "AFC",
     "grupo": "G",
     "director_tecnico": "Gomez",
-    "ranking_fifa": 55
+    "ranking_fifa": 55,
+    "pais_anfitrion": false
   },
   {
     "_id": "CHN",
@@ -501,7 +556,8 @@
     "confederacion": "AFC",
     "grupo": "H",
     "director_tecnico": "Costa",
-    "ranking_fifa": 56
+    "ranking_fifa": 56,
+    "pais_anfitrion": false
   },
   {
     "_id": "USA",
@@ -510,7 +566,8 @@
     "confederacion": "CONCACAF",
     "grupo": "I",
     "director_tecnico": "Ferreira",
-    "ranking_fifa": 57
+    "ranking_fifa": 57,
+    "pais_anfitrion": false
   },
   {
     "_id": "MEX",
@@ -519,7 +576,8 @@
     "confederacion": "CONCACAF",
     "grupo": "J",
     "director_tecnico": "Sosa",
-    "ranking_fifa": 58
+    "ranking_fifa": 58,
+    "pais_anfitrion": false
   },
   {
     "_id": "CAN",
@@ -528,7 +586,8 @@
     "confederacion": "CONCACAF",
     "grupo": "K",
     "director_tecnico": "Ibarra",
-    "ranking_fifa": 59
+    "ranking_fifa": 59,
+    "pais_anfitrion": false
   },
   {
     "_id": "CRC",
@@ -537,7 +596,8 @@
     "confederacion": "CONCACAF",
     "grupo": "L",
     "director_tecnico": "Quispe",
-    "ranking_fifa": 60
+    "ranking_fifa": 60,
+    "pais_anfitrion": false
   },
   {
     "_id": "JAM",
@@ -546,7 +606,8 @@
     "confederacion": "CONCACAF",
     "grupo": "M",
     "director_tecnico": "Rojas",
-    "ranking_fifa": 61
+    "ranking_fifa": 61,
+    "pais_anfitrion": false
   },
   {
     "_id": "PAN",
@@ -555,7 +616,8 @@
     "confederacion": "CONCACAF",
     "grupo": "N",
     "director_tecnico": "Medina",
-    "ranking_fifa": 62
+    "ranking_fifa": 62,
+    "pais_anfitrion": false
   },
   {
     "_id": "NZL",
@@ -564,7 +626,8 @@
     "confederacion": "OFC",
     "grupo": "O",
     "director_tecnico": "Castro",
-    "ranking_fifa": 63
+    "ranking_fifa": 63,
+    "pais_anfitrion": false
   },
   {
     "_id": "NCL",
@@ -573,6 +636,7 @@
     "confederacion": "OFC",
     "grupo": "P",
     "director_tecnico": "Flores",
-    "ranking_fifa": 64
+    "ranking_fifa": 64,
+    "pais_anfitrion": false
   }
 ]

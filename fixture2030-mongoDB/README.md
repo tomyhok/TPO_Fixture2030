@@ -25,10 +25,11 @@ schemas/                      diseno y validacion documental
 queries/                      operaciones de carga y recuperacion
   01-operaciones.js             inserciones y actualizaciones
   02-consultas.js               filtros, proyecciones, orden y paginacion
-  03-agregacion.js              agregacion de goles por confederacion
+  03-agregacion.js              cantidad de jugadores por equipo
   04-explain.js                 analisis de eficiencia con explain()
 docs/
-  Decisiones_Tecnicas.md        decisiones de diseno y evidencia de pruebas
+  Grupo_4_Hito_4_Decisiones_Documentales_Fixture2030.md
+                                decisiones de diseno y evidencia de pruebas
 README.md
 ```
 

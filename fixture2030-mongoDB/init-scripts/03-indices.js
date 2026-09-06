@@ -7,7 +7,8 @@ print("=== Creando índices para 'equipos' ===");
 // 1. Índice único sobre codigo_iso (exigido por RF12 / integridad referencial de equipos)
 db.equipos.createIndex({ codigo_iso: 1 }, { name: "idx_codigo_iso_unico", unique: true });
 
-// 2. Equipos de un grupo (consulta 2 de queries/02-consultas.js)
+// 2. Equipos por confederación y grupo
+db.equipos.createIndex({ confederacion: 1 }, { name: "idx_confederacion" });
 db.equipos.createIndex({ grupo: 1 }, { name: "idx_grupo" });
 
 // 3. Tabla de equipos ordenada por ranking FIFA, con paginación (consulta 5)
@@ -21,12 +22,8 @@ db.jugadores.createIndex({ codigo_equipo: 1 }, { name: "idx_codigo_equipo" });
 
 // 5. Índices compuestos para jugadores de un equipo filtrados por posición (consulta 3)
 db.jugadores.createIndex({ codigo_equipo: 1, posicion: 1 }, { name: "idx_equipo_posicion" });
-db.jugadores.createIndex({ equipo_id: 1, posicion: 1 }, { name: "idx_equipo_id_posicion" });
 
-// 6. Ranking de goleadores del torneo (consulta 4)
-db.jugadores.createIndex({ "estadisticas.goles": -1 }, { name: "idx_goles" });
-
-// 7. Integridad de negocio: un dorsal no se repite dentro del mismo equipo
+// 6. Integridad de negocio: un dorsal no se repite dentro del mismo equipo
 db.jugadores.createIndex({ codigo_equipo: 1, dorsal: 1 }, { name: "idx_dorsal_unico", unique: true });
 
 print("");

@@ -49,12 +49,11 @@ try {
     dorsal: 24,
     posicion: "DEL",
     fecha_nacimiento: "2003-05-14",
+    edad: 27,
     altura_cm: 180,
     pie_habil: "derecho",
+    club_actual: "No informado",
     codigo_equipo: "ARG",
-    equipo_id: "ARG",
-    estado: "Convocado",
-    estadisticas: { partidos: 0, goles: 0, asistencias: 0 }
   });
   print("Jugador 'ARG-24' insertado exitosamente cumpliendo $jsonSchema.");
 } catch (e) {
@@ -79,25 +78,21 @@ print("Equipo ARG actualizado con $set:");
 printjson(db.equipos.findOne({ codigo_iso: "ARG" }));
 
 print("\n==================================================");
-print(" 5. ACTUALIZACIÓN CONTROLADA DE JUGADOR ($set e $inc)");
+print(" 5. ACTUALIZACIÓN CONTROLADA DE JUGADOR ($set)");
 print("==================================================");
-// Actualiza estado y club con $set, e incrementa partidos y goles con $inc sin afectar relaciones
+// Actualiza datos personales y deportivos sin modificar la referencia al equipo.
 db.jugadores.updateOne(
   { _id: "ARG-24" },
   {
     $set: {
-      club_actual: "Inter Miami",
-      estado: "Convocado"
-    },
-    $inc: {
-      "estadisticas.partidos": 1,
-      "estadisticas.goles": 1
+      club_actual: "No informado",
+      pie_habil: "derecho"
     }
   }
 );
 print("Jugador ARG-24 actualizado:");
 printjson(db.jugadores.findOne(
   { _id: "ARG-24" },
-  { nombre: 1, codigo_equipo: 1, estado: 1, club_actual: 1, estadisticas: 1 }
+  { _id: 0, nombre: 1, dorsal: 1, posicion: 1, club_actual: 1, codigo_equipo: 1 }
 ));
 

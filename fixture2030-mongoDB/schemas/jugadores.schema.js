@@ -5,7 +5,8 @@ db.createCollection("jugadores", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["nombre", "dorsal", "posicion", "codigo_equipo"],
+      additionalProperties: false,
+      required: ["nombre", "dorsal", "posicion", "fecha_nacimiento", "edad", "altura_cm", "pie_habil", "club_actual", "codigo_equipo"],
       properties: {
         _id: {
           bsonType: "string",
@@ -14,10 +15,6 @@ db.createCollection("jugadores", {
         nombre: {
           bsonType: "string",
           description: "Nombre y apellido del jugador (obligatorio)"
-        },
-        nombre_completo: {
-          bsonType: "string",
-          description: "Nombre completo alternativo del jugador"
         },
         dorsal: {
           bsonType: "int",
@@ -53,32 +50,9 @@ db.createCollection("jugadores", {
           maxLength: 3,
           description: "Clave foránea hacia equipos.codigo_iso (obligatorio, ej. 'ARG')"
         },
-        equipo_id: {
-          bsonType: "string",
-          minLength: 3,
-          maxLength: 3,
-          description: "Referencia compatible con equipos._id"
-        },
-        estado: {
-          enum: ["Convocado", "Lesionado", "Suspendido"],
-          description: "Estado de convocatoria médica o disciplinaria"
-        },
         club_actual: {
           bsonType: "string",
           description: "Club actual de procedencia del futbolista"
-        },
-        estadisticas: {
-          bsonType: "object",
-          description: "Subdocumento embebido con estadísticas deportivas del jugador",
-          properties: {
-            partidos: { bsonType: "int", minimum: 0 },
-            goles: { bsonType: "int", minimum: 0 },
-            asistencias: { bsonType: "int", minimum: 0 }
-          }
-        },
-        estadisticas_historicas: {
-          bsonType: "object",
-          description: "Subdocumento de métricas históricas"
         }
       }
     }

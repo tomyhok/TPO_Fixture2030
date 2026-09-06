@@ -5,7 +5,7 @@
 const fs = require("fs");
 const DATOS = "/docker-entrypoint-initdb.d/data";
 
-// Cada documento trae su propio _id y codigo_iso/codigo_equipo.
+// Cada documento trae su propio _id y su referencia documental al equipo.
 // El upsert reemplaza el documento existente en lugar de insertar uno nuevo:
 // La carga es 100% idempotente (se puede repetir sin duplicar datos).
 function cargar(coleccion, archivo) {
@@ -13,10 +13,8 @@ function cargar(coleccion, archivo) {
   const documentos = JSON.parse(fs.readFileSync(ruta, "utf8"));
 
   const operaciones = documentos.map(function (doc) {
-    // Normalización de compatibilidad para asegurar cumplimiento del esquema
-    if (!doc.codigo_iso && doc._id) doc.codigo_iso = doc._id;
-    if (!doc.codigo_equipo && doc.equipo_id) doc.codigo_equipo = doc.equipo_id;
-    if (!doc.equipo_id && doc.codigo_equipo) doc.equipo_id = doc.codigo_equipo;
+    // Normalización mínima para equipos; los jugadores ya traen codigo_equipo.
+    if (coleccion === "equipos" && !doc.codigo_iso && doc._id) doc.codigo_iso = doc._id;
 
     return {
       replaceOne: {
@@ -45,8 +43,7 @@ print("Jugadores cargados: " + totalJugadores + " (Objetivo RF5: >= 1000)");
 const codigosIsoValidos = db.equipos.distinct("codigo_iso");
 const huerfanos = db.jugadores.countDocuments({
   $and: [
-    { codigo_equipo: { $nin: codigosIsoValidos } },
-    { equipo_id: { $nin: codigosIsoValidos } }
+    { codigo_equipo: { $nin: codigosIsoValidos } }
   ]
 });
 print("Jugadores sin equipo valido (huerfanos): " + huerfanos);

@@ -5,7 +5,8 @@ db.createCollection("equipos", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["codigo_iso", "nombre", "confederacion", "grupo", "ranking_fifa"],
+      additionalProperties: false,
+      required: ["codigo_iso", "nombre", "confederacion", "grupo", "ranking_fifa", "pais_anfitrion"],
       properties: {
         _id: {
           bsonType: "string",

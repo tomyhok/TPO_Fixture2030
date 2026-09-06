@@ -43,6 +43,7 @@ try {
 
 const explainAntes = db.jugadores
   .find({ codigo_equipo: "BRA", posicion: "DEF" })
+  .hint({ $natural: 1 })
   .explain("executionStats");
 
 imprimirMetricas(">>> ESTADO 1: ANTES de crear el índice (COLLSCAN)", explainAntes);
@@ -64,37 +65,10 @@ print(" TABLA COMPARATIVA DE EFICIENCIA (RNF4):");
 print("--------------------------------------------------------------------------------");
 print(" Métrica                | Antes (Sin Índice)          | Después (Con Índice)");
 print("------------------------|-----------------------------|-------------------------");
-print(" Etapa de escaneo       | COLLSCAN (Barrido total)    | IXSCAN + FETCH (B-Tree)");
-print(" Documentos examinados  | " + explainAntes.executionStats.totalDocsExamined + " documentos            | " + explainDespues.executionStats.totalDocsExamined + " documentos (Ratio 1:1)");
+print(" Etapa de escaneo       | " + extraerEtapaEIndice(explainAntes.queryPlanner.winningPlan).stage + "                  | " + extraerEtapaEIndice(explainDespues.queryPlanner.winningPlan).stage);
+print(" Documentos examinados  | " + explainAntes.executionStats.totalDocsExamined + " documentos            | " + explainDespues.executionStats.totalDocsExamined + " documentos");
 print(" Claves examinadas      | " + explainAntes.executionStats.totalKeysExamined + "                           | " + explainDespues.executionStats.totalKeysExamined);
-print(" Complejidad temporal   | O(N)                        | O(log N)");
+print(" Documentos devueltos    | " + explainAntes.executionStats.nReturned + "                           | " + explainDespues.executionStats.nReturned);
+print(" Tiempo observado (ms)   | " + explainAntes.executionStats.executionTimeMillis + "                           | " + explainDespues.executionStats.executionTimeMillis);
 print("--------------------------------------------------------------------------------\n");
-
-
-print("================================================================================");
-print(" VERIFICACIÓN DE OTRAS CONSULTAS DEL MÓDULO CON SUS ÍNDICES RESPECTIVOS");
-print("================================================================================");
-
-imprimirMetricas(
-  "1. Equipos por codigo_iso (Índice único idx_codigo_iso_unico):",
-  db.equipos.find({ codigo_iso: "ARG" }).explain("executionStats")
-);
-print("");
-
-imprimirMetricas(
-  "2. Equipos del grupo A (Índice idx_grupo):",
-  db.equipos.find({ grupo: "A" }).explain("executionStats")
-);
-print("");
-
-imprimirMetricas(
-  "3. Top 10 goleadores (Índice idx_goles):",
-  db.jugadores.find({}).sort({ "estadisticas.goles": -1 }).limit(10).explain("executionStats")
-);
-print("");
-
-imprimirMetricas(
-  "4. Paginación de equipos por ranking (Índice idx_ranking):",
-  db.equipos.find({}).sort({ ranking_fifa: 1 }).skip(10).limit(10).explain("executionStats")
-);
 

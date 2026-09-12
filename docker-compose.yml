@@ -32,6 +32,32 @@ services:
       NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
       NEO4J_apoc_import_file_enabled: "true"
 
+  cassandra:
+    image: cassandra:latest
+    container_name: fixture2030-cassandra
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: Fixture2030_Cassandra
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 2G
+      HEAP_NEWSIZE: 512M
+    volumes:
+      # Persistencia en la notebook, segun la convencion de la materia (RNF2).
+      - ~/docker/data/cassandra:/var/lib/cassandra
+      - ./fixture2030-cassandra/scripts:/scripts:ro
+      - ./fixture2030-cassandra/tools:/tools:ro
+      - ./fixture2030-cassandra/data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+
 volumes:
   mongodb_data:
     name: fixture_mongodb_data

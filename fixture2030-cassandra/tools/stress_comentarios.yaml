@@ -1,0 +1,72 @@
+# =====================================================================
+# Hito 6 - Fixture 2030 - Perfil de cassandra-stress (RF12)
+# =====================================================================
+# Escribe sobre la tabla real del modulo, respetando la clave de particion
+# ((id_partido, ventana, shard), id_comentario). Asi la medicion refleja la
+# distribucion de nuestro diseno y no la de un esquema de ejemplo.
+# =====================================================================
+keyspace: fixture2030
+keyspace_definition: |
+  CREATE KEYSPACE IF NOT EXISTS fixture2030
+  WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+table: comentarios_por_partido
+table_definition: |
+  CREATE TABLE IF NOT EXISTS comentarios_por_partido (
+      id_partido text,
+      ventana text,
+      shard int,
+      id_comentario timeuuid,
+      id_usuario text,
+      usuario_alias text,
+      equipo_apoyado text,
+      texto text,
+      idioma text,
+      estado_moderacion text,
+      minuto_partido int,
+      creado_en timestamp,
+      PRIMARY KEY ((id_partido, ventana, shard), id_comentario)
+  ) WITH CLUSTERING ORDER BY (id_comentario DESC);
+
+columnspec:
+  # 64 partidos, igual que el fixture del torneo.
+  - name: id_partido
+    size: fixed(5)
+    population: uniform(1..64)
+  # 120 ventanas de un minuto por partido (duracion de un encuentro).
+  - name: ventana
+    size: fixed(12)
+    population: uniform(1..7680)
+  # 4 shards por ventana: la defensa anti-hotspot del diseno.
+  - name: shard
+    population: uniform(1..4)
+  # Filas por particion: el objetivo declarado es mantenerlas bajo ~25.000.
+  - name: id_comentario
+    cluster: uniform(1..5000)
+  - name: id_usuario
+    size: fixed(8)
+    population: uniform(1..200000)
+  - name: usuario_alias
+    size: fixed(16)
+  - name: equipo_apoyado
+    size: fixed(3)
+  - name: texto
+    size: gaussian(40..280)
+  - name: idioma
+    size: fixed(2)
+  - name: estado_moderacion
+    size: fixed(9)
+
+insert:
+  partitions: fixed(1)        # cada operacion toca una sola particion
+  batchtype: UNLOGGED         # sin batch multi-particion: mide escritura pura
+  select: fixed(1)/5000
+
+queries:
+  muro_en_vivo:
+    cql: >
+      SELECT id_comentario, usuario_alias, texto
+      FROM comentarios_por_partido
+      WHERE id_partido = ? AND ventana = ? AND shard = ?
+      LIMIT 20
+    fields: samerow

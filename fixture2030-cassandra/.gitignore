@@ -1,0 +1,5 @@
+# Datasets sinteticos generados por tools/generar_comentarios.py
+data/*.csv
+
+# Cache de Python del generador
+tools/__pycache__/

@@ -1,0 +1,36 @@
+services:
+  cassandra:
+    # RNF1: entorno didactico, siempre sobre la imagen oficial actual.
+    image: cassandra:latest
+    container_name: fixture2030-cassandra
+    restart: unless-stopped
+    environment:
+      CASSANDRA_CLUSTER_NAME: Fixture2030_Cassandra
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      # Heap acotado para una notebook; ajustar segun el equipo de cada integrante.
+      MAX_HEAP_SIZE: 2G
+      HEAP_NEWSIZE: 512M
+    ports:
+      # Puerto nativo CQL para cqlsh, drivers y cassandra-stress.
+      - "9042:9042"
+    volumes:
+      # RNF2: datos persistentes en la notebook, segun la convencion de la materia.
+      - ~/docker/data/cassandra:/var/lib/cassandra
+      # Scripts CQL, generadores y datasets accesibles desde dentro del contenedor.
+      - ./scripts:/scripts:ro
+      - ./tools:/tools:ro
+      - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    networks:
+      - fixture2030-network
+
+networks:
+  fixture2030-network:
+    driver: bridge

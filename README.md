@@ -1,19 +1,22 @@
 # TPO Fixture 2030
 
 Proyecto de Ingenieria de Datos II para modelar la informacion del Fixture 2030
-con dos motores de persistencia:
+con tres motores de persistencia:
 
-- **MongoDB**: modelo documental de equipos y jugadores.
-- **Neo4j**: modelo de grafos para representar equipos, jugadores, partidos,
-  sedes y eventos deportivos.
+- **MongoDB** (Hito 4): modelo documental de equipos y jugadores.
+- **Neo4j** (Hito 5): modelo de grafos para representar equipos, jugadores,
+  partidos, sedes y eventos deportivos.
+- **Cassandra** (Hito 6): modelo tabular de columnas anchas para el modulo de
+  comentarios masivos de los partidos.
 
 ## Requisitos
 
 - Docker Desktop con Docker Compose.
-- Puertos disponibles: `27017`, `7474` y `7687`.
+- Puertos disponibles: `27017`, `7474`, `7687` y `9042`.
+- Python 3 en el host, solo para el generador de datos de Cassandra.
 
-No es necesario instalar MongoDB, `mongosh` ni Neo4j localmente: las herramientas
-se ejecutan dentro de los containers.
+No es necesario instalar MongoDB, `mongosh`, Neo4j ni `cqlsh` localmente: las
+herramientas se ejecutan dentro de los containers.
 
 ## Inicio rapido
 
@@ -31,6 +34,7 @@ Los servicios disponibles son:
 | `mongodb` | Base documental | `localhost:27017` |
 | `neo4j` | Base de grafos | Browser: `http://localhost:7474` |
 | `neo4j` | Protocolo Bolt | `neo4j://localhost:7687` |
+| `cassandra` | Base tabular de columnas anchas | `localhost:9042` |
 
 Para detener los servicios sin borrar los datos:
 
@@ -133,10 +137,66 @@ Abrir Neo4j Browser y ejecutar los archivos de
 La carga utiliza `MERGE`, por lo que puede ejecutarse nuevamente sin generar
 duplicados para las entidades con identificadores definidos.
 
+
+## Cassandra
+
+Modulo de comentarios masivos del Hito 6. La guia detallada esta en
+[`fixture2030-cassandra/README.md`](fixture2030-cassandra/README.md).
+
+### Acceso
+
+- Puerto CQL: `localhost:9042`
+- Keyspace: `fixture2030`
+- Sin autenticacion (ambiente local de desarrollo)
+
+A diferencia de MongoDB y Neo4j, los datos de Cassandra **no** se guardan en un
+volumen Docker sino en un bind mount en `~/docker/data/cassandra`, segun la
+convencion de la materia.
+
+### Verificar la conexion
+
+Cassandra tarda entre 60 y 120 segundos en aceptar conexiones la primera vez.
+
+```powershell
+docker compose exec cassandra nodetool status
+docker compose exec cassandra cqlsh -e "SHOW VERSION"
+```
+
+### Scripts de Cassandra
+
+Los scripts de `fixture2030-cassandra/scripts/` estan montados dentro del
+contenedor en `/scripts` y se ejecutan en este orden:
+
+```powershell
+docker compose exec cassandra cqlsh -f /scripts/01-keyspace.cql
+docker compose exec cassandra cqlsh -f /scripts/02-tablas.cql
+docker compose exec cassandra cqlsh -f /scripts/03-carga-muestra.cql
+docker compose exec cassandra cqlsh -f /scripts/04-crud.cql
+docker compose exec cassandra cqlsh -f /scripts/05-consultas.cql
+```
+
+1. `01-keyspace.cql`: keyspace, estrategia y factor de replicacion.
+2. `02-tablas.cql`: las cuatro tablas y el indice secundario.
+3. `03-carga-muestra.cql`: muestra idempotente de 35 comentarios.
+4. `04-crud.cql`: operaciones CRUD sobre un comentario de prueba.
+5. `05-consultas.cql`: consultas del muro, historial, moderacion y metricas.
+
+### Carga masiva y medicion
+
+Ejecutar desde la carpeta `fixture2030-cassandra`:
+
+```bash
+bash tools/carga_masiva.sh 1000000
+bash tools/benchmark_escritura.sh 500000 32
+docker compose exec cassandra cqlsh --request-timeout=600 -f /scripts/06-medicion.cql
+```
+
+Los resultados se registran en `fixture2030-cassandra/docs/evidencia.md`.
+
 ## Estructura del proyecto
 
 ```text
-docker-compose.yml                 Compose unificado de MongoDB y Neo4j
+docker-compose.yml                 Compose unificado de MongoDB, Neo4j y Cassandra
 fixture2030-mongoDB/
   init-scripts/                     Inicializacion y datos JSON de MongoDB
   schemas/                          Validaciones JSON Schema
@@ -148,11 +208,18 @@ fixture2030-neo4j/
   docs/                             Documentacion del modelo de grafos
   docker-compose.yml                Compose independiente del modulo
   import/                            Archivos auxiliares de importacion
+fixture2030-cassandra/
+  scripts/                          Scripts CQL de esquema, carga, CRUD y medicion
+  tools/                            Generador de datos y pruebas de rendimiento
+  data/                             CSV generados (no se versionan)
+  docs/                             Analisis, modelo tabular y evidencia
+  docker-compose.yml                Compose independiente del modulo
 ```
 
-Los dos Compose dentro de los modulos se conservan como referencia y para
-ejecutar cada modulo por separado. Para el proyecto completo se debe usar el
-Compose de la raiz. No levantar los tres Compose al mismo tiempo.
+Los Compose dentro de los modulos se conservan como referencia y para ejecutar
+cada modulo por separado. Para el proyecto completo se debe usar el Compose de
+la raiz. No levantar los Compose de los modulos y el de la raiz al mismo tiempo:
+comparten nombres de contenedor y puertos.
 
 ## Persistencia y reinicio desde cero
 
@@ -169,6 +236,15 @@ docker compose down -v
 
 Luego volver a ejecutar `docker compose up -d` y repetir la preparacion y carga
 de Neo4j.
+
+Los datos de Cassandra no viven en un volumen Docker, asi que `down -v` no los
+borra. Para reiniciar ese modulo desde cero hay que eliminar el bind mount de
+forma consciente:
+
+```bash
+docker compose down
+rm -rf ~/docker/data/cassandra
+```
 
 Los volumenes Docker son locales a cada computadora y no se versionan en Git.
 El Compose crea los volumenes automaticamente si no existen. Por eso, otro

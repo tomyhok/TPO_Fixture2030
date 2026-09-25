@@ -46,7 +46,6 @@ services:
       MAX_HEAP_SIZE: 2G
       HEAP_NEWSIZE: 512M
     volumes:
-      # Persistencia en la notebook, segun la convencion de la materia (RNF2).
       - ~/docker/data/cassandra:/var/lib/cassandra
       - ./fixture2030-cassandra/scripts:/scripts:ro
       - ./fixture2030-cassandra/tools:/tools:ro
@@ -57,6 +56,17 @@ services:
       timeout: 10s
       retries: 10
       start_period: 90s
+
+  redis:
+    image: redis:latest
+    container_name: fixture2030-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel notice
+    ports:
+      - "6379:6379"
+    volumes:
+      - ~/docker/data/redis:/data
+      - ./scripts:/scripts:ro
 
 volumes:
   mongodb_data:

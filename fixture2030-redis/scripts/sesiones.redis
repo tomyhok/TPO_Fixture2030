@@ -1,0 +1,24 @@
+# ==============================================================================
+# Script de Sesiones y Expiración (RF3, RF4, RF5)
+# Demuestra creación, lectura, renovación y cierre de sesiones.
+# ==============================================================================
+
+# 1. Creación de una sesión nueva de administrador
+HSET sesion:A001 token "admin_secreto_001" rol "admin" ultimo_acceso "2026-09-25T10:00:00Z"
+EXPIRE sesion:A001 1800
+
+# 2. Consultar la sesión y el TTL actual (App la necesita en un middleware de Auth)
+HGETALL sesion:A001
+TTL sesion:A001
+
+# 3. Renovación de sesión tras interactuar con la plataforma
+# Actualiza ultimo_acceso y extiende el TTL otros 1800s (30m)
+HSET sesion:A001 ultimo_acceso "2026-09-25T10:05:00Z"
+EXPIRE sesion:A001 1800
+
+# 4. Finalización / Cierre explícito (Usuario presiona "Logout")
+DEL sesion:A001
+
+# 5. Comprobar comportamiento ante clave expirada o ausente
+GET sesion:A001
+# (nil) -> La aplicación sabe que debe obligar a hacer login

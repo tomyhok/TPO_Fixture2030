@@ -1,0 +1,19 @@
+# ==============================================================================
+# Script de Métricas (RF12)
+# Muestra cómo observar la salud y rendimiento de la caché (hits, misses, evictions).
+# ==============================================================================
+
+# 1. Obtener estadísticas de hits vs misses (para evaluar efectividad de caché)
+INFO stats
+
+# Nota: buscar "keyspace_hits" y "keyspace_misses".
+# Tasa de hit = hits / (hits + misses) * 100
+
+# 2. Obtener estadísticas de uso de memoria y configuración de límite
+INFO memory
+
+# Nota: buscar "used_memory_human" y "maxmemory_human".
+
+# 3. Explorar claves seguras con SCAN (Nunca usar KEYS *)
+# Para ver si hay sesiones activas por ejemplo, trae cursor y algunos resultados
+SCAN 0 MATCH sesion:* COUNT 100

@@ -1,0 +1,24 @@
+# ==============================================================================
+# Script de Concurrencia y Ranking (RF8, RF9)
+# Demuestra operaciones atómicas usando Sorted Sets y transacciones.
+# ==============================================================================
+
+# 1. Tres usuarios distintos (concurrentes) votan por el mismo jugador.
+# En lugar de leer-sumar-escribir, usamos la operación atómica ZINCRBY del servidor
+ZINCRBY encuesta:partido:M001:figura 1 "jugador-10-ARG"
+ZINCRBY encuesta:partido:M001:figura 1 "jugador-10-ARG"
+ZINCRBY encuesta:partido:M001:figura 1 "jugador-10-ARG"
+
+# 2. Voto por otro jugador
+ZINCRBY encuesta:partido:M001:figura 1 "jugador-5-ARG"
+
+# 3. Mostrar el ranking en tiempo real (Top 3 de jugadores)
+# Ordena de mayor a menor y muestra su score automáticamente.
+ZREVRANGE encuesta:partido:M001:figura 0 2 WITHSCORES
+
+# 4. Transacción (MULTI / EXEC) si hubiera que hacer dos cosas juntas
+# Ejemplo: Votar en la encuesta general Y sumar a su propio historial (simulado)
+MULTI
+ZINCRBY encuesta:partido:M001:figura 1 "jugador-11-BRA"
+HINCRBY sesion:U019 votos_emitidos 1
+EXEC

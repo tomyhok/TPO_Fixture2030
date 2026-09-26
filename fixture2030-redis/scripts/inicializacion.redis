@@ -1,0 +1,15 @@
+# ==============================================================================
+# Script de Inicialización (RF10, RNF9)
+# Define la política de límite de memoria y evicción de claves.
+# ==============================================================================
+
+# 1. Configurar la memoria máxima para Redis (Simulado pequeño para probar presión)
+CONFIG SET maxmemory 256mb
+
+# 2. Configurar la política de evicción. Elegimos 'allkeys-lru' para priorizar 
+# la disponibilidad sobre datos que olvidemos asignar un TTL.
+CONFIG SET maxmemory-policy allkeys-lru
+
+# 3. Comprobar que los cambios fueron aplicados (para observar en pantalla)
+CONFIG GET maxmemory
+CONFIG GET maxmemory-policy

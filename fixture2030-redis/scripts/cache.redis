@@ -1,0 +1,21 @@
+# ==============================================================================
+# Script de Caché e Invalidación (Cache-Aside) (RF6, RF7)
+# Demuestra Hit, Miss y estrategia de Invalidez al cambiar fuente de verdad.
+# ==============================================================================
+
+# 1. Simular un Cache Hit (El dato fue cargado en carga_muestra.redis)
+GET cache:partido:M001
+
+# 2. Simular un cambio en la fuente de verdad.
+# La API procesa un GOL. Guarda en MongoDB/Neo4j, e invalida la caché:
+DEL cache:partido:M001
+
+# 3. Próximo visitante del Fixture pide el partido. Cache MISS:
+GET cache:partido:M001
+# Resultado: (nil)
+
+# 4. App busca en DB principal, arma JSON y hace Cache LOAD (con TTL seguridad)
+SET cache:partido:M001 '{"id":"M001","local":"ARG","visitante":"BRA","goles_local":1,"goles_visitante":0}' EX 60
+
+# 5. Siguientes lecturas son HIT y ven el gol actualizado
+GET cache:partido:M001

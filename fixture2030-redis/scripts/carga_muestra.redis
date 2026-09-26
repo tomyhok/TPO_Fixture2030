@@ -1,0 +1,19 @@
+# ==============================================================================
+# Script de Carga de Muestra (RF11)
+# Preparación de datos simulados para iniciar las pruebas de flujos.
+# ==============================================================================
+
+# Limpiar entorno pre-existente
+FLUSHALL
+
+# 1. Cargar una sesión "antigua" (para luego probar expiración de la misma)
+HSET sesion:U019 token "token_secreto_019" rol "fan" ultimo_acceso "2026-09-01T10:00:00Z"
+EXPIRE sesion:U019 10 # Le damos apenas 10 segundos de vida para simular rápido vencimiento
+
+# 2. Cargar caché de un partido
+SET cache:partido:M001 '{"id":"M001","local":"ARG","visitante":"BRA","goles_local":0,"goles_visitante":0}' EX 600
+
+# 3. Cargar ranking (encuesta) de figura de un partido con votos previos
+ZADD encuesta:partido:M001:figura 10 "jugador-10-ARG"
+ZADD encuesta:partido:M001:figura 5 "jugador-5-ARG"
+ZADD encuesta:partido:M001:figura 3 "jugador-11-BRA"

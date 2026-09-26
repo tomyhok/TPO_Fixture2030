@@ -1,0 +1,9 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: fixture2030-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --save 60 1 --loglevel notice
+    volumes:
+      - ~/docker/data/redis:/data

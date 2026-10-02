@@ -1,0 +1,9 @@
+# Fecha: 2026-10-02 12:30:36 -03
+# Verificacion de expiracion de sesion:S-0199, 7 s despues de crearla con EXPIRE 5
+> TTL sesion:S-0199
+-2
+> HGETALL sesion:S-0199
+
+> INFO stats (expired_keys)
+expired_keys:1
+expired_keys_active:1

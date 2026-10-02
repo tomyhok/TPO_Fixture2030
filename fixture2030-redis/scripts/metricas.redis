@@ -1,0 +1,60 @@
+# =====================================================================
+# Hito 7 - Fixture 2030 - Modulo de Cache de Usuarios y Sesiones
+# metricas.redis : metricas del servidor e inspeccion segura (RF12, RF13)
+# =====================================================================
+# Tasa de hit = keyspace_hits / (keyspace_hits + keyspace_misses) * 100
+# Ojo: los contadores de INFO son de TODO el servidor. Cuentan cualquier
+# lectura de una clave (GET de cache, HGET/HGETALL de sesiones, TTL),
+# no solo las claves cache:*.
+#
+# Ejecucion:
+#   docker compose exec redis sh -c "grep -v '^#' /scripts/metricas.redis | redis-cli"
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1) Version y uptime (RNF10)
+# ---------------------------------------------------------------------
+ECHO "=== 1) Servidor ==="
+INFO server
+
+# ---------------------------------------------------------------------
+# 2) Estadisticas: keyspace_hits, keyspace_misses, expired_keys,
+#    evicted_keys y total_commands_processed
+# ---------------------------------------------------------------------
+ECHO "=== 2) Estadisticas ==="
+INFO stats
+
+# ---------------------------------------------------------------------
+# 3) Memoria: used_memory_human, maxmemory_human, maxmemory_policy
+# ---------------------------------------------------------------------
+ECHO "=== 3) Memoria ==="
+INFO memory
+
+# ---------------------------------------------------------------------
+# 4) Keyspace: cantidad de claves (keys) y cuantas tienen TTL (expires)
+# ---------------------------------------------------------------------
+ECHO "=== 4) Keyspace ==="
+INFO keyspace
+
+# ---------------------------------------------------------------------
+# 5) Inspeccion segura con SCAN (RNF8). No se usa KEYS *.
+#    SCAN devuelve un cursor y un lote parcial. Si el cursor devuelto
+#    no es 0, se vuelve a llamar con ese cursor.
+# ---------------------------------------------------------------------
+ECHO "=== 5) SCAN de sesiones ==="
+SCAN 0 MATCH sesion:* COUNT 100
+ECHO "=== 5) SCAN de cache ==="
+SCAN 0 MATCH cache:* COUNT 100
+
+# ---------------------------------------------------------------------
+# 6) TTL observados de cada tipo de clave
+#    sesion ~1800 | cache:partido ~300 | cache:equipo ~3600
+#    contador ~172800 | conectados ~10800 | encuesta -1 (abierta) o ~86400
+# ---------------------------------------------------------------------
+ECHO "=== 6) TTL observados ==="
+TTL sesion:S-0001
+TTL cache:partido:P-002
+TTL cache:equipo:BRA
+TTL contador:partido:P-001:visitas
+TTL conectados:partido:P-001
+TTL encuesta:partido:P-001:figura

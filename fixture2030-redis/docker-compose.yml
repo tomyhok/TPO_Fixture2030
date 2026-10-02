@@ -1,0 +1,23 @@
+services:
+  redis:
+    # RNF1: imagen oficial con la etiqueta latest, segun el criterio de la materia.
+    image: redis:latest
+    container_name: fixture2030-redis
+    restart: unless-stopped
+    # --appendonly yes / --save 60 1 : AOF + snapshot RDB, igual que el laboratorio de clase.
+    # --maxmemory / --maxmemory-policy : RF10, ver docs/memoria_y_escalabilidad.md.
+    command: >
+      redis-server
+      --appendonly yes
+      --save 60 1
+      --maxmemory 256mb
+      --maxmemory-policy volatile-lru
+      --loglevel notice
+    ports:
+      # Puerto estandar de Redis para redis-cli y aplicaciones.
+      - "6379:6379"
+    volumes:
+      # RNF2: datos persistentes en la notebook, segun la convencion de la materia.
+      - ~/docker/data/redis:/data
+      # Scripts del modulo accesibles desde dentro del contenedor.
+      - ./scripts:/scripts:ro

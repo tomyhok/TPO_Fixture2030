@@ -1,0 +1,81 @@
+# Fecha: 2026-10-02 12:30:29 -03
+# Script: scripts/sesiones.redis
+=== 1) Crear sesion S-0100 ===
+OK
+QUEUED
+QUEUED
+8
+1
+=== 2) Recuperar sesion S-0100 ===
+U-0100
+id_sesion
+S-0100
+usuario_id
+U-0100
+rol
+fan
+estado
+activa
+dispositivo
+web
+creada_en
+2030-06-10T21:00:00Z
+ultimo_acceso
+2030-06-10T21:00:00Z
+paginas_vistas
+0
+1800
+=== 3) HSET no renueva el TTL ===
+1
+0
+1200
+=== 4) Actividad del usuario: validar, actualizar y renovar ===
+U-0100
+OK
+QUEUED
+QUEUED
+QUEUED
+1
+0
+1
+id_sesion
+S-0100
+usuario_id
+U-0100
+rol
+fan
+estado
+activa
+dispositivo
+android
+creada_en
+2030-06-10T21:00:00Z
+ultimo_acceso
+2030-06-10T21:10:00Z
+paginas_vistas
+1
+1800
+=== 5) Cerrar sesion S-0100 (logout) ===
+1
+
+
+-2
+=== 6) Invalidacion explicita de S-0101 ===
+OK
+QUEUED
+QUEUED
+8
+1
+1800
+1
+-2
+=== 7) Sesion inexistente ===
+
+-2
+=== 8) Sesion de prueba con TTL de 5 segundos ===
+OK
+QUEUED
+QUEUED
+8
+1
+5

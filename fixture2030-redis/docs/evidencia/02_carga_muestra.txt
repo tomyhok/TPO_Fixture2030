@@ -1,0 +1,42 @@
+# Fecha: 2026-10-02 12:30:29 -03
+# Script: scripts/carga_muestra.redis
+=== 1) Sesiones ===
+8
+1
+8
+1
+8
+1
+8
+1
+8
+1
+8
+1
+8
+1
+8
+1
+8
+1
+8
+1
+=== 2) Cache de partidos ===
+OK
+=== 3) Cache de equipos ===
+OK
+OK
+OK
+OK
+=== 4) Contador de visitas ===
+OK
+=== 5) Usuarios conectados al partido ===
+0
+6
+1
+=== 6) Encuesta figura del partido ===
+0
+4
+=== 7) Verificacion ===
+# Keyspace
+db0:keys=18,expires=17,avg_ttl=2179998,subexpiry=0

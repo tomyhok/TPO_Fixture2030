@@ -1,0 +1,112 @@
+# =====================================================================
+# Hito 7 - Fixture 2030 - Modulo de Cache de Usuarios y Sesiones
+# sesiones.redis : ciclo de vida de una sesion (RF3, RF4, RF5)
+# =====================================================================
+# Clave:      sesion:<id_sesion>          (Hash)
+# Duracion:   1800 s (30 min) de inactividad
+# Validez:    la sesion es valida si HGET sesion:<id> usuario_id devuelve
+#             un valor (ver ciclo_de_vida_e_invalidacion.md)
+# Renovacion: cada peticion valida del usuario
+#
+# Se trabaja sobre sesiones de prueba propias (S-0100, S-0101, S-0199)
+# para no alterar la muestra cargada en carga_muestra.redis.
+#
+# Ejecucion:
+#   docker compose exec redis sh -c "grep -v '^#' /scripts/sesiones.redis | redis-cli"
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1) CREAR - login del usuario U-0100
+#    HSET + EXPIRE dentro de MULTI/EXEC: asi nunca queda una sesion
+#    creada sin TTL si el cliente se corta entre los dos comandos.
+# ---------------------------------------------------------------------
+ECHO "=== 1) Crear sesion S-0100 ==="
+MULTI
+HSET sesion:S-0100 id_sesion "S-0100" usuario_id "U-0100" rol "fan" estado "activa" dispositivo "web" creada_en "2030-06-10T21:00:00Z" ultimo_acceso "2030-06-10T21:00:00Z" paginas_vistas 0
+EXPIRE sesion:S-0100 1800
+EXEC
+
+# ---------------------------------------------------------------------
+# 2) RECUPERAR - la aplicacion recibe el id de sesion en cada peticion.
+#    HGET usuario_id devuelve "U-0100" -> sesion valida.
+#    TTL esperado: cercano a 1800.
+# ---------------------------------------------------------------------
+ECHO "=== 2) Recuperar sesion S-0100 ==="
+HGET sesion:S-0100 usuario_id
+HGETALL sesion:S-0100
+TTL sesion:S-0100
+
+# ---------------------------------------------------------------------
+# 3) ACTUALIZAR SIN RENOVAR - un HSET solo NO renueva el TTL.
+#    Para simular que pasaron 10 minutos sin actividad se baja el TTL a
+#    1200 s. Despues del HSET el TTL sigue en ~1200, no vuelve a 1800:
+#    por eso la renovacion tiene que ser explicita.
+# ---------------------------------------------------------------------
+ECHO "=== 3) HSET no renueva el TTL ==="
+EXPIRE sesion:S-0100 1200
+HSET sesion:S-0100 dispositivo "android"
+TTL sesion:S-0100
+
+# ---------------------------------------------------------------------
+# 4) ACTUALIZAR Y RENOVAR - el usuario navega a otra pagina.
+#    La app primero valida (HGET usuario_id) y despues manda las tres
+#    operaciones juntas en MULTI/EXEC para que otra peticion no se
+#    intercale entre la actualizacion y la renovacion.
+# ---------------------------------------------------------------------
+ECHO "=== 4) Actividad del usuario: validar, actualizar y renovar ==="
+HGET sesion:S-0100 usuario_id
+MULTI
+HINCRBY sesion:S-0100 paginas_vistas 1
+HSET sesion:S-0100 ultimo_acceso "2030-06-10T21:10:00Z"
+EXPIRE sesion:S-0100 1800
+EXEC
+HGETALL sesion:S-0100
+TTL sesion:S-0100
+
+# ---------------------------------------------------------------------
+# 5) FINALIZAR - logout del usuario. Se borra la clave completa.
+#    Despues del DEL: HGET y HGETALL vacios y TTL = -2.
+# ---------------------------------------------------------------------
+ECHO "=== 5) Cerrar sesion S-0100 (logout) ==="
+DEL sesion:S-0100
+HGET sesion:S-0100 usuario_id
+HGETALL sesion:S-0100
+TTL sesion:S-0100
+
+# ---------------------------------------------------------------------
+# 6) INVALIDACION EXPLICITA - un moderador suspende al usuario U-0101.
+#    La sesion se elimina aunque todavia tenga TTL. La proxima peticion
+#    del usuario no la encuentra y la aplicacion lo manda al login.
+# ---------------------------------------------------------------------
+ECHO "=== 6) Invalidacion explicita de S-0101 ==="
+MULTI
+HSET sesion:S-0101 id_sesion "S-0101" usuario_id "U-0101" rol "fan" estado "activa" dispositivo "ios" creada_en "2030-06-10T21:05:00Z" ultimo_acceso "2030-06-10T21:05:00Z" paginas_vistas 0
+EXPIRE sesion:S-0101 1800
+EXEC
+TTL sesion:S-0101
+DEL sesion:S-0101
+TTL sesion:S-0101
+
+# ---------------------------------------------------------------------
+# 7) SESION INEXISTENTE - id que nunca existio o que ya vencio.
+#    HGETALL devuelve vacio y TTL -2: la aplicacion responde 401 y
+#    pide volver a iniciar sesion. No se crea nada automaticamente.
+# ---------------------------------------------------------------------
+ECHO "=== 7) Sesion inexistente ==="
+HGETALL sesion:S-9999
+TTL sesion:S-9999
+
+# ---------------------------------------------------------------------
+# 8) EXPIRACION POR INACTIVIDAD - demostracion con TTL corto.
+#    Solo para la prueba se usa EXPIRE de 5 s en lugar de 1800 s.
+#    Despues de esperar 6 segundos verificar desde la terminal:
+#      docker compose exec redis redis-cli TTL sesion:S-0199      -> -2
+#      docker compose exec redis redis-cli HGETALL sesion:S-0199  -> vacio
+#    Redis borra la clave solo; no hay un proceso que recorra sesiones.
+# ---------------------------------------------------------------------
+ECHO "=== 8) Sesion de prueba con TTL de 5 segundos ==="
+MULTI
+HSET sesion:S-0199 id_sesion "S-0199" usuario_id "U-0199" rol "fan" estado "activa" dispositivo "web" creada_en "2030-06-10T21:20:00Z" ultimo_acceso "2030-06-10T21:20:00Z" paginas_vistas 0
+EXPIRE sesion:S-0199 5
+EXEC
+TTL sesion:S-0199

@@ -1,0 +1,26 @@
+# Fecha: 2026-10-02 12:30:37 -03
+# Script: scripts/cache.redis
+=== 1) Cache hit de P-001 ===
+{"codigo_partido":"P-001","fecha":"2030-06-10","fase":"Grupos","local":"ARG","visitante":"ESP","sede":"Estadio Monumental","goles_local":0,"goles_visitante":0}
+292
+=== 2) Cache miss de P-002 ===
+
+OK
+--- la siguiente lectura ya es un hit ---
+{"codigo_partido":"P-002","fecha":"2030-06-12","fase":"Grupos","local":"URU","visitante":"ARG","sede":"Estadio Centenario","goles_local":0,"goles_visitante":0}
+300
+=== 3) Invalidacion de P-001 por cambio de resultado ===
+1
+
+OK
+{"codigo_partido":"P-001","fecha":"2030-06-10","fase":"Grupos","local":"ARG","visitante":"ESP","sede":"Estadio Monumental","goles_local":1,"goles_visitante":0}
+=== 4) Invalidacion de cache:equipo:ARG ===
+3592
+1
+
+=== 5) SET sin EX elimina el TTL ===
+OK
+300
+OK
+-1
+1

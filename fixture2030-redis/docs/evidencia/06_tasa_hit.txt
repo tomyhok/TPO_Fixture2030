@@ -1,0 +1,4 @@
+# Fecha: 2026-10-02 12:30:38 -03
+# Hits y misses de cache.redis (INFO stats antes y despues)
+keyspace_hits   antes=11 despues=19 diferencia=8
+keyspace_misses antes=8 despues=11 diferencia=3

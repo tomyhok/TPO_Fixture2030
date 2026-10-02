@@ -1,0 +1,6 @@
+# Fecha: 2026-10-02 12:31:05 -03
+# Recursos del equipo
+Docker: Docker version 27.5.1, build 9f9e405
+Imagen: redis@sha256:6f81e8915c60b065a524e6967e0ad1c639ba6efa84d669f823683ea04d9150ee
+CPUs y memoria asignadas a Docker: 8 CPU, 8217858048 bytes
+Darwin arm64

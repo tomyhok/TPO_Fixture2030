@@ -1,0 +1,99 @@
+# =====================================================================
+# Hito 7 - Fixture 2030 - Modulo de Cache de Usuarios y Sesiones
+# concurrencia.redis : operaciones atomicas y ranking temporal (RF8, RF9)
+# =====================================================================
+# Miles de usuarios actualizan los mismos datos al mismo tiempo durante
+# un partido. Todas las actualizaciones se hacen con comandos nativos
+# que Redis ejecuta de a uno (INCR, ZINCRBY, SADD, HINCRBY) o con
+# MULTI/EXEC cuando son varios comandos. Nunca GET -> sumar -> SET.
+#
+# La prueba con clientes en paralelo esta en tools/prueba_concurrencia.sh
+#
+# Ejecucion (despues de carga_muestra.redis):
+#   docker compose exec redis sh -c "grep -v '^#' /scripts/concurrencia.redis | redis-cli"
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1) CONTADOR DE VISITAS de la ficha de P-001 (String)
+#    INCR suma dentro del servidor: no pisa incrementos de otros clientes.
+#    INCR + EXPIRE van juntos en MULTI/EXEC: si la clave habia vencido,
+#    INCR la vuelve a crear y el EXPIRE le pone TTL, asi nunca queda un
+#    contador sin TTL. El TTL queda en 48 h desde la ultima visita.
+# ---------------------------------------------------------------------
+ECHO "=== 1) Contador de visitas ==="
+MULTI
+INCR contador:partido:P-001:visitas
+EXPIRE contador:partido:P-001:visitas 172800
+EXEC
+MULTI
+INCRBY contador:partido:P-001:visitas 50
+EXPIRE contador:partido:P-001:visitas 172800
+EXEC
+GET contador:partido:P-001:visitas
+TTL contador:partido:P-001:visitas
+
+# ---------------------------------------------------------------------
+# 2) VOTO EN LA ENCUESTA de figura del partido (Sorted Set)
+#    ZINCRBY suma 1 al jugador votado en una sola operacion.
+#    La encuesta abierta no lleva TTL (ver ciclo de vida).
+# ---------------------------------------------------------------------
+ECHO "=== 2) Votos en la encuesta de figura de P-001 ==="
+ZINCRBY encuesta:partido:P-001:figura 1 "ARG-10"
+ZINCRBY encuesta:partido:P-001:figura 1 "ARG-10"
+ZINCRBY encuesta:partido:P-001:figura 1 "ARG-10"
+ZINCRBY encuesta:partido:P-001:figura 1 "ESP-8"
+ZINCRBY encuesta:partido:P-001:figura 1 "ESP-8"
+ZINCRBY encuesta:partido:P-001:figura 1 "ARG-9"
+
+# ---------------------------------------------------------------------
+# 3) RANKING TEMPORAL - Top 3 de la encuesta (RF9)
+#    El Sorted Set ya esta ordenado por score: no se ordena en la app.
+# ---------------------------------------------------------------------
+ECHO "=== 3) Top 3 de la encuesta ==="
+ZREVRANGE encuesta:partido:P-001:figura 0 2 WITHSCORES
+
+# ---------------------------------------------------------------------
+# 4) USUARIOS CONECTADOS al partido (Set)
+#    SADD es idempotente: un usuario no se cuenta dos veces.
+#    SADD + EXPIRE en MULTI/EXEC por el mismo motivo que el contador.
+#    SREM saca al usuario cuando deja la transmision.
+# ---------------------------------------------------------------------
+ECHO "=== 4) Usuarios conectados a P-001 ==="
+MULTI
+SADD conectados:partido:P-001 U-0007
+EXPIRE conectados:partido:P-001 10800
+EXEC
+SADD conectados:partido:P-001 U-0007
+SREM conectados:partido:P-001 U-0002
+SISMEMBER conectados:partido:P-001 U-0002
+SMEMBERS conectados:partido:P-001
+
+# ---------------------------------------------------------------------
+# 5) ACTIVIDAD DE SESION - dos pestanas del mismo usuario navegan a la vez.
+#    HINCRBY es atomico y MULTI/EXEC evita que otra peticion se meta
+#    entre la actualizacion de ultimo_acceso y la renovacion del TTL.
+# ---------------------------------------------------------------------
+ECHO "=== 5) Actividad concurrente sobre sesion S-0001 ==="
+HGET sesion:S-0001 usuario_id
+MULTI
+HINCRBY sesion:S-0001 paginas_vistas 1
+HSET sesion:S-0001 ultimo_acceso "2030-06-10T20:15:00Z"
+EXPIRE sesion:S-0001 1800
+EXEC
+HGET sesion:S-0001 usuario_id
+MULTI
+HINCRBY sesion:S-0001 paginas_vistas 1
+HSET sesion:S-0001 ultimo_acceso "2030-06-10T20:15:05Z"
+EXPIRE sesion:S-0001 1800
+EXEC
+HGETALL sesion:S-0001
+
+# ---------------------------------------------------------------------
+# 6) CIERRE DE LA ENCUESTA - al terminar el partido.
+#    El resultado final se guarda en la fuente de verdad (fuera de este
+#    modulo) y recien ahi se le pone TTL de 24 h (86400 s) al ranking.
+# ---------------------------------------------------------------------
+ECHO "=== 6) Cierre de la encuesta ==="
+TTL encuesta:partido:P-001:figura
+EXPIRE encuesta:partido:P-001:figura 86400
+TTL encuesta:partido:P-001:figura

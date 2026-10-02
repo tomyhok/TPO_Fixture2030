@@ -1,0 +1,23 @@
+# Fecha: 2026-10-02 12:30:58 -03
+# Persistencia: claves antes y despues de reiniciar el contenedor
+> INFO keyspace (antes)
+# Keyspace
+db0:keys=19,expires=19,avg_ttl=8413903,subexpiry=0
+> docker compose restart redis
+ Container fixture2030-redis  Restarting
+ Container fixture2030-redis  Started
+> INFO keyspace (despues)
+# Keyspace
+db0:keys=19,expires=19,avg_ttl=15758968,subexpiry=0
+> HGET sesion:S-0005 usuario_id
+U-0005
+> TTL sesion:S-0005 (el TTL se conserva y sigue corriendo)
+1764
+> ls ~/docker/data/redis
+appendonlydir
+dump.rdb
+
+~/docker/data/redis/appendonlydir:
+appendonly.aof.2.base.rdb
+appendonly.aof.2.incr.aof
+appendonly.aof.manifest

@@ -1,0 +1,96 @@
+# =====================================================================
+# Hito 7 - Fixture 2030 - Modulo de Cache de Usuarios y Sesiones
+# carga_muestra.redis : conjunto de datos reproducible (RF11)
+# =====================================================================
+# Datos de muestra:
+#   - 10 sesiones de usuarios (S-0001 a S-0010), usuarios U-0001 a U-0010
+#   - 1 partido en cache (P-001, el mismo del Hito 5 en Neo4j). P-002
+#     existe en Neo4j pero NO se carga, para mostrar el cache miss.
+#   - 4 equipos en cache (ARG, BRA, URU, ESP, los mismos del Hito 4 en MongoDB)
+#   - contador de visitas, conectados y encuesta de figura de P-001
+#
+# El script es idempotente: HSET y SET sobrescriben, DEL limpia los Sets y
+# Sorted Sets antes de volver a cargarlos. Puede reejecutarse sin duplicar.
+#
+# Las sesiones NO guardan tokens ni contrasenas (RNF7). La clave usa un
+# identificador de sesion opaco, no el token.
+#
+# Ejecucion:
+#   docker compose exec redis sh -c "grep -v '^#' /scripts/carga_muestra.redis | redis-cli"
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1) SESIONES - Hash sesion:<id_sesion> + TTL de 1800 s (30 min)
+#    Campos: id_sesion, usuario_id, rol, estado, dispositivo,
+#            creada_en, ultimo_acceso, paginas_vistas
+# ---------------------------------------------------------------------
+ECHO "=== 1) Sesiones ==="
+HSET sesion:S-0001 id_sesion "S-0001" usuario_id "U-0001" rol "fan" estado "activa" dispositivo "web" creada_en "2030-06-10T20:00:00Z" ultimo_acceso "2030-06-10T20:00:00Z" paginas_vistas 0
+EXPIRE sesion:S-0001 1800
+HSET sesion:S-0002 id_sesion "S-0002" usuario_id "U-0002" rol "fan" estado "activa" dispositivo "android" creada_en "2030-06-10T20:01:00Z" ultimo_acceso "2030-06-10T20:01:00Z" paginas_vistas 0
+EXPIRE sesion:S-0002 1800
+HSET sesion:S-0003 id_sesion "S-0003" usuario_id "U-0003" rol "fan" estado "activa" dispositivo "ios" creada_en "2030-06-10T20:02:00Z" ultimo_acceso "2030-06-10T20:02:00Z" paginas_vistas 0
+EXPIRE sesion:S-0003 1800
+HSET sesion:S-0004 id_sesion "S-0004" usuario_id "U-0004" rol "fan" estado "activa" dispositivo "web" creada_en "2030-06-10T20:03:00Z" ultimo_acceso "2030-06-10T20:03:00Z" paginas_vistas 0
+EXPIRE sesion:S-0004 1800
+HSET sesion:S-0005 id_sesion "S-0005" usuario_id "U-0005" rol "fan" estado "activa" dispositivo "android" creada_en "2030-06-10T20:04:00Z" ultimo_acceso "2030-06-10T20:04:00Z" paginas_vistas 0
+EXPIRE sesion:S-0005 1800
+HSET sesion:S-0006 id_sesion "S-0006" usuario_id "U-0006" rol "fan" estado "activa" dispositivo "web" creada_en "2030-06-10T20:05:00Z" ultimo_acceso "2030-06-10T20:05:00Z" paginas_vistas 0
+EXPIRE sesion:S-0006 1800
+HSET sesion:S-0007 id_sesion "S-0007" usuario_id "U-0007" rol "fan" estado "activa" dispositivo "ios" creada_en "2030-06-10T20:06:00Z" ultimo_acceso "2030-06-10T20:06:00Z" paginas_vistas 0
+EXPIRE sesion:S-0007 1800
+HSET sesion:S-0008 id_sesion "S-0008" usuario_id "U-0008" rol "periodista" estado "activa" dispositivo "web" creada_en "2030-06-10T20:07:00Z" ultimo_acceso "2030-06-10T20:07:00Z" paginas_vistas 0
+EXPIRE sesion:S-0008 1800
+HSET sesion:S-0009 id_sesion "S-0009" usuario_id "U-0009" rol "moderador" estado "activa" dispositivo "web" creada_en "2030-06-10T20:08:00Z" ultimo_acceso "2030-06-10T20:08:00Z" paginas_vistas 0
+EXPIRE sesion:S-0009 1800
+HSET sesion:S-0010 id_sesion "S-0010" usuario_id "U-0010" rol "admin" estado "activa" dispositivo "web" creada_en "2030-06-10T20:09:00Z" ultimo_acceso "2030-06-10T20:09:00Z" paginas_vistas 0
+EXPIRE sesion:S-0010 1800
+
+# ---------------------------------------------------------------------
+# 2) CACHE DE PARTIDOS - String cache:partido:<id> con JSON + TTL 300 s
+#    Fuente de verdad: Neo4j (Hito 5), nodos Partido/Equipo/Sede.
+# ---------------------------------------------------------------------
+ECHO "=== 2) Cache de partidos ==="
+SET cache:partido:P-001 "{\"codigo_partido\":\"P-001\",\"fecha\":\"2030-06-10\",\"fase\":\"Grupos\",\"local\":\"ARG\",\"visitante\":\"ESP\",\"sede\":\"Estadio Monumental\",\"goles_local\":0,\"goles_visitante\":0}" EX 300
+
+# ---------------------------------------------------------------------
+# 3) CACHE DE EQUIPOS - String cache:equipo:<codigo_iso> con JSON + TTL 3600 s
+#    Fuente de verdad: MongoDB (Hito 4), coleccion equipos.
+# ---------------------------------------------------------------------
+ECHO "=== 3) Cache de equipos ==="
+SET cache:equipo:ARG "{\"codigo_iso\":\"ARG\",\"nombre\":\"Argentina\",\"confederacion\":\"CONMEBOL\",\"grupo\":\"A\",\"director_tecnico\":\"Martinez\",\"ranking_fifa\":1}" EX 3600
+SET cache:equipo:BRA "{\"codigo_iso\":\"BRA\",\"nombre\":\"Brasil\",\"confederacion\":\"CONMEBOL\",\"grupo\":\"B\",\"director_tecnico\":\"Silva\",\"ranking_fifa\":2}" EX 3600
+SET cache:equipo:URU "{\"codigo_iso\":\"URU\",\"nombre\":\"Uruguay\",\"confederacion\":\"CONMEBOL\",\"grupo\":\"C\",\"director_tecnico\":\"Dubois\",\"ranking_fifa\":3}" EX 3600
+SET cache:equipo:ESP "{\"codigo_iso\":\"ESP\",\"nombre\":\"Espana\",\"confederacion\":\"UEFA\",\"grupo\":\"K\",\"director_tecnico\":\"Keller\",\"ranking_fifa\":11}" EX 3600
+
+# ---------------------------------------------------------------------
+# 4) CONTADOR DE VISITAS - String contador:partido:<id>:visitas
+#    Se inicializa en 0 con un TTL de 48 h (172800 s).
+# ---------------------------------------------------------------------
+ECHO "=== 4) Contador de visitas ==="
+SET contador:partido:P-001:visitas 0 EX 172800
+
+# ---------------------------------------------------------------------
+# 5) USUARIOS CONECTADOS - Set conectados:partido:<id> + TTL 3 h (10800 s)
+# ---------------------------------------------------------------------
+ECHO "=== 5) Usuarios conectados al partido ==="
+DEL conectados:partido:P-001
+SADD conectados:partido:P-001 U-0001 U-0002 U-0003 U-0004 U-0005 U-0006
+EXPIRE conectados:partido:P-001 10800
+
+# ---------------------------------------------------------------------
+# 6) ENCUESTA FIGURA DEL PARTIDO - Sorted Set encuesta:partido:<id>:figura
+#    Sin TTL mientras la encuesta esta abierta (ver ciclo de vida).
+#    Los miembros son id_jugador del Hito 4 / Hito 5.
+# ---------------------------------------------------------------------
+ECHO "=== 6) Encuesta figura del partido ==="
+DEL encuesta:partido:P-001:figura
+ZADD encuesta:partido:P-001:figura 0 "ARG-10" 0 "ARG-9" 0 "ESP-8" 0 "ESP-7"
+
+# ---------------------------------------------------------------------
+# 7) Verificacion de la carga: INFO keyspace muestra cuantas claves hay
+#    (keys) y cuantas tienen TTL (expires). Esperado: keys=18, expires=17
+#    (la unica sin TTL es la encuesta abierta).
+# ---------------------------------------------------------------------
+ECHO "=== 7) Verificacion ==="
+INFO keyspace

@@ -1,0 +1,40 @@
+# =====================================================================
+# Hito 7 - Fixture 2030 - Modulo de Cache de Usuarios y Sesiones
+# inicializacion.redis : verificar el servidor y la configuracion (RF1)
+# =====================================================================
+# Redis no tiene schema ni keyspace que crear: el modelo se expresa en
+# el nombre de la clave, el tipo de dato y su TTL. Este script solo
+# comprueba que el servidor responde y registra su configuracion.
+#
+# ECHO solo imprime un titulo para que la salida sea facil de leer.
+#
+# Ejecucion (redis-cli no admite comentarios, por eso se filtran):
+#   docker compose exec redis sh -c "grep -v '^#' /scripts/inicializacion.redis | redis-cli"
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1) Disponibilidad del servidor. Resultado esperado: PONG
+# ---------------------------------------------------------------------
+ECHO "=== 1) PING ==="
+PING
+
+# ---------------------------------------------------------------------
+# 2) Version observada de Redis (RNF10). Como usamos redis:latest, este
+#    dato hay que anotarlo en docs/evidencia/ en cada ejecucion.
+# ---------------------------------------------------------------------
+ECHO "=== 2) Version del servidor ==="
+INFO server
+
+# ---------------------------------------------------------------------
+# 3) Persistencia: AOF y snapshots RDB activados desde el Compose.
+#    Esperado: aof_enabled:1
+# ---------------------------------------------------------------------
+ECHO "=== 3) Persistencia ==="
+INFO persistence
+
+# ---------------------------------------------------------------------
+# 4) Memoria y politica de memoria (RF10).
+#    Esperado: maxmemory_human:256.00M y maxmemory_policy:volatile-lru
+# ---------------------------------------------------------------------
+ECHO "=== 4) Memoria ==="
+INFO memory

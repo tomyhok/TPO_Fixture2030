@@ -1,0 +1,11 @@
+Fecha: 2026-10-02 12:30:38 -03
+Clientes en paralelo: 10 | INCR por cliente: 1000
+Contador esperado: 10000 | obtenido: 10000
+TTL del contador: 599 s
+RESULTADO: OK - no se perdio ninguna actualizacion
+
+Fecha: 2026-10-02 12:30:39 -03
+Clientes en paralelo: 20 | INCR por cliente: 5000
+Contador esperado: 100000 | obtenido: 100000
+TTL del contador: 595 s
+RESULTADO: OK - no se perdio ninguna actualizacion

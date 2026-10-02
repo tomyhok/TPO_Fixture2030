@@ -1,0 +1,40 @@
+# =====================================================================
+# Hito 7 - Fixture 2030 - Modulo de Cache de Usuarios y Sesiones
+# limpieza.redis : limpieza opcional del laboratorio (RNF9)
+# =====================================================================
+# Borra solo las claves del modulo, por nombre. No se usa FLUSHALL ni
+# KEYS * para no tocar otros datos ni bloquear el servidor.
+# Despues de este script se puede volver a correr carga_muestra.redis.
+#
+# Ejecucion:
+#   docker compose exec redis sh -c "grep -v '^#' /scripts/limpieza.redis | redis-cli"
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1) Sesiones de muestra y de prueba
+# ---------------------------------------------------------------------
+ECHO "=== 1) Borrar sesiones ==="
+DEL sesion:S-0001 sesion:S-0002 sesion:S-0003 sesion:S-0004 sesion:S-0005
+DEL sesion:S-0006 sesion:S-0007 sesion:S-0008 sesion:S-0009 sesion:S-0010
+DEL sesion:S-0100 sesion:S-0101 sesion:S-0199
+
+# ---------------------------------------------------------------------
+# 2) Copias de cache
+# ---------------------------------------------------------------------
+ECHO "=== 2) Borrar cache ==="
+DEL cache:partido:P-001 cache:partido:P-002 cache:prueba:ttl
+DEL cache:equipo:ARG cache:equipo:BRA cache:equipo:URU cache:equipo:ESP
+
+# ---------------------------------------------------------------------
+# 3) Datos temporales del partido (incluye las claves de la prueba de
+#    concurrencia, P-999)
+# ---------------------------------------------------------------------
+ECHO "=== 3) Borrar datos temporales ==="
+DEL contador:partido:P-001:visitas conectados:partido:P-001 encuesta:partido:P-001:figura
+DEL contador:partido:P-999:visitas
+
+# ---------------------------------------------------------------------
+# 4) Verificacion: esperado keyspace vacio (o sin db0)
+# ---------------------------------------------------------------------
+ECHO "=== 4) Verificacion ==="
+INFO keyspace

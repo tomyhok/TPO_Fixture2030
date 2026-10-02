@@ -1,0 +1,73 @@
+# =====================================================================
+# Hito 7 - Fixture 2030 - Modulo de Cache de Usuarios y Sesiones
+# cache.redis : patron Cache-Aside, hit, miss e invalidacion (RF6, RF7)
+# =====================================================================
+# Datos cacheados:
+#   cache:partido:<id>      -> fuente de verdad Neo4j (Hito 5), TTL 300 s
+#   cache:equipo:<iso>      -> fuente de verdad MongoDB (Hito 4), TTL 3600 s
+#
+# redis-cli no puede consultar Neo4j ni MongoDB, asi que el paso
+# "consultar la fuente de verdad" se indica con un comentario y se
+# simula escribiendo el valor que devolveria esa base.
+#
+# Ejecucion (despues de carga_muestra.redis):
+#   docker compose exec redis sh -c "grep -v '^#' /scripts/cache.redis | redis-cli"
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1) CACHE HIT - la ficha de P-001 ya esta en Redis.
+#    GET devuelve el JSON y la app responde sin ir a Neo4j.
+# ---------------------------------------------------------------------
+ECHO "=== 1) Cache hit de P-001 ==="
+GET cache:partido:P-001
+TTL cache:partido:P-001
+
+# ---------------------------------------------------------------------
+# 2) CACHE MISS - P-002 existe en Neo4j pero no esta en Redis.
+#    GET devuelve (nil) -> la app consulta Neo4j:
+#      MATCH (p:Partido {codigo_partido:'P-002'}) ... RETURN p
+#    -> guarda la copia con TTL de 300 s -> responde.
+# ---------------------------------------------------------------------
+ECHO "=== 2) Cache miss de P-002 ==="
+GET cache:partido:P-002
+SET cache:partido:P-002 "{\"codigo_partido\":\"P-002\",\"fecha\":\"2030-06-12\",\"fase\":\"Grupos\",\"local\":\"URU\",\"visitante\":\"ARG\",\"sede\":\"Estadio Centenario\",\"goles_local\":0,\"goles_visitante\":0}" EX 300
+ECHO "--- la siguiente lectura ya es un hit ---"
+GET cache:partido:P-002
+TTL cache:partido:P-002
+
+# ---------------------------------------------------------------------
+# 3) INVALIDACION - gol de Argentina en P-001.
+#    a) La app actualiza primero la fuente de verdad (Neo4j).
+#    b) Despues borra la copia en Redis con DEL.
+#    c) La proxima lectura es un miss y recarga el dato nuevo.
+#    No se espera a que venza el TTL: sin el DEL los usuarios verian
+#    el 0-0 hasta 5 minutos despues del gol.
+# ---------------------------------------------------------------------
+ECHO "=== 3) Invalidacion de P-001 por cambio de resultado ==="
+DEL cache:partido:P-001
+GET cache:partido:P-001
+SET cache:partido:P-001 "{\"codigo_partido\":\"P-001\",\"fecha\":\"2030-06-10\",\"fase\":\"Grupos\",\"local\":\"ARG\",\"visitante\":\"ESP\",\"sede\":\"Estadio Monumental\",\"goles_local\":1,\"goles_visitante\":0}" EX 300
+GET cache:partido:P-001
+
+# ---------------------------------------------------------------------
+# 4) INVALIDACION DE EQUIPO - cambia el director tecnico de ARG en MongoDB.
+#    db.equipos.updateOne({_id:"ARG"}, {$set:{director_tecnico:"..."}})
+#    -> DEL cache:equipo:ARG. La siguiente lectura recarga desde MongoDB.
+# ---------------------------------------------------------------------
+ECHO "=== 4) Invalidacion de cache:equipo:ARG ==="
+TTL cache:equipo:ARG
+DEL cache:equipo:ARG
+GET cache:equipo:ARG
+
+# ---------------------------------------------------------------------
+# 5) Por que no se usa SET sin EX: SET reemplaza el valor y BORRA el TTL.
+#    Se muestra con una clave temporal (cache:prueba:ttl) que se borra
+#    al final. TTL pasa a -1 (sin expiracion).
+#    Por eso todas las escrituras de cache del modulo usan SET ... EX.
+# ---------------------------------------------------------------------
+ECHO "=== 5) SET sin EX elimina el TTL ==="
+SET cache:prueba:ttl "v1" EX 300
+TTL cache:prueba:ttl
+SET cache:prueba:ttl "v2"
+TTL cache:prueba:ttl
+DEL cache:prueba:ttl

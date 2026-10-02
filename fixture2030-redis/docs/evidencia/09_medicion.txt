@@ -1,0 +1,11 @@
+Fecha: 2026-10-02 12:30:44 -03
+redis_version:8.10.2
+Comandos por operacion: 20000 (1 cliente, secuencial)
+
+Leer sesion          (HGETALL)     | 20000 comandos en 1096 ms | 18248 ops/s
+Renovar sesion       (EXPIRE)      | 20000 comandos en 1738 ms | 11507 ops/s
+Actividad de sesion  (HINCRBY)     | 20000 comandos en 1770 ms | 11299 ops/s
+Cache hit de partido (GET)         | 20000 comandos en 1008 ms | 19841 ops/s
+Escritura de cache   (SET ... EX)  | 20000 comandos en 1716 ms | 11655 ops/s
+Contador de visitas  (INCR)        | 20000 comandos en 1691 ms | 11827 ops/s
+Voto en encuesta     (ZINCRBY)     | 20000 comandos en 1720 ms | 11627 ops/s

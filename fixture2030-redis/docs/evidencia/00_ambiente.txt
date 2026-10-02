@@ -1,0 +1,4 @@
+# Fecha: 2026-10-02 12:30:25 -03
+# docker compose ps
+NAME                IMAGE          COMMAND                  SERVICE   CREATED          STATUS          PORTS
+fixture2030-redis   redis:latest   "docker-entrypoint.s…"   redis     19 minutes ago   Up 34 seconds   0.0.0.0:6379->6379/tcp

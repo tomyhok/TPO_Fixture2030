@@ -8,14 +8,16 @@ con tres motores de persistencia:
   partidos, sedes y eventos deportivos.
 - **Cassandra** (Hito 6): modelo tabular de columnas anchas para el modulo de
   comentarios masivos de los partidos.
+- **Redis** (Hito 7): base clave/valor en memoria para sesiones de usuarios,
+  cache de consultas frecuentes y contadores en vivo.
 
 ## Requisitos
 
 - Docker Desktop con Docker Compose.
-- Puertos disponibles: `27017`, `7474`, `7687` y `9042`.
+- Puertos disponibles: `27017`, `7474`, `7687`, `9042` y `6379`.
 - Python 3 en el host, solo para el generador de datos de Cassandra.
 
-No es necesario instalar MongoDB, `mongosh`, Neo4j ni `cqlsh` localmente: las
+No es necesario instalar MongoDB, `mongosh`, Neo4j, `cqlsh` ni `redis-cli` localmente: las
 herramientas se ejecutan dentro de los containers.
 
 ## Inicio rapido
@@ -35,6 +37,7 @@ Los servicios disponibles son:
 | `neo4j` | Base de grafos | Browser: `http://localhost:7474` |
 | `neo4j` | Protocolo Bolt | `neo4j://localhost:7687` |
 | `cassandra` | Base tabular de columnas anchas | `localhost:9042` |
+| `redis` | Base clave/valor en memoria | `localhost:6379` |
 
 Para detener los servicios sin borrar los datos:
 
@@ -193,10 +196,52 @@ docker compose exec cassandra cqlsh --request-timeout=600 -f /scripts/06-medicio
 
 Los resultados se registran en `fixture2030-cassandra/docs/evidencia.md`.
 
+## Redis
+
+Modulo de cache de usuarios y sesiones del Hito 7. La guia detallada esta en
+[`fixture2030-redis/README.md`](fixture2030-redis/README.md).
+
+### Acceso
+
+- Puerto: `localhost:6379`
+- Sin contrasena (ambiente local de desarrollo)
+- Datos en el bind mount `~/docker/data/redis` (AOF + RDB)
+
+### Verificar la conexion
+
+```bash
+docker compose exec redis redis-cli PING
+```
+
+### Scripts de Redis
+
+Los scripts de `fixture2030-redis/scripts/` estan montados en `/scripts`.
+Como `redis-cli` no acepta comentarios, se filtran con `grep`:
+
+```bash
+docker compose exec redis sh -c "grep -v '^#' /scripts/inicializacion.redis | redis-cli"
+docker compose exec redis sh -c "grep -v '^#' /scripts/carga_muestra.redis | redis-cli"
+docker compose exec redis sh -c "grep -v '^#' /scripts/sesiones.redis | redis-cli"
+docker compose exec redis sh -c "grep -v '^#' /scripts/cache.redis | redis-cli"
+docker compose exec redis sh -c "grep -v '^#' /scripts/concurrencia.redis | redis-cli"
+docker compose exec redis sh -c "grep -v '^#' /scripts/metricas.redis | redis-cli"
+docker compose exec redis sh -c "grep -v '^#' /scripts/limpieza.redis | redis-cli"   # opcional
+```
+
+La prueba de concurrencia y la medicion se ejecutan desde `fixture2030-redis`:
+
+```bash
+bash tools/prueba_concurrencia.sh 10 1000
+bash tools/medicion.sh 20000
+bash tools/generar_evidencia.sh   # corre todo en orden y guarda la evidencia
+```
+
+Los resultados se registran en `fixture2030-redis/docs/evidencia/README.md`.
+
 ## Estructura del proyecto
 
 ```text
-docker-compose.yml                 Compose unificado de MongoDB, Neo4j y Cassandra
+docker-compose.yml                 Compose unificado de MongoDB, Neo4j, Cassandra y Redis
 fixture2030-mongoDB/
   init-scripts/                     Inicializacion y datos JSON de MongoDB
   schemas/                          Validaciones JSON Schema
@@ -213,6 +258,11 @@ fixture2030-cassandra/
   tools/                            Generador de datos y pruebas de rendimiento
   data/                             CSV generados (no se versionan)
   docs/                             Analisis, modelo tabular y evidencia
+  docker-compose.yml                Compose independiente del modulo
+fixture2030-redis/
+  scripts/                          Scripts redis-cli de carga, sesiones, cache y metricas
+  tools/                            Prueba de concurrencia, medicion y evidencia
+  docs/                             Patrones de acceso, modelo, ciclo de vida y evidencia
   docker-compose.yml                Compose independiente del modulo
 ```
 
@@ -237,13 +287,14 @@ docker compose down -v
 Luego volver a ejecutar `docker compose up -d` y repetir la preparacion y carga
 de Neo4j.
 
-Los datos de Cassandra no viven en un volumen Docker, asi que `down -v` no los
-borra. Para reiniciar ese modulo desde cero hay que eliminar el bind mount de
+Los datos de Cassandra y Redis no viven en un volumen Docker, asi que `down -v`
+no los borra. Para reiniciar ese modulo desde cero hay que eliminar el bind mount de
 forma consciente:
 
 ```bash
 docker compose down
 rm -rf ~/docker/data/cassandra
+rm -rf ~/docker/data/redis
 ```
 
 Los volumenes Docker son locales a cada computadora y no se versionan en Git.

@@ -10,6 +10,7 @@ con tres motores de persistencia:
   comentarios masivos de los partidos.
 - **Redis** (Hito 7): base clave/valor en memoria para sesiones de usuarios,
   cache de consultas frecuentes y contadores en vivo.
+- **InfluxDB** (Hito 8): base de series temporales (InfluxDB 3 Core) para métricas en vivo.
 - **IRIS** (Hito 9): base orientada a objetos / multimodelo para gestionar 
   entidades complejas con relaciones directas y validaciones encapsuladas.
 
@@ -40,6 +41,7 @@ Los servicios disponibles son:
 | `neo4j` | Protocolo Bolt | `neo4j://localhost:7687` |
 | `cassandra` | Base tabular de columnas anchas | `localhost:9042` |
 | `redis` | Base clave/valor en memoria | `localhost:6379` |
+| `influxdb` | Base temporal InfluxDB 3 Core | `localhost:8181` |
 | `iris` | Base de objetos y multimodelo | `localhost:1972` (Portal: `52773`) |
 
 Para detener los servicios sin borrar los datos:
@@ -262,6 +264,25 @@ docker compose exec iris iris session iris
 
 Las instrucciones de carga y demostración se detallan en el README del módulo.
 
+## InfluxDB (Series Temporales)
+
+Módulo de métricas en vivo del Hito 8. La guía detallada está en
+[`fixture2030-influxDB/README.md`](fixture2030-influxDB/README.md).
+
+### Acceso
+
+- Puerto superserver y CLI: `localhost:8181`
+- Datos en el bind mount `~/docker/data/influxdb`
+
+### Ingreso y ejecución
+
+Para inicializar la base, cargar lotes y probar consultas, ir al módulo y usar los scripts Bash.
+
+```bash
+cd fixture2030-influxDB
+bash scripts/inicializacion.sh
+```
+
 ## Estructura del proyecto
 
 ```text
@@ -287,6 +308,11 @@ fixture2030-redis/
   scripts/                          Scripts redis-cli de carga, sesiones, cache y metricas
   tools/                            Prueba de concurrencia, medicion y evidencia
   docs/                             Patrones de acceso, modelo, ciclo de vida y evidencia
+  docker-compose.yml                Compose independiente del modulo
+fixture2030-influxDB/
+  scripts/                          Scripts de Inicialización, Python Generator (LP) y Bash para la API
+  docs/                             Análisis de cardinalidad, retención y modelo
+  README.md                         Documentación del modelo temporal InfluxDB 3 Core
   docker-compose.yml                Compose independiente del modulo
 fixture2030-iris/
   scripts/                          Scripts de clases (XML/UDL) y rutinas operativas MAC

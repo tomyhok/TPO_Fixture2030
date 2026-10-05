@@ -1,0 +1,19 @@
+services:
+  influxdb:
+    # `latest` apunta a InfluxDB 2.x. `3-core` mantiene la línea actual de InfluxDB 3 Core.
+    image: influxdb:3-core
+    pull_policy: always
+    container_name: fixture2030-influxdb
+    restart: unless-stopped
+    command:
+      - influxdb3
+      - serve
+      - --node-id=fixture2030-local
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+      - --http-bind=0.0.0.0:8181
+    ports:
+      - "127.0.0.1:8181:8181"
+    volumes:
+      - ${HOME}/docker/data/influxdb:/var/lib/influxdb3/data
+      - ./scripts:/scripts:ro

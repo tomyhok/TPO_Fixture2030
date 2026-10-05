@@ -87,6 +87,24 @@ services:
       - ~/docker/data/iris:/durable
       - ./fixture2030-iris/scripts:/scripts:ro
 
+  influxdb:
+    image: influxdb:3-core
+    pull_policy: always
+    container_name: fixture2030-influxdb
+    restart: unless-stopped
+    command:
+      - influxdb3
+      - serve
+      - --node-id=fixture2030-local
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+      - --http-bind=0.0.0.0:8181
+    ports:
+      - "8181:8181"
+    volumes:
+      - ~/docker/data/influxdb:/var/lib/influxdb3/data
+      - ./fixture2030-influxDB/scripts:/scripts:ro
+
 volumes:
   mongodb_data:
     name: fixture_mongodb_data

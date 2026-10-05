@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8"?><Export generator="IRIS" version="26"><Class name="Test.Test1"><Super>%Persistent</Super></Class><Class name="Test.Test2"><Super>%Persistent</Super></Class></Export>

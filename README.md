@@ -10,6 +10,8 @@ con tres motores de persistencia:
   comentarios masivos de los partidos.
 - **Redis** (Hito 7): base clave/valor en memoria para sesiones de usuarios,
   cache de consultas frecuentes y contadores en vivo.
+- **IRIS** (Hito 9): base orientada a objetos / multimodelo para gestionar 
+  entidades complejas con relaciones directas y validaciones encapsuladas.
 
 ## Requisitos
 
@@ -38,6 +40,7 @@ Los servicios disponibles son:
 | `neo4j` | Protocolo Bolt | `neo4j://localhost:7687` |
 | `cassandra` | Base tabular de columnas anchas | `localhost:9042` |
 | `redis` | Base clave/valor en memoria | `localhost:6379` |
+| `iris` | Base de objetos y multimodelo | `localhost:1972` (Portal: `52773`) |
 
 Para detener los servicios sin borrar los datos:
 
@@ -238,6 +241,27 @@ bash tools/generar_evidencia.sh   # corre todo en orden y guarda la evidencia
 
 Los resultados se registran en `fixture2030-redis/docs/evidencia/README.md`.
 
+## InterSystems IRIS
+
+Módulo de entidades complejas del Hito 9. La guía detallada está en
+[`fixture2030-iris/README.md`](fixture2030-iris/README.md).
+
+### Acceso
+
+- Puerto superserver: `localhost:1972`
+- Management Portal: `http://localhost:52773/csp/sys/UtilHome.csp`
+- Datos en el bind mount `~/docker/data/iris`
+
+### Ingreso y ejecución
+
+Para ingresar al terminal de ObjectScript y probar las clases:
+
+```powershell
+docker compose exec iris iris session iris
+```
+
+Las instrucciones de carga y demostración se detallan en el README del módulo.
+
 ## Estructura del proyecto
 
 ```text
@@ -263,6 +287,11 @@ fixture2030-redis/
   scripts/                          Scripts redis-cli de carga, sesiones, cache y metricas
   tools/                            Prueba de concurrencia, medicion y evidencia
   docs/                             Patrones de acceso, modelo, ciclo de vida y evidencia
+  docker-compose.yml                Compose independiente del modulo
+fixture2030-iris/
+  scripts/                          Scripts de clases (XML/UDL) y rutinas operativas MAC
+  docs/evidencia/                   Capturas de validación y ejecución
+  README.md                         Documentación del modelo, UML y matriz de integridad
   docker-compose.yml                Compose independiente del modulo
 ```
 

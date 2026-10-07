@@ -1,0 +1,53 @@
+# Fecha: 2026-10-07 17:55:56 -03
+# Script: scripts/consultas_temporales.sh
+=== Consultas Temporales (RF8) ===
+--- 1) Ventana de 10 minutos de M001 / EQ001_1 (primeros 10 puntos) ---
+Consulta SQL:
+
+SELECT time, equipo_id, posesion_pct, pases_completados, tiros, usuarios_activos
+FROM estadisticas_partido
+WHERE partido_id = 'M001' AND equipo_id = 'EQ001_1'
+  AND time >= '2030-06-01T03:40:00Z' AND time < '2030-06-01T03:50:00Z'
+ORDER BY time ASC
+LIMIT 10
+
+Resultados:
++---------------------+-----------+--------------+-------------------+-------+------------------+
+| time                | equipo_id | posesion_pct | pases_completados | tiros | usuarios_activos |
++---------------------+-----------+--------------+-------------------+-------+------------------+
+| 2030-06-01T03:40:01 | EQ001_1   | 37.46        | 0                 | 0     | 242928           |
+| 2030-06-01T03:40:02 | EQ001_1   | 38.05        | 0                 | 0     | 246986           |
+| 2030-06-01T03:40:03 | EQ001_1   | 38.75        | 2                 | 0     | 249540           |
+| 2030-06-01T03:40:04 | EQ001_1   | 37.78        | 2                 | 0     | 253072           |
+| 2030-06-01T03:40:05 | EQ001_1   | 37.23        | 3                 | 0     | 254652           |
+| 2030-06-01T03:40:06 | EQ001_1   | 37.23        | 4                 | 0     | 257836           |
+| 2030-06-01T03:40:07 | EQ001_1   | 37.84        | 5                 | 0     | 262305           |
+| 2030-06-01T03:40:08 | EQ001_1   | 38.37        | 7                 | 0     | 257628           |
+| 2030-06-01T03:40:09 | EQ001_1   | 38.26        | 7                 | 0     | 256384           |
+| 2030-06-01T03:40:10 | EQ001_1   | 39.08        | 9                 | 0     | 258570           |
++---------------------+-----------+--------------+-------------------+-------+------------------+
+
+--- 2) Comparación de los dos equipos de M001 en la misma ventana ---
+Consulta SQL:
+
+SELECT equipo_id,
+       COUNT(*) AS puntos,
+       MIN(time) AS desde,
+       MAX(time) AS hasta,
+       ROUND(AVG(posesion_pct), 2) AS posesion_promedio,
+       MAX(pases_completados) AS pases_al_cierre_ventana
+FROM estadisticas_partido
+WHERE partido_id = 'M001'
+  AND time >= '2030-06-01T03:40:00Z' AND time < '2030-06-01T03:50:00Z'
+GROUP BY equipo_id
+ORDER BY equipo_id
+
+Resultados:
++-----------+--------+---------------------+---------------------+-------------------+-------------------------+
+| equipo_id | puntos | desde               | hasta               | posesion_promedio | pases_al_cierre_ventana |
++-----------+--------+---------------------+---------------------+-------------------+-------------------------+
+| EQ001_1   | 599    | 2030-06-01T03:40:01 | 2030-06-01T03:49:59 | 30.91             | 593                     |
+| EQ001_2   | 599    | 2030-06-01T03:40:01 | 2030-06-01T03:49:59 | 75.95             | 558                     |
++-----------+--------+---------------------+---------------------+-------------------+-------------------------+
+
+Duración: 0.57 s

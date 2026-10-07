@@ -271,12 +271,13 @@ Módulo de métricas en vivo del Hito 8. La guía detallada está en
 
 ### Acceso
 
-- Puerto superserver y CLI: `localhost:8181`
+- API HTTP: `localhost:8181`
 - Datos en el bind mount `~/docker/data/influxdb`
 
 ### Ingreso y ejecución
 
-Para inicializar la base, cargar lotes y probar consultas, ir al módulo y usar los scripts Bash.
+Para inicializar la base, cargar lotes y probar consultas, ir al módulo y usar los scripts Bash
+(los pasos completos están en el README del módulo).
 
 ```bash
 cd fixture2030-influxDB

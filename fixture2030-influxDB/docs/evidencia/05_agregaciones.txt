@@ -1,0 +1,55 @@
+# Fecha: 2026-10-07 17:55:57 -03
+# Script: scripts/agregaciones.sh
+=== Agregaciones (RF9) ===
+--- 1) Resumen de M001 por equipo ---
+Consulta SQL:
+
+SELECT equipo_id,
+       ROUND(AVG(posesion_pct), 2) AS posesion_promedio,
+       MAX(pases_completados) AS total_pases,
+       MAX(tiros) AS total_tiros,
+       MAX(usuarios_activos) AS pico_usuarios
+FROM estadisticas_partido
+WHERE partido_id = 'M001'
+  AND time >= '2030-06-01T03:40:00Z' AND time < '2030-06-01T06:00:00Z'
+GROUP BY equipo_id
+ORDER BY equipo_id
+
+Resultados:
++-----------+-------------------+-------------+-------------+---------------+
+| equipo_id | posesion_promedio | total_pases | total_tiros | pico_usuarios |
++-----------+-------------------+-------------+-------------+---------------+
+| EQ001_1   | 40.94             | 8379        | 86          | 285277        |
+| EQ001_2   | 73.36             | 8371        | 77          | 356678        |
++-----------+-------------------+-------------+-------------+---------------+
+
+--- 2) M001 / EQ001_1 agregado por minuto (primeros 10 minutos) ---
+Consulta SQL:
+
+SELECT date_bin(INTERVAL '1 minute', time) AS minuto,
+       MAX(usuarios_activos) AS pico_usuarios,
+       ROUND(AVG(posesion_pct), 2) AS posesion_promedio,
+       MAX(tiros) AS tiros_acumulados
+FROM estadisticas_partido
+WHERE partido_id = 'M001' AND equipo_id = 'EQ001_1'
+  AND time >= '2030-06-01T03:40:00Z' AND time < '2030-06-01T03:50:00Z'
+GROUP BY minuto
+ORDER BY minuto
+
+Resultados:
++---------------------+---------------+-------------------+------------------+
+| minuto              | pico_usuarios | posesion_promedio | tiros_acumulados |
++---------------------+---------------+-------------------+------------------+
+| 2030-06-01T03:40:00 | 262305        | 36.06             | 2                |
+| 2030-06-01T03:41:00 | 230874        | 32.69             | 3                |
+| 2030-06-01T03:42:00 | 172219        | 27.16             | 6                |
+| 2030-06-01T03:43:00 | 154822        | 25.11             | 6                |
+| 2030-06-01T03:44:00 | 137768        | 29.2              | 6                |
+| 2030-06-01T03:45:00 | 124523        | 30.67             | 6                |
+| 2030-06-01T03:46:00 | 114420        | 29.28             | 7                |
+| 2030-06-01T03:47:00 | 112036        | 31.57             | 8                |
+| 2030-06-01T03:48:00 | 84752         | 32.96             | 8                |
+| 2030-06-01T03:49:00 | 58526         | 34.43             | 9                |
++---------------------+---------------+-------------------+------------------+
+
+Duración: 0.41 s

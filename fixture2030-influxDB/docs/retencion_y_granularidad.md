@@ -9,7 +9,7 @@ Durante la inicialización (ver `inicializacion.sh`), la base de datos `fixture2
 ## 2. Granularidad e Histórico (Downsampling Teórico)
 Para retener información posterior a los 30 días, el equipo propuso la siguiente política teórica de *Downsampling*:
 *   **Precisión original (1 seg):** Solo se usa para las métricas consultadas el día del partido.
-*   **Ventanas de Agregación (1 a 5 min):** Una tarea programada debe tomar el promedio de posesión y la suma final de pases por equipo agrupándolos en bloques de minutos, y escribirlos en un *bucket histórico* que posea retención infinita. Esto achica el peso del archivo resultante en un factor de x60 a x300.
+*   **Ventanas de Agregación (1 a 5 min):** Una tarea programada debe tomar el promedio de posesión y el máximo de pases y tiros (contadores acumulados) por equipo agrupándolos en bloques de minutos, y escribirlos en una base histórica aparte (`fixture2030_historico`) sin retención. Esto achica el peso del archivo resultante en un factor de x60 a x300.
 
 ## 3. Justificación por Medida (Función de Agregación)
 No todos los resúmenes funcionan igual para downsampling:

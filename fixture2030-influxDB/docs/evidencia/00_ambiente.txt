@@ -1,0 +1,15 @@
+# Fecha: 2026-10-07 17:55:02 -03
+# Ambiente
+> docker exec fixture2030-influxdb influxdb3 --version
+influxdb3 InfluxDB 3 Core, 3.12.0, revision 3ba97c65f1ee4e1f127a8266517d4d2083b7ea39
+> docker image inspect (imagen usada)
+influxdb:3-core sha256:683491b16341fcb1e345b21ce5e87ffb6df69dcc0ab4d5d5b3f003fa95f2b864
+> docker compose ps
+NAME                   IMAGE             COMMAND                  SERVICE    CREATED         STATUS         PORTS
+fixture2030-influxdb   influxdb:3-core   "/usr/bin/entrypoint…"   influxdb   7 seconds ago   Up 6 seconds   127.0.0.1:8181->8181/tcp
+> Recursos del host
+Darwin 25.6.0 arm64
+CPU: Apple M1 Pro (8 núcleos)
+RAM: 16 GB
+> Recursos asignados a Docker
+CPUs: 8  RAM: 8217858048 bytes

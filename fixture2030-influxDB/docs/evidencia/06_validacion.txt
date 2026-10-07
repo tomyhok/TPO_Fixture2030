@@ -1,0 +1,36 @@
+# Fecha: 2026-10-07 17:55:57 -03
+# Script: scripts/validacion.sh
+=== Validación de la carga (RF13) ===
+--- 1) Totales ---
+Consulta SQL:
+
+SELECT COUNT(*) AS total_puntos,
+       COUNT(DISTINCT partido_id) AS partidos,
+       COUNT(DISTINCT partido_id || '/' || equipo_id) AS series
+FROM estadisticas_partido
+
+Resultados:
++--------------+----------+--------+
+| total_puntos | partidos | series |
++--------------+----------+--------+
+| 9999980      | 127      | 254    |
++--------------+----------+--------+
+
+--- 2) Puntos por serie (mínimo y máximo) ---
+Consulta SQL:
+
+SELECT MIN(puntos) AS min_por_serie, MAX(puntos) AS max_por_serie
+FROM (
+  SELECT partido_id, equipo_id, COUNT(*) AS puntos
+  FROM estadisticas_partido
+  GROUP BY partido_id, equipo_id
+) t
+
+Resultados:
++---------------+---------------+
+| min_por_serie | max_por_serie |
++---------------+---------------+
+| 39370         | 39370         |
++---------------+---------------+
+
+Duración: 69.22 s

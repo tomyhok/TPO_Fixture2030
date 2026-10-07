@@ -15,9 +15,24 @@ Esta cardinalidad de 254 es **excelente y extremadamente baja**. Mantiene el ín
 
 ## Estrategia de Carga (10M+ Puntos)
 
-Para lograr el volumen requerido sin saturar el entorno local:
-1.  **Batching:** La inyección no se realiza punto a punto (API simple), sino que se genera un archivo *Line Protocol* masivo y se inyecta por el CLI de InfluxDB (`influxdb3 write`).
-2.  **Límites CLI:** Se configuran parámetros internos concurrentes (`--max-concurrent-requests 8` y compresión `--gzip`) que permiten que el propio cliente parta el archivo y maximice el I/O sin ahorcar el contenedor.
-3.  **Generación Realista:** El script de Python simula la carga distribuyendo los puntos entre los 127 partidos con una variación estadística natural en lugar de enviar un pico masivo a una sola serie.
+La carga está separada en tres pasos: generación (`generacion_puntos.py`), carga (`carga_lotes.sh`) y validación (`validacion.sh`).
 
-El script `generacion_puntos.py` fue validado en este entorno generando eficientemente el archivo de prueba y el archivo masivo.
+*   **Generación de timestamps:** cada serie arranca en el inicio de su partido y avanza de a 1 segundo. La precisión es de segundos y se declara en el generador y en la carga (`--precision s`).
+*   **Orden:** el archivo se escribe ordenado por serie y por tiempo. InfluxDB acepta igual datos desordenados o tardíos porque cada punto trae su timestamp.
+*   **Tamaño de lote:** el CLI de InfluxDB parte el archivo en lotes de 10 MiB (con 10M de puntos fueron 139 requests de ~72.000 líneas).
+*   **Concurrencia:** hasta 8 requests en paralelo (`--max-concurrent-requests 8`) y compresión `--gzip`.
+*   **Errores y reintentos:** si un lote falla, el CLI corta con error y el script se detiene (`set -e`). Como un punto con la misma serie y timestamp reemplaza al anterior, se puede volver a correr la carga completa sin duplicar datos.
+*   **Validación:** `validacion.sh` comprueba el total de puntos, la cantidad de partidos y series, y que todas las series tengan la misma cantidad de puntos.
+
+## Prueba realizada vs. objetivo
+
+En esta notebook (Apple M1 Pro, 16 GB) se cargaron **9.999.980 puntos** en ~25 s de escritura (~405.000 puntos/s). El detalle está en [`evidencia/README.md`](evidencia/README.md).
+
+Límites observados del laboratorio:
+*   El archivo de 10M de puntos ocupa 1,35 GB; para volúmenes mucho mayores conviene generar y cargar por partes en vez de un único archivo.
+*   Las consultas sin rango de tiempo sobre los 10M de puntos tardan más de un minuto (la validación tardó 69 s), mientras que las acotadas responden en menos de un segundo.
+
+Qué cambiaría con más carga o más fuentes:
+*   Con muchas fuentes escribiendo a la vez, cada estadio enviaría sus propios lotes en paralelo en vez de un único archivo.
+*   La cardinalidad no crece con el volumen: más puntos por serie no agregan series. Solo crecería si se agregan tags (por ejemplo `jugador_id`).
+*   Para producción haría falta separar escritura y consulta en distintos nodos (InfluxDB 3 Enterprise) y monitorear la instancia, algo que queda fuera del alcance de este hito.

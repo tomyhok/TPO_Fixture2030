@@ -16,5 +16,5 @@ El modelo en InfluxDB 3 Core se basa en la tabla `estadisticas_partido`, diseña
 | **Field** | Medida | `usuarios_activos` (Integer)| Medida volátil (sube y baja) de la audiencia. |
 
 ## 2. Exclusiones Intencionales (Lo que NO es Tag)
-De acuerdo a las buenas prácticas de la clase 9, **se ha excluido intencionalmente `jugador_id` de los tags**. 
-Si se agregara como tag para observar el rendimiento micro, multiplicaría la cardinalidad a más de 1000 jugadores por segundo. Ese tipo de telemetría hiper-fragmentada (heatmaps individuales, acelerómetros en botines) debería procesarse en un stream y guardarse en tablas separadas orientadas a un caso de uso distinto para no degradar el dashboard principal de partido.
+**Se ha excluido intencionalmente `jugador_id` de los tags**. 
+Si se agregara como tag para observar el rendimiento micro, multiplicaría la cardinalidad por la cantidad de jugadores de cada equipo (de 254 a más de 5.000 series). Ese tipo de telemetría hiper-fragmentada (heatmaps individuales, acelerómetros en botines) debería procesarse en un stream y guardarse en tablas separadas orientadas a un caso de uso distinto para no degradar el dashboard principal de partido.

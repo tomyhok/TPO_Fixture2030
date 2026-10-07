@@ -1,0 +1,8 @@
+# Fecha: 2026-10-07 17:55:03 -03
+# Script: scripts/inicializacion.sh
+=== Inicializando InfluxDB 3 Core ===
+Creando token administrador...
+Token guardado en .influxdb3-token
+Creando base de datos 'fixture2030' con retención de 30 días...
+Database "fixture2030" created successfully
+=== Inicialización completa ===

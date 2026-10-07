@@ -20,7 +20,7 @@ docker cp data_estadisticas.lp fixture2030-influxdb:/tmp/data_estadisticas.lp
 echo "Iniciando carga masiva usando la API de InfluxDB 3 (Batching y GZIP activados)..."
 # La CLI maneja internamente la fragmentación según bytes y concurrencia.
 # Se usa precisión temporal de segundos (s) porque así se generó.
-docker compose exec -T influxdb influxdb3 write \
+docker exec -i fixture2030-influxdb influxdb3 write \
   --database fixture2030 \
   --token "$TOKEN" \
   --precision s \
@@ -29,6 +29,6 @@ docker compose exec -T influxdb influxdb3 write \
   --file /tmp/data_estadisticas.lp
 
 echo "Carga completada. Limpiando archivos temporales del contenedor..."
-docker compose exec -T influxdb rm /tmp/data_estadisticas.lp
+docker exec -u root fixture2030-influxdb rm -f /tmp/data_estadisticas.lp
 
 echo "Carga exitosa."

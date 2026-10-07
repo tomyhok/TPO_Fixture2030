@@ -1,0 +1,13 @@
+# Fecha: 2026-10-07 17:55:03 -03
+# Script: python3 scripts/generacion_puntos.py 10000000 data_estadisticas.lp
+Generando 10000000 puntos de estadísticas en data_estadisticas.lp...
+
+Se generaron 9999980 puntos en 17.28 segundos.
+Cardinalidad estimada: 254 series únicas.
+Duración: 17.34 s
+> Tamaño del archivo
+1.4G data_estadisticas.lp
+> Primeras 3 líneas (line protocol, precisión en segundos)
+estadisticas_partido,partido_id=M001,equipo_id=EQ001_1 posesion_pct=37.46,pases_completados=0i,tiros=0i,usuarios_activos=242928i 1906515601
+estadisticas_partido,partido_id=M001,equipo_id=EQ001_1 posesion_pct=38.05,pases_completados=0i,tiros=0i,usuarios_activos=246986i 1906515602
+estadisticas_partido,partido_id=M001,equipo_id=EQ001_1 posesion_pct=38.75,pases_completados=2i,tiros=0i,usuarios_activos=249540i 1906515603

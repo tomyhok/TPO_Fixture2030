@@ -1,6 +1,8 @@
 # Módulo Hito 8: Series Temporales con InfluxDB 3 Core
 
-Este módulo resuelve el problema del Hito 8 (Estadísticas en vivo del Fixture 2030). Se utilizó **InfluxDB 3 Core** para almacenar las estadísticas de los partidos (posesión, pases, tiros, usuarios conectados) con consultas por ventana de tiempo, agregaciones y una cardinalidad controlada.
+**Repositorio:** https://github.com/tomyhok/TPO_Fixture2030
+
+Este módulo resuelve el Hito 8 (estadísticas en vivo del Fixture 2030). Usa **InfluxDB 3 Core** para guardar las estadísticas de los partidos (posesión, pases, tiros y usuarios conectados) y consultarlas por ventana de tiempo, con agregaciones y una cardinalidad controlada.
 
 ## Estructura del Módulo
 
@@ -22,7 +24,7 @@ Este módulo resuelve el problema del Hito 8 (Estadísticas en vivo del Fixture 
 
 ## Problema Temporal
 
-Durante cada partido llegan estadísticas que cambian todo el tiempo: la posesión de cada equipo, los pases completados, los tiros y la cantidad de usuarios conectados a la plataforma. La fuente envía un punto por segundo por equipo. Sumando todos los partidos del torneo y los dos equipos de cada partido, el volumen proyectado supera los 10M de puntos.
+Durante cada partido llegan estadísticas que cambian todo el tiempo: la posesión de cada equipo, los pases completados, los tiros y la cantidad de usuarios conectados siguiendo a cada equipo. La fuente envía un punto por segundo por equipo. Para los 104 partidos del torneo eso da unas 1,5M filas (104 × 2 equipos × ~7.200 s). El objetivo de diseño de 10M+ puntos deja margen para subir la frecuencia de captura, sumar fuentes o conservar más de un torneo (ver [cardinalidad y escalabilidad](docs/cardinalidad_y_escalabilidad.md)).
 
 Las decisiones que se toman en tiempo real con estos datos son:
 *   mostrar la evolución del partido en la pantalla de estadísticas en vivo;
@@ -46,10 +48,10 @@ Todos los comandos se ejecutan desde la carpeta `fixture2030-influxDB/`. Los scr
    ```
 3. **Generar y cargar los puntos:**
    ```bash
-   python3 scripts/generacion_puntos.py 1000000 data_estadisticas.lp   # o 10000000 para 10M
+   python3 scripts/generacion_puntos.py 1000000 data_estadisticas.lp   # o 10000234 para superar los 10M
    bash scripts/carga_lotes.sh
    ```
-   Si no existe `data_estadisticas.lp`, `carga_lotes.sh` lo genera con 1M de puntos.
+   Si no existe `data_estadisticas.lp`, `carga_lotes.sh` lo genera con 1M de puntos. El generador reparte `total / 254` puntos por serie con división entera, así que el total cargado puede ser apenas menor al pedido (con 10.000.000 se cargan 9.999.980).
 4. **Consultas, agregaciones y validación:**
    ```bash
    bash scripts/consultas_temporales.sh
@@ -65,10 +67,17 @@ Todos los comandos se ejecutan desde la carpeta `fixture2030-influxDB/`. Los scr
    docker compose stop      # o: docker compose down
    docker compose up -d     # los datos siguen en ~/docker/data/influxdb
    ```
+7. **Limpieza (opcional, borra todos los datos cargados):**
+   ```bash
+   docker compose down
+   rm -rf ~/docker/data/influxdb/*
+   rm -f .influxdb3-token data_estadisticas.lp
+   ```
+   Después de esto hay que volver a empezar desde el paso 1.
 
 ## Pruebas y Evidencia
 
-Se cargaron **9.999.980 puntos** en una notebook (Apple M1 Pro, 16 GB) con InfluxDB 3 Core 3.12.0. El método, los tiempos medidos y las limitaciones están en [`docs/evidencia/README.md`](docs/evidencia/README.md), junto con la salida de cada script.
+Se cargaron **9.999.980 puntos** (se pidieron 10M; la diferencia se explica en el paso 3) en una notebook (Apple M1 Pro, 16 GB) con InfluxDB 3 Core 3.12.0. El método, los tiempos medidos y las limitaciones están en [`docs/evidencia/README.md`](docs/evidencia/README.md), junto con la salida de cada script.
 
 ## Seguridad Local
 
@@ -79,6 +88,7 @@ Se cargaron **9.999.980 puntos** en una notebook (Apple M1 Pro, 16 GB) con Influ
 
 ## Coherencia con el TPO
 
-*   **Partidos y equipos:** `partido_id` y `equipo_id` representan los mismos partidos y equipos que el grafo de Neo4j (Hito 5) y los comentarios de Cassandra (Hito 6). En este módulo se usan identificadores simulados (`M001`, `EQ001_1`); con datos reales se usaría el mismo identificador de partido de los otros módulos (`P-001`).
-*   **Usuarios:** `usuarios_activos` es la cantidad de sesiones activas que maneja Redis (Hito 7), registrada a lo largo del tiempo.
+*   **Partidos y equipos:** `partido_id` y `equipo_id` representan los mismos partidos y equipos que el grafo de Neo4j (Hito 5) y los comentarios de Cassandra (Hito 6). En este módulo se usan identificadores simulados (`M001`, `EQ001_1`); con datos reales se usarían los mismos identificadores de los otros módulos (`P-001` para el partido y el código de cada selección para el equipo).
+*   **Sedes:** no se guardan acá. Cada partido se juega en una sola sede, que se obtiene desde el fixture de Neo4j a partir de `partido_id`.
+*   **Usuarios:** `usuarios_activos` es la cantidad de sesiones activas que maneja Redis (Hito 7) siguiendo a cada equipo, registrada a lo largo del tiempo.
 *   **Eventos:** los goles, tarjetas y demás eventos puntuales siguen en sus módulos. Acá solo se guardan medidas numéricas que cambian en el tiempo; no se duplica la información de equipos y jugadores de MongoDB (Hito 4).

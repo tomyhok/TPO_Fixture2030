@@ -9,3 +9,7 @@ neo4j_data/
 neo4j_logs/
 neo4j_import/
 neo4j_plugins/
+# InfluxDB (Hito 8): token local y datos generados
+fixture2030-influxDB/.influxdb3-token
+fixture2030-influxDB/data_estadisticas.lp
+*.lp

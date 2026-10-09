@@ -1,22 +1,44 @@
 ROUTINE DemoOperaciones
 #include %occStatus
 
-    Write "==== Inicio de Demostración Operativa ====",!
-    Write "1. Carga atómica de objetos y relaciones fuertes (RF6)",!
-    
+    Write "==== Inicio de Demostracion Operativa ====",!
+
+    Write !, "1. Herencia: Arbitro y Tecnico extienden Persona (RF4)",!
+    Set arbitro = ##class(Fixture.Arbitro).%New()
+    Set arbitro.Nombre = "Facundo"
+    Set arbitro.Apellido = "Tello"
+    Set arbitro.DNI = "30111222"
+    Set arbitro.Rango = "FIFA"
+    Set status = arbitro.%Save()
+    If $$$ISERR(status) { Do $system.Status.DisplayError(status) }
+
+    Set tecnico = ##class(Fixture.Tecnico).%New()
+    Set tecnico.Nombre = "Marcelo"
+    Set tecnico.Apellido = "Bielsa"
+    Set tecnico.DNI = "10333444"
+    Set tecnico.Licencia = "PRO-UEFA"
+    Set status = tecnico.%Save()
+    If $$$ISERR(status) { Do $system.Status.DisplayError(status) }
+
+    Write "Arbitro guardado: ", arbitro.Apellido, " (clase ", arbitro.%ClassName(1), ", ID ", arbitro.%Id(), ")",!
+    Write "Tecnico guardado: ", tecnico.Apellido, " (clase ", tecnico.%ClassName(1), ", ID ", tecnico.%Id(), ")",!
+
+    Write !, "2. Carga atomica de objetos y relaciones fuertes (RF6)",!
+
     // Instanciar Partido (Padre)
     Set partido = ##class(Fixture.Partido).%New()
     Set partido.Sede = "Estadio Centenario"
     Set partido.Fecha = $ZDATEH("2030-07-15", 3)
     Set partido.Estado = "En Juego"
-    
+    Set partido.Arbitro = arbitro
+
     // Instanciar Eventos (Hijos)
     Set evento1 = ##class(Fixture.Evento).%New()
     Set evento1.Minuto = 12
     Set evento1.Tipo = "Gol"
     Set evento1.Descripcion = "Gol de Uruguay"
     Do partido.Eventos.Insert(evento1)
-    
+
     Set evento2 = ##class(Fixture.Evento).%New()
     Set evento2.Minuto = 45
     Set evento2.Tipo = "Tarjeta Amarilla"
@@ -26,59 +48,112 @@ ROUTINE DemoOperaciones
     // Guardar Padre (guarda atómicamente a los hijos)
     Set status = partido.%Save()
     If $$$ISOK(status) {
-        Write "Partido y Eventos guardados exitosamente. ID del Partido: ", partido.%Id(),!
+        Write "Partido y Eventos guardados con un solo %Save(). ID del Partido: ", partido.%Id(),!
+        Write "IDs de los eventos (padre||hijo): ", evento1.%Id(), ", ", evento2.%Id(),!
     } Else {
         Write "Error al guardar: "
         Do $system.Status.DisplayError(status)
     }
 
-    Write !, "2. Navegación por referencias sin SQL (RF7)",!
+    Write !, "3. Navegacion por referencias sin SQL (RF7)",!
     Set idPartido = partido.%Id()
-    
+
     // Abrir el objeto desde disco
+    Kill partido, evento1, evento2
     Set partidoDB = ##class(Fixture.Partido).%OpenId(idPartido)
     Write "Partido en ", partidoDB.Sede, " - Estado: ", partidoDB.Estado,!
-    
-    // Iterar la colección de hijos
+    Write "Arbitro: ", partidoDB.Arbitro.Nombre, " ", partidoDB.Arbitro.Apellido, " (", partidoDB.Arbitro.Rango, ")",!
+
+    // Iterar la colección de hijos y volver al padre desde el hijo
     For i=1:1:partidoDB.Eventos.Count() {
         Set evento = partidoDB.Eventos.GetAt(i)
-        Write " - Evento al minuto ", evento.Minuto, ": ", evento.Tipo, " (", evento.Descripcion, ")",!
-    }
-    
-    Write !, "3. Demostración de Proyección Multimodelo SQL (RF8)",!
-    Set sql = "SELECT ID, Minuto, Tipo, Descripcion, Partido FROM Fixture.Evento WHERE Partido = ?"
-    Set rs = ##class(%ResultSet).%New("%DynamicQuery:SQL")
-    Set status = rs.Prepare(sql)
-    If $$$ISOK(status) {
-        Set status = rs.Execute(idPartido)
-        Write "Resultados de SQL para los Eventos del Partido ", idPartido, ":",!
-        While rs.Next() {
-            Write " - ID: ", rs.Get("ID"), " | Minuto: ", rs.Get("Minuto"), " | Tipo: ", rs.Get("Tipo"),!
-        }
-    } Else {
-        Write "Error al preparar SQL: "
-        Do $system.Status.DisplayError(status)
+        Write " - Evento al minuto ", evento.Minuto, ": ", evento.Tipo, " (", evento.Descripcion, ")"
+        Write " -> pertenece al partido en ", evento.Partido.Sede,!
     }
 
-    Write !, "4. Validación Encapsulada (%OnBeforeSave) (RF9)",!
+    Write !, "4. Demostracion de Proyeccion Multimodelo SQL (RF8)",!
+    Set rs = ##class(%ResultSet).%New("%DynamicQuery:SQL")
+    Set status = rs.Prepare("SELECT ID, Sede, Estado, Arbitro->Apellido AS Arbitro FROM Fixture.Partido WHERE ID = ?")
+    If $$$ISOK(status) {
+        Do rs.Execute(idPartido)
+        Write "SELECT sobre Fixture.Partido:",!
+        While rs.Next() {
+            Write " - ID: ", rs.Get("ID"), " | Sede: ", rs.Get("Sede"), " | Estado: ", rs.Get("Estado"), " | Arbitro: ", rs.Get("Arbitro"),!
+        }
+    } Else { Do $system.Status.DisplayError(status) }
+
+    Set rs = ##class(%ResultSet).%New("%DynamicQuery:SQL")
+    Set status = rs.Prepare("SELECT ID, Minuto, Tipo, Partido FROM Fixture.Evento WHERE Partido = ? ORDER BY Minuto")
+    If $$$ISOK(status) {
+        Do rs.Execute(idPartido)
+        Write "SELECT sobre Fixture.Evento:",!
+        While rs.Next() {
+            Write " - ID: ", rs.Get("ID"), " | Minuto: ", rs.Get("Minuto"), " | Tipo: ", rs.Get("Tipo"), " | Partido: ", rs.Get("Partido"),!
+        }
+    } Else { Do $system.Status.DisplayError(status) }
+
+    Set rs = ##class(%ResultSet).%New("%DynamicQuery:SQL")
+    Set status = rs.Prepare("SELECT ID, Nombre, Apellido, DNI, x__classname AS Clase FROM Fixture.Persona WHERE ID IN (?, ?)")
+    If $$$ISOK(status) {
+        Do rs.Execute(arbitro.%Id(), tecnico.%Id())
+        Write "SELECT sobre Fixture.Persona (incluye las subclases):",!
+        While rs.Next() {
+            Write " - ID: ", rs.Get("ID"), " | ", rs.Get("Nombre"), " ", rs.Get("Apellido"), " | DNI: ", rs.Get("DNI"), " | Clase: ", rs.Get("Clase"),!
+        }
+    } Else { Do $system.Status.DisplayError(status) }
+
+    Write !, "5. Fallo controlado por propiedad obligatoria omitida (RF5)",!
+    Set partidoSinSede = ##class(Fixture.Partido).%New()
+    Set partidoSinSede.Fecha = $ZDATEH("2030-07-16", 3)
+    Set partidoSinSede.Estado = "Programado"
+    Set partidoSinSede.Arbitro = arbitro
+    // No se asigna Sede, que es [Required]
+    Set status = partidoSinSede.%Save()
+    If $$$ISERR(status) {
+        Write "Guardado rechazado como se esperaba: ",!
+        Do $system.Status.DisplayError(status)
+        Write !
+    } Else {
+        Write "Error de implementacion: el partido sin Sede se guardo.",!
+    }
+
+    Write !, "6. Validacion Encapsulada (RF9)",!
     Set partidoDB.Estado = "Finalizado"
     Set status = partidoDB.%Save()
-    
-    Write "Intentando agregar un evento a un partido Finalizado...",!
+    If $$$ISERR(status) { Do $system.Status.DisplayError(status) }
+
+    Write "a) Intentando agregar un evento a un partido Finalizado...",!
     Set eventoInvalido = ##class(Fixture.Evento).%New()
     Set eventoInvalido.Minuto = 90
     Set eventoInvalido.Tipo = "Gol"
     Set eventoInvalido.Descripcion = "Gol fuera de tiempo"
-    
-    // Asignamos la relación al partido finalizado
     Set eventoInvalido.Partido = partidoDB
     Set status = eventoInvalido.%Save()
-    
     If $$$ISERR(status) {
-        Write "Validación exitosa, el guardado fue rechazado con el error: ",!
+        Write "Rechazado por %OnBeforeSave: ",!
         Do $system.Status.DisplayError(status)
+        Write !
     } Else {
-        Write "Error de implementación: El evento se guardó incorrectamente.",!
+        Write "Error de implementacion: El evento se guardo incorrectamente.",!
     }
-    
-    Write !, "==== Fin de la Demostración ====",!
+
+    Write "b) Intentando guardar un evento en el minuto 0...",!
+    Set partidoNuevo = ##class(Fixture.Partido).%New()
+    Set partidoNuevo.Sede = "Estadio Monumental"
+    Set partidoNuevo.Fecha = $ZDATEH("2030-07-18", 3)
+    Set partidoNuevo.Estado = "En Juego"
+    Set partidoNuevo.Arbitro = arbitro
+    Set eventoMinuto0 = ##class(Fixture.Evento).%New()
+    Set eventoMinuto0.Minuto = 0
+    Set eventoMinuto0.Tipo = "Gol"
+    Do partidoNuevo.Eventos.Insert(eventoMinuto0)
+    Set status = partidoNuevo.%Save()
+    If $$$ISERR(status) {
+        Write "Rechazado por MINVAL (y el partido tampoco se guardo: ID = '", partidoNuevo.%Id(), "'): ",!
+        Do $system.Status.DisplayError(status)
+        Write !
+    } Else {
+        Write "Error de implementacion: el evento en el minuto 0 se guardo.",!
+    }
+
+    Write !, "==== Fin de la Demostracion ====",!

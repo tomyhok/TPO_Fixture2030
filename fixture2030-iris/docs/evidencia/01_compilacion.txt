@@ -1,0 +1,41 @@
+# Fecha: 2026-10-09 16:47:38 -03
+# Do $system.OBJ.Load("/scripts/Fixture.Clases.cls","ck") y DemoOperaciones.mac
+
+Node: da4c8d69ef33, Instance: IRIS
+
+USER>
+
+Load started on 10/09/2026 19:47:38
+Loading file /scripts/Fixture.Clases.cls as xml
+Imported class: Fixture.Persona
+Imported class: Fixture.Arbitro
+Imported class: Fixture.Tecnico
+Imported class: Fixture.Partido
+Imported class: Fixture.Evento
+Compiling 5 classes
+Compiling class Fixture.Persona
+Compiling class Fixture.Partido
+Compiling class Fixture.Arbitro
+Compiling class Fixture.Tecnico
+Compiling class Fixture.Evento
+Compiling table Fixture.Arbitro
+Compiling table Fixture.Persona
+Compiling table Fixture.Tecnico
+Compiling table Fixture.Partido
+Compiling table Fixture.Evento
+Compiling routine Fixture.Persona.1
+Compiling routine Fixture.Partido.1
+Compiling routine Fixture.Tecnico.1
+Compiling routine Fixture.Arbitro.1
+Compiling routine Fixture.Evento.1
+Load finished successfully.
+
+USER>
+
+Load started on 10/09/2026 19:47:38
+Loading file /scripts/DemoOperaciones.mac as udl
+DemoOperaciones.MAC Loaded
+Compiling routine : DemoOperaciones.mac
+Load finished successfully.
+
+USER>

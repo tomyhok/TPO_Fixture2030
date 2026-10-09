@@ -16,12 +16,10 @@ classDiagram
     }
 
     class Fixture_Arbitro {
-        <<%Persistent>>
-        +String Rango [Required]
+        +String Rango [Required, VALUELIST: FIFA | Nacional]
     }
 
     class Fixture_Tecnico {
-        <<%Persistent>>
         +String Licencia [Required]
     }
 
@@ -32,20 +30,23 @@ classDiagram
         <<%Persistent>>
         +String Sede [Required]
         +Date Fecha [Required]
-        +String Estado [Required]
+        +String Estado [Required, VALUELIST: Programado | En Juego | Finalizado]
+        +Fixture_Arbitro Arbitro [Required]
         +Relationship Eventos (children)
     }
 
     class Fixture_Evento {
         <<%Persistent>>
-        +Integer Minuto [Required]
-        +String Tipo [Required]
+        +Integer Minuto [Required, MINVAL 1, MAXVAL 130]
+        +String Tipo [Required, VALUELIST: Gol | Tarjeta Amarilla | Tarjeta Roja | Cambio]
         +String Descripcion
         +Relationship Partido (parent)
-        +%OnBeforeSave(insert:%Boolean): %Status
+        +Index PartidoIndex(Partido)
+        -%OnBeforeSave(insert:%Boolean): %Status
     }
 
     Fixture_Partido "1" *-- "N" Fixture_Evento : Eventos / Partido
+    Fixture_Partido "N" --> "1" Fixture_Arbitro : Arbitro
 ```
 
 ## 2. Matriz de Integridad
@@ -54,10 +55,13 @@ Las reglas de integridad implementadas garantizan la consistencia del modelo dir
 
 | Regla de Integridad | Implementación en IRIS | Comportamiento en la Base de Datos |
 | :--- | :--- | :--- |
-| **Integridad Referencial Bidireccional** | Relación `parent`/`children` entre `Partido` y `Evento`. | Al asignar un Evento a la colección de un Partido, IRIS automáticamente actualiza la propiedad inversa (el Evento sabe a qué Partido pertenece). |
-| **Dependencia de Ciclo de Vida (Borrado en Cascada)** | Modificador `[ Cardinality = children ]` en la propiedad `Eventos`. | Si se ejecuta un `%DeleteId()` sobre un objeto `Partido`, la base de datos elimina automáticamente todos sus `Eventos` asociados, ya que un evento carece de sentido sin su partido correspondiente. |
-| **Campos Obligatorios Restrictivos** | Modificador `[ Required ]` en propiedades clave. | Si se intenta guardar (`%Save()`) un Partido sin `Sede`, o una Persona sin `DNI`, el guardado es rechazado atómicamente retornando un error al invocador. |
-| **Validación de Transición de Estado** | Método encapsulado `%OnBeforeSave()` sobreescrito en `Fixture.Evento`. | Impide la inserción de eventos con minuto negativo (`< 0`) y prohíbe agregar cualquier evento si el objeto padre (`Partido`) se encuentra en estado "Finalizado". Todo el guardado se aborta si no pasa la regla. |
+| **Integridad Referencial Bidireccional** | Relación `parent`/`children` entre `Partido` y `Evento`. | Al insertar un Evento en la colección de un Partido, IRIS actualiza la propiedad inversa: desde el evento se llega a su partido (`evento.Partido.Sede`) y desde el partido a sus eventos. |
+| **Dependencia de Ciclo de Vida (Borrado en Cascada)** | `[ Cardinality = children ]` en `Eventos`. El ID del evento es `idPartido\|\|n`. | Si se borra un `Partido` (`%DeleteId()`), IRIS borra todos sus `Eventos`: un evento no tiene sentido sin su partido. |
+| **Guardado atómico del grafo** | Un solo `%Save()` sobre el padre. | Se guardan el partido y sus eventos juntos. Si algún evento es inválido (por ejemplo, minuto 0), no se guarda nada, tampoco el partido. |
+| **Árbitro obligatorio** | `Property Arbitro As Fixture.Arbitro [ Required ]` en `Partido`. | No se puede guardar un partido sin árbitro asignado. Solo se acepta un objeto `Arbitro`, no cualquier `Persona`. Borrar un árbitro no borra sus partidos. |
+| **Campos Obligatorios** | `[ Required ]` en las propiedades clave. | Si se intenta guardar un Partido sin `Sede`, o una Persona sin `DNI`, el guardado es rechazado con un error. |
+| **Valores permitidos** | `VALUELIST` en `Estado`, `Tipo` y `Rango`; `MINVAL`/`MAXVAL` en `Minuto`. | Se rechazan estados o tipos de evento que no estén en la lista y minutos fuera de 1..130 (por ejemplo, un evento en el minuto 0). |
+| **Validación de Transición de Estado** | `%OnBeforeSave()` en `Fixture.Evento`. | Prohíbe insertar eventos nuevos si el `Partido` está en estado "Finalizado". El guardado se aborta si no pasa la regla. |
 
 ## 3. Código Fuente del Dominio
 
@@ -70,13 +74,18 @@ Esta definición empaqueta las clases base (`Persona`), herencias especializadas
 
 Para compilar, instanciar y navegar los objetos en el entorno local (cumpliendo RNF2 y RNF4):
 
-1. Levantar el servicio asegurando que el host tenga correctamente montado el volumen (como se indica en las consignas):
+1. Crear el directorio durable con los permisos que indica la Clase 10 y levantar el servicio (desde `fixture2030-iris/`):
    ```bash
-   docker compose up -d iris
+   mkdir -p ~/docker/data/iris
+   sudo chown -R "$(id -u):$(id -g)" ~/docker/data/iris
+   sudo chmod -R 777 ~/docker/data/iris
+   docker compose up -d
+   docker compose ps
    ```
+   Si el contenedor no puede escribir en `/durable`, hacer `docker compose down`, repetir el `chown` y el `chmod`, y volver a levantarlo.
 2. Ingresar al terminal de ObjectScript del contenedor:
    ```bash
-   docker compose exec iris iris session iris
+   docker exec -it fixture2030-iris iris session IRIS
    ```
 3. Dentro del prompt `USER>`, importar y compilar las clases del modelo y el script de la demo:
    ```objectscript
@@ -89,14 +98,22 @@ Para compilar, instanciar y navegar los objetos en el entorno local (cumpliendo 
    ```
 
 El script de demostración (`scripts/DemoOperaciones.mac`) realiza automáticamente las siguientes comprobaciones:
-- **Carga atómica (RF6):** Crea un partido con dos eventos en memoria y ejecuta un único `%Save()` sobre el padre para guardar el grafo entero.
-- **Navegación (RF7):** Abre el partido guardado desde el disco mediante `%OpenId()`, y usa un bucle clásico de objetos (`GetAt()`) para navegar la lista de eventos referenciados.
-- **SQL Multimodelo (RF8):** Ejecuta una consulta con `%ResultSet` sobre la tabla proyectada automáticamente (`Fixture.Evento`) para demostrar el acceso relacional tradicional.
-- **Validación (RF9):** Cambia el estado del partido a "Finalizado" en memoria y trata de insertarle un evento extra para provocar y capturar el rechazo dictado por la regla interna `%OnBeforeSave()`.
+- **Herencia (RF4):** Crea un `Arbitro` y un `Tecnico`, que extienden `Persona`.
+- **Carga atómica (RF6):** Crea un partido con su árbitro y dos eventos en memoria y ejecuta un único `%Save()` sobre el padre para guardar el grafo entero.
+- **Navegación (RF7):** Abre el partido guardado desde el disco mediante `%OpenId()`, navega al árbitro (`partido.Arbitro.Apellido`), recorre los eventos con `GetAt()` y vuelve del evento al partido (`evento.Partido.Sede`).
+- **SQL Multimodelo (RF8):** Ejecuta `SELECT` con `%ResultSet` sobre las tablas proyectadas `Fixture.Partido`, `Fixture.Evento` y `Fixture.Persona` (que incluye las filas de Arbitro y Tecnico), y muestra que coinciden con los objetos creados.
+- **Campo obligatorio (RF5):** Intenta guardar un partido sin `Sede` y muestra el error de IRIS.
+- **Validación (RF9):** Cambia el estado del partido a "Finalizado" en memoria y trata de insertarle un evento extra para provocar y capturar el rechazo dictado por la regla interna `%OnBeforeSave()`. También intenta guardar un evento en el minuto 0, que se rechaza por `MINVAL`, y comprueba que el partido nuevo tampoco se guardó.
+
+Para salir del Terminal: `Halt`.
 
 ## 5. Evidencia de Ejecución
 
-> **Nota para los evaluadores:** 
-> A continuación se adjunta la captura del terminal evidenciando la compilación sin errores y la ejecución correcta de las pruebas, demostrando la carga de objetos y las validaciones rechazadas apropiadamente.
+La evidencia se generó con `bash tools/generar_evidencia.sh` (desde `fixture2030-iris/`, con el contenedor levantado), que compila las clases, corre la demo y guarda la salida del Terminal de IRIS en `docs/evidencia/`. La ejecución registrada es del 2026-10-09 con IRIS Community 2026.2 (Build 221U), partiendo de `~/docker/data/iris` vacío.
 
-![Evidencia de ejecución](docs/evidencia/ejecucion_demo.png)
+| Archivo | Qué muestra |
+| :--- | :--- |
+| [`00_ambiente.txt`](docs/evidencia/00_ambiente.txt) | Contenedor levantado y versión de IRIS. |
+| [`01_compilacion.txt`](docs/evidencia/01_compilacion.txt) | Las 5 clases y la rutina compilan sin errores (RNF2). |
+| [`02_demo.txt`](docs/evidencia/02_demo.txt) | Salida completa de `Do ^DemoOperaciones`: objetos guardados, navegación, SQL y los tres rechazos (sin `Sede`, partido Finalizado y minuto 0). |
+| [`03_persistencia.txt`](docs/evidencia/03_persistencia.txt) | Después de `docker restart`, las consultas SQL devuelven los mismos datos: el partido (ya Finalizado), sus 2 eventos y las 2 personas. El partido con el evento en el minuto 0 no existe. |

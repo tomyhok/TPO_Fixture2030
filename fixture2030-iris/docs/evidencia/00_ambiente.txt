@@ -1,0 +1,13 @@
+# Fecha: 2026-10-09 16:47:37 -03
+# Ambiente
+> docker compose ps
+NAME               IMAGE                                   COMMAND                 SERVICE   CREATED          STATUS          PORTS
+fixture2030-iris   intersystems/iris-community:latest-cd   "/tini -- /iris-main"   iris      10 minutes ago   Up 10 minutes   127.0.0.1:1972->1972/tcp, 2188/tcp, 53773/tcp, 127.0.0.1:52773->52773/tcp, 54773/tcp
+> Version de IRIS
+
+Node: da4c8d69ef33, Instance: IRIS
+
+USER>
+IRIS for UNIX (Ubuntu Server LTS for ARM64 Containers) 2026.2 (Build 221U) Fri Jun 26 2026 09:59:12 EDT
+
+USER>

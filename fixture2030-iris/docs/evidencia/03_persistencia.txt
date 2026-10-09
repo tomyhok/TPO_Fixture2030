@@ -1,0 +1,30 @@
+# Fecha: 2026-10-09 16:47:38 -03
+# Persistencia: docker restart fixture2030-iris y consultas SQL
+fixture2030-iris
+
+Node: da4c8d69ef33, Instance: IRIS
+
+USER>
+ID	Sede	Estado	Arbitro
+1	Estadio Centenario	Finalizado	Tello
+
+1 Rows(s) Affected
+USER>
+
+
+USER>
+ID	Minuto	Tipo	Partido
+1||1	12	Gol	1
+1||2	45	Tarjeta Amarilla	1
+
+2 Rows(s) Affected
+USER>
+
+
+USER>
+ID	Nombre	Apellido	DNI
+1	Facundo	Tello	30111222
+2	Marcelo	Bielsa	10333444
+
+2 Rows(s) Affected
+USER>

@@ -21,6 +21,7 @@
 <Property name="Rango">
 <Type>%String</Type>
 <Required>1</Required>
+<Parameter name="VALUELIST" value=",FIFA,Nacional"/>
 </Property>
 </Class>
 
@@ -45,6 +46,11 @@
 <Property name="Estado">
 <Type>%String</Type>
 <Required>1</Required>
+<Parameter name="VALUELIST" value=",Programado,En Juego,Finalizado"/>
+</Property>
+<Property name="Arbitro">
+<Type>Fixture.Arbitro</Type>
+<Required>1</Required>
 </Property>
 <Property name="Eventos">
 <Type>Fixture.Evento</Type>
@@ -59,10 +65,13 @@
 <Property name="Minuto">
 <Type>%Integer</Type>
 <Required>1</Required>
+<Parameter name="MINVAL" value="1"/>
+<Parameter name="MAXVAL" value="130"/>
 </Property>
 <Property name="Tipo">
 <Type>%String</Type>
 <Required>1</Required>
+<Parameter name="VALUELIST" value=",Gol,Tarjeta Amarilla,Tarjeta Roja,Cambio"/>
 </Property>
 <Property name="Descripcion">
 <Type>%String</Type>
@@ -80,12 +89,13 @@
 
 <Method name="%OnBeforeSave">
 <FormalSpec>insert:%Boolean</FormalSpec>
+<Private>1</Private>
 <ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
 <Implementation><![CDATA[
-    If (..Minuto < 0) {
-        Quit $$$ERROR($$$GeneralError, "El minuto del evento no puede ser negativo")
-    }
-    If ($ISOBJECT(..Partido)) {
+    // Regla de estado: un partido Finalizado no admite eventos nuevos.
+    // (El rango del minuto lo controlan MINVAL/MAXVAL de la propiedad.)
+    If (insert && $ISOBJECT(..Partido)) {
         If (..Partido.Estado = "Finalizado") {
             Quit $$$ERROR($$$GeneralError, "No se pueden agregar eventos a un partido finalizado")
         }

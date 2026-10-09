@@ -1,0 +1,51 @@
+# Fecha: 2026-10-09 16:47:38 -03
+# Do ^DemoOperaciones
+
+Node: da4c8d69ef33, Instance: IRIS
+
+USER>
+==== Inicio de Demostracion Operativa ====
+
+1. Herencia: Arbitro y Tecnico extienden Persona (RF4)
+Arbitro guardado: Tello (clase Fixture.Arbitro, ID 1)
+Tecnico guardado: Bielsa (clase Fixture.Tecnico, ID 2)
+
+2. Carga atomica de objetos y relaciones fuertes (RF6)
+Partido y Eventos guardados con un solo %Save(). ID del Partido: 1
+IDs de los eventos (padre||hijo): 1||1, 1||2
+
+3. Navegacion por referencias sin SQL (RF7)
+Partido en Estadio Centenario - Estado: En Juego
+Arbitro: Facundo Tello (FIFA)
+ - Evento al minuto 12: Gol (Gol de Uruguay) -> pertenece al partido en Estadio Centenario
+ - Evento al minuto 45: Tarjeta Amarilla (Falta fuerte) -> pertenece al partido en Estadio Centenario
+
+4. Demostracion de Proyeccion Multimodelo SQL (RF8)
+SELECT sobre Fixture.Partido:
+ - ID: 1 | Sede: Estadio Centenario | Estado: En Juego | Arbitro: Tello
+SELECT sobre Fixture.Evento:
+ - ID: 1||1 | Minuto: 12 | Tipo: Gol | Partido: 1
+ - ID: 1||2 | Minuto: 45 | Tipo: Tarjeta Amarilla | Partido: 1
+SELECT sobre Fixture.Persona (incluye las subclases):
+ - ID: 1 | Facundo Tello | DNI: 30111222 | Clase: ~Fixture.Arbitro~
+ - ID: 2 | Marcelo Bielsa | DNI: 10333444 | Clase: ~Fixture.Tecnico~
+
+5. Fallo controlado por propiedad obligatoria omitida (RF5)
+Guardado rechazado como se esperaba: 
+
+ERROR #5659: Property 'Fixture.Partido::Sede(12@Fixture.Partido,ID=)' required
+
+6. Validacion Encapsulada (RF9)
+a) Intentando agregar un evento a un partido Finalizado...
+Rechazado por %OnBeforeSave: 
+
+ERROR #5001: No se pueden agregar eventos a un partido finalizado
+b) Intentando guardar un evento en el minuto 0...
+Rechazado por MINVAL (y el partido tampoco se guardo: ID = ''): 
+
+ERROR #7204: Datatype value '0' less than MINVAL allowed of 1
+  > ERROR #5802: Datatype validation failed on property 'Fixture.Evento:Minuto', with value equal to "0"
+
+==== Fin de la Demostracion ====
+
+USER>

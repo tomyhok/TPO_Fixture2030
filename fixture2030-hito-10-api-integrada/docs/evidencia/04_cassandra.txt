@@ -1,0 +1,92 @@
+# Cassandra - comentarios (CU08-CU09)
+# Generado: 2026-10-15T18:54:18Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+------------------------------------------------------------------
+## CU08 muro de una ventana, página 1 (limit=3)
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/comentarios\?ventana=203006152015\&limit=3
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: f2893caa-4df2-4522-8e30-14d77eee2364
+
+{"codigo_partido":"P-001","ventana":"203006152015","items":[{"id_comentario":"0a745805-e506-11f5-8005-00000005f1c7","codigo_partido":"P-001","ventana":"203006152015","id_usuario":"U-1002","usuario_alias":"verdeamarelo10","equipo_apoyado":"BRA","texto":"Penal clarisimo que no cobraron","idioma":"pt","estado_moderacion":"publicado","minuto_partido":20,"creado_en":"2030-06-15T20:15:44Z"},{"id_comentario":"03e5e084-e506-11f5-8004-00000005f1c7","codigo_partido":"P-001","ventana":"203006152015","id_usuario":"U-1004","usuario_alias":"carioca_futbol","equipo_apoyado":"BRA","texto":"Que atajada tremenda, salvo el partido","idioma":"pt","estado_moderacion":"publicado","minuto_partido":18,"creado_en":"2030-06-15T20:15:33Z"},{"id_comentario":"fd576903-e505-11f5-8003-00000005f1c7","codigo_partido":"P-001","ventana":"203006152015","id_usuario":"U-1002","usuario_alias":"verdeamarelo10","equipo_apoyado":"BRA","texto":"Cambio necesario, el mediocampo esta perdido","idioma":"pt","estado_moderacion":"publicado","minuto_partido":16,"creado_en":"2030-06-15T20:15:22Z"}],"cursor_siguiente":"fd576903-e505-11f5-8003-00000005f1c7"}
+
+
+------------------------------------------------------------------
+## CU08 página 2 con el cursor_siguiente
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/comentarios\?ventana=203006152015\&limit=3\&cursor=fd576903-e505-11f5-8003-00000005f1c7
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: e5d0bd3c-97de-47d8-beee-c6a022e2335f
+
+{"codigo_partido":"P-001","ventana":"203006152015","items":[{"id_comentario":"f6c8f182-e505-11f5-8002-00000005f1c7","codigo_partido":"P-001","ventana":"203006152015","id_usuario":"U-1004","usuario_alias":"carioca_futbol","equipo_apoyado":"BRA","texto":"Golazo de media distancia, imposible para el arquero","idioma":"pt","estado_moderacion":"publicado","minuto_partido":14,"creado_en":"2030-06-15T20:15:11Z"},{"id_comentario":"f03a7a01-e505-11f5-8001-00000005f1c7","codigo_partido":"P-001","ventana":"203006152015","id_usuario":"U-1002","usuario_alias":"verdeamarelo10","equipo_apoyado":"BRA","texto":"El arbitro cobro mal ese offside","idioma":"pt","estado_moderacion":"publicado","minuto_partido":12,"creado_en":"2030-06-15T20:15:00Z"}],"cursor_siguiente":null}
+
+
+------------------------------------------------------------------
+## CU08 ventana sin comentarios -> 200 vacío
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/comentarios\?ventana=203001010000
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: cfdbe890-be52-4723-bd15-86a35ed4fc26
+
+{"codigo_partido":"P-001","ventana":"203001010000","items":[],"cursor_siguiente":null}
+
+
+------------------------------------------------------------------
+## CU09 publicar comentario -> 201
+$ curl -i -X POST http://127.0.0.1:8000/partidos/P-001/comentarios -H Content-Type:\ application/json -H Idempotency-Key:\ a5ba4165-fb79-467e-8d12-803b3f059ed8 -d \{\"id_usuario\":\"U-1001\"\,\"usuario_alias\":\"hincha_albiceleste\"\,\"equipo_apoyado\":\"ARG\"\,\"texto\":\"Evidencia\ Hito\ 10\ 20261015T185418:\ que\ golazo\"\,\"idioma\":\"es\"\,\"minuto_partido\":67\}
+
+HTTP/1.1 201 Created
+content-type: application/json
+location: /partidos/P-001/comentarios?ventana=202610151854
+x-request-id: 89d11767-5c4a-4843-9dc9-54220f275657
+
+{"id_comentario":"d3a2ce80-c8c9-11f1-992e-29e6eb9f738f","codigo_partido":"P-001","ventana":"202610151854","id_usuario":"U-1001","usuario_alias":"hincha_albiceleste","equipo_apoyado":"ARG","texto":"Evidencia Hito 10 20261015T185418: que golazo","idioma":"es","estado_moderacion":"publicado","minuto_partido":67,"creado_en":"2026-10-15T18:54:18.984000Z"}
+
+
+------------------------------------------------------------------
+## CU09 reintento con la misma Idempotency-Key -> 200 Idempotent-Replayed
+$ curl -i -X POST http://127.0.0.1:8000/partidos/P-001/comentarios -H Content-Type:\ application/json -H Idempotency-Key:\ a5ba4165-fb79-467e-8d12-803b3f059ed8 -d \{\"id_usuario\":\"U-1001\"\,\"usuario_alias\":\"hincha_albiceleste\"\,\"equipo_apoyado\":\"ARG\"\,\"texto\":\"Evidencia\ Hito\ 10\ 20261015T185418:\ que\ golazo\"\,\"idioma\":\"es\"\,\"minuto_partido\":67\}
+
+HTTP/1.1 200 OK
+content-type: application/json
+idempotent-replayed: true
+location: /partidos/P-001/comentarios?ventana=202610151854
+x-request-id: 4bafa814-a5da-46c4-90b2-dbd6551f938a
+
+{"id_comentario":"d3a2ce80-c8c9-11f1-992e-29e6eb9f738f","codigo_partido":"P-001","ventana":"202610151854","id_usuario":"U-1001","usuario_alias":"hincha_albiceleste","equipo_apoyado":"ARG","texto":"Evidencia Hito 10 20261015T185418: que golazo","idioma":"es","estado_moderacion":"publicado","minuto_partido":67,"creado_en":"2026-10-15T18:54:18.984000Z"}
+
+
+------------------------------------------------------------------
+## CU09 misma clave con otro cuerpo -> 409
+$ curl -i -X POST http://127.0.0.1:8000/partidos/P-001/comentarios -H Content-Type:\ application/json -H Idempotency-Key:\ a5ba4165-fb79-467e-8d12-803b3f059ed8 -d \{\"id_usuario\":\"U-1001\"\,\"usuario_alias\":\"hincha_albiceleste\"\,\"equipo_apoyado\":\"ARG\"\,\"texto\":\"Evidencia\ Hito\ 10\ 20261015T185418:\ que\ golazo\"\,\"idioma\":\"es\"\,\"minuto_partido\":68\}
+
+HTTP/1.1 409 Conflict
+content-type: application/json
+x-request-id: 7e2e19b8-8648-40f9-8f10-19080cacfbc2
+
+{"error":{"codigo":"CONFLICTO_IDEMPOTENCIA","mensaje":"La Idempotency-Key ya se usó con un cuerpo distinto. Genere una clave nueva.","request_id":"7e2e19b8-8648-40f9-8f10-19080cacfbc2","detalles":[]}}
+
+
+------------------------------------------------------------------
+## CU09 partido inexistente -> 404
+$ curl -i -X POST http://127.0.0.1:8000/partidos/P-999/comentarios -H Content-Type:\ application/json -H Idempotency-Key:\ bd9056e2-3846-4b90-8772-57808e63b313 -d \{\"id_usuario\":\"U-1001\"\,\"usuario_alias\":\"hincha_albiceleste\"\,\"equipo_apoyado\":\"ARG\"\,\"texto\":\"Evidencia\ Hito\ 10\ 20261015T185418:\ que\ golazo\"\,\"idioma\":\"es\"\,\"minuto_partido\":67\}
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 1574e9d4-989a-46a2-b1aa-2c818d092c14
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"No existe el partido 'P-999'.","request_id":"1574e9d4-989a-46a2-b1aa-2c818d092c14","detalles":[]}}
+
+
+> Comprobación directa en Cassandra: el comentario existe una sola vez en el historial del usuario
+  (consulta acotada a la partición (id_usuario, periodo) del Hito 6)
+
+ id_comentario                        | id_partido | texto
+--------------------------------------+------------+-----------------------------------------------
+ d3a2ce80-c8c9-11f1-992e-29e6eb9f738f |      P-001 | Evidencia Hito 10 20261015T185418: que golazo
+
+(1 rows)

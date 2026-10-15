@@ -1,0 +1,2592 @@
+openapi: 3.1.0
+info:
+  title: Fixture 2030 - API REST integrada
+  description: '
+
+    API REST que integra los módulos NoSQL del Fixture Mundial 2030. Cada ruta resuelve un
+
+    caso de uso documentado en `docs/casos_de_uso.md` y llega a la fuente que le corresponde
+
+    mediante un adaptador propio:
+
+
+    | Módulo | Fuente | Hito |
+
+    |---|---|---|
+
+    | Equipos y jugadores | MongoDB | 4 |
+
+    | Partidos, eventos y relaciones | Neo4j | 5 |
+
+    | Comentarios | Cassandra | 6 |
+
+    | Sesiones y caché | Redis | 7 |
+
+    | Estadísticas temporales | InfluxDB 3 | 8 |
+
+    | Actas oficiales | InterSystems IRIS | 9 |
+
+
+    **Errores.** Todas las respuestas de error usan el esquema `ErrorRespuesta`. Toda respuesta
+
+    incluye el header `X-Request-ID` (se reutiliza el que envía el cliente si es válido), que
+
+    también aparece en los logs de la ruta y del adaptador.
+
+
+    **Autenticación.** No implementada en este hito: la API se ejecuta en el laboratorio local.
+
+    '
+  version: 1.0.0
+servers:
+- url: http://localhost:8000
+  description: Notebook (local)
+paths:
+  /equipos:
+    get:
+      tags:
+      - Equipos y jugadores (MongoDB)
+      summary: CU02 - Listar selecciones por ranking FIFA
+      operationId: listar_equipos_equipos_get
+      parameters:
+      - name: confederacion
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/Confederacion'
+          - type: 'null'
+          title: Confederacion
+      - name: grupo
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/Grupo'
+          - type: 'null'
+          title: Grupo
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 1
+          title: Page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 10
+          title: Size
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaEquipos'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /equipos/{codigo_iso}:
+    get:
+      tags:
+      - Equipos y jugadores (MongoDB)
+      summary: CU01 - Ficha de una selección
+      operationId: obtener_equipo_equipos__codigo_iso__get
+      parameters:
+      - name: codigo_iso
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: Código de la selección (3 letras).
+          examples:
+          - ARG
+          title: Codigo Iso
+        description: Código de la selección (3 letras).
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EquipoDetalle'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /equipos/{codigo_iso}/jugadores:
+    get:
+      tags:
+      - Equipos y jugadores (MongoDB)
+      summary: CU03 - Plantel de una selección
+      operationId: plantel_equipos__codigo_iso__jugadores_get
+      parameters:
+      - name: codigo_iso
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: Código de la selección (3 letras).
+          examples:
+          - ARG
+          title: Codigo Iso
+        description: Código de la selección (3 letras).
+      - name: posicion
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/Posicion'
+          - type: 'null'
+          title: Posicion
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 1
+          title: Page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 26
+          title: Size
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaJugadores'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /jugadores/{id_jugador}:
+    get:
+      tags:
+      - Equipos y jugadores (MongoDB)
+      summary: CU04 - Ficha de un jugador
+      operationId: obtener_jugador_jugadores__id_jugador__get
+      parameters:
+      - name: id_jugador
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[A-Z]{3}-\d{1,2}$
+          description: Identificador del jugador.
+          examples:
+          - ARG-10
+          title: Id Jugador
+        description: Identificador del jugador.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JugadorDetalle'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /partidos/{codigo_partido}:
+    get:
+      tags:
+      - Partidos y relaciones (Neo4j)
+      summary: CU05 - Ficha de un partido (caché Redis + Neo4j)
+      description: 'Cache-aside: primero `cache:partido:<codigo>` en Redis (TTL 300 s); si no está, Cypher
+        parametrizado en Neo4j y se guarda en la caché. Si Redis no está disponible la respuesta es degradada
+        (`X-Cache: BYPASS`) y se lee directo de Neo4j.'
+      operationId: ficha_partido_partidos__codigo_partido__get
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FichaPartido'
+          headers:
+            X-Cache:
+              description: HIT (Redis), MISS (Neo4j y se cacheó) o BYPASS (Redis caído).
+              schema:
+                type: string
+                enum:
+                - HIT
+                - MISS
+                - BYPASS
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /partidos/{codigo_partido}/eventos:
+    get:
+      tags:
+      - Partidos y relaciones (Neo4j)
+      summary: CU06 - Eventos de un partido
+      description: '404 si el partido no existe; 200 con `eventos: []` si existe y no tiene eventos.'
+      operationId: eventos_partido_partidos__codigo_partido__eventos_get
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventosPartido'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /equipos/{codigo_iso}/rivales:
+    get:
+      tags:
+      - Partidos y relaciones (Neo4j)
+      summary: CU07 - Rivales de una selección
+      operationId: rivales_equipos__codigo_iso__rivales_get
+      parameters:
+      - name: codigo_iso
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: Código de la selección (3 letras).
+          examples:
+          - ARG
+          title: Codigo Iso
+        description: Código de la selección (3 letras).
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 20
+          minimum: 1
+          default: 10
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RivalesEquipo'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /partidos/{codigo_partido}/comentarios:
+    get:
+      tags:
+      - Comentarios (Cassandra)
+      summary: CU08 - Muro de comentarios de un partido (una ventana de 1 minuto)
+      description: 'Lee las 4 particiones `(id_partido, ventana, shard)` de la ventana pedida y las combina
+        del más reciente al más viejo. Para la página siguiente se envía `cursor` con el valor de `cursor_siguiente`.
+        Una ventana sin comentarios devuelve `items: []`; no se verifica que el partido exista en otra
+        fuente.'
+      operationId: muro_partidos__codigo_partido__comentarios_get
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      - name: ventana
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^\d{12}$
+          description: Minuto AAAAMMDDHHMM (UTC).
+          examples:
+          - '203006152016'
+          title: Ventana
+        description: Minuto AAAAMMDDHHMM (UTC).
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          description: cursor_siguiente.
+          title: Cursor
+        description: cursor_siguiente.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuroComentarios'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+    post:
+      tags:
+      - Comentarios (Cassandra)
+      summary: CU09 - Publicar un comentario
+      description: 'Escribe en `comentarios_por_partido` y `comentarios_por_usuario` (BATCH logged). Exige
+        `Idempotency-Key`: repetir la request con la misma clave y el mismo cuerpo devuelve 200 con el
+        mismo comentario y `Idempotent-Replayed: true`, sin duplicarlo.'
+      operationId: publicar_partidos__codigo_partido__comentarios_post
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          description: UUID generado por el cliente. Reintentar con la misma clave no duplica la escritura.
+          examples:
+          - 3f2b8c1e-6d4a-4e2b-9c7d-1a2b3c4d5e6f
+          title: Idempotency-Key
+        description: UUID generado por el cliente. Reintentar con la misma clave no duplica la escritura.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComentarioNuevo'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comentario'
+        '200':
+          description: 'Repetición con la misma Idempotency-Key: no se volvió a escribir.'
+          headers:
+            Idempotent-Replayed:
+              schema:
+                type: string
+                enum:
+                - 'true'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comentario'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '409':
+          description: Conflicto con el estado actual del recurso o de la clave de idempotencia.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: CONFLICTO_ESTADO
+                  mensaje: 'El partido está Finalizado: el acta no admite eventos nuevos.'
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /sesiones/{id_sesion}:
+    get:
+      tags:
+      - Sesiones (Redis)
+      summary: CU10 - Validar una sesión
+      description: Lee `sesion:<id>` y su TTL. Una sesión inexistente o expirada responde 404 `SESION_NO_VIGENTE`
+        (Redis borra la clave al expirar, así que ambos casos son iguales). Redis caído responde 503/504.
+        La lectura no renueva el TTL.
+      operationId: obtener_sesion_sesiones__id_sesion__get
+      parameters:
+      - name: id_sesion
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^S-\d{4,}$
+          description: Identificador opaco de la sesión.
+          examples:
+          - S-0001
+          title: Id Sesion
+        description: Identificador opaco de la sesión.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: SESION_NO_VIGENTE
+                  mensaje: No existe una sesión vigente con id 'S-9999'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+    delete:
+      tags:
+      - Sesiones (Redis)
+      summary: CU11 - Cerrar (invalidar) una sesión
+      description: '`DEL sesion:<id>`. Idempotente: devuelve 204 aunque la sesión ya no exista.'
+      operationId: cerrar_sesion_sesiones__id_sesion__delete
+      parameters:
+      - name: id_sesion
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^S-\d{4,}$
+          description: Identificador opaco de la sesión.
+          examples:
+          - S-0001
+          title: Id Sesion
+        description: Identificador opaco de la sesión.
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /partidos/{codigo_partido}/estadisticas:
+    get:
+      tags:
+      - Estadísticas (InfluxDB)
+      summary: CU12 - Estadísticas en vivo por ventana temporal
+      description: 'Intervalo `[desde, hasta)` en UTC, de 3 horas como máximo, agregado con `date_bin`
+        a la resolución pedida (10s, 1m o 5m): AVG(posesion_pct), MAX(pases_completados), MAX(tiros) y
+        MAX(usuarios_activos). Máximo 1.081 puntos por equipo. Sin puntos en la ventana: 200 con `series:
+        []`.'
+      operationId: estadisticas_partidos__codigo_partido__estadisticas_get
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      - name: desde
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+          description: Inicio, ISO 8601 con zona.
+          examples:
+          - '2030-06-10T20:00:00Z'
+          title: Desde
+        description: Inicio, ISO 8601 con zona.
+      - name: hasta
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+          description: Fin (excluido), ISO 8601 con zona.
+          examples:
+          - '2030-06-10T20:30:00Z'
+          title: Hasta
+        description: Fin (excluido), ISO 8601 con zona.
+      - name: resolucion
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Resolucion'
+          default: 1m
+      - name: equipo
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[A-Z]{3}$
+          - type: 'null'
+          description: Filtra un equipo.
+          title: Equipo
+        description: Filtra un equipo.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadisticasPartido'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /partidos-oficiales/{codigo_partido}:
+    get:
+      tags:
+      - Actas oficiales (IRIS)
+      summary: CU13 - Acta oficial de un partido
+      operationId: obtener_acta_partidos_oficiales__codigo_partido__get
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Acta'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /partidos-oficiales/{codigo_partido}/estado:
+    patch:
+      tags:
+      - Actas oficiales (IRIS)
+      summary: CU14 - Cambiar el estado del partido
+      description: 'Máquina de estados Programado -> En Juego -> Finalizado, validada antes de `%Save()`.
+        Una transición no permitida responde 409 sin persistir nada. Pedir el estado actual responde 200
+        con `cambiado: false` (idempotente).'
+      operationId: cambiar_estado_partidos_oficiales__codigo_partido__estado_patch
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioEstado'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoCambioEstado'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '409':
+          description: Conflicto con el estado actual del recurso o de la clave de idempotencia.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: CONFLICTO_ESTADO
+                  mensaje: 'No se puede pasar de ''Finalizado'' a ''En Juego''. Transiciones permitidas:
+                    Programado -> En Juego -> Finalizado.'
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - estado_actual: Finalizado
+                    estado_pedido: En Juego
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /partidos-oficiales/{codigo_partido}/eventos:
+    post:
+      tags:
+      - Actas oficiales (IRIS)
+      summary: CU15 - Registrar un evento en el acta
+      description: 'La regla ''un partido Finalizado no admite eventos'' la aplica `Fixture.Evento:%OnBeforeSave`
+        y se informa como 409. Exige `Idempotency-Key`: un reintento con la misma clave devuelve 200 con
+        el mismo resultado sin duplicar el evento.'
+      operationId: registrar_evento_partidos_oficiales__codigo_partido__eventos_post
+      parameters:
+      - name: codigo_partido
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^P-\d{3}$
+          description: Código de negocio del partido.
+          examples:
+          - P-001
+          title: Codigo Partido
+        description: Código de negocio del partido.
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          description: UUID generado por el cliente. Reintentar con la misma clave no duplica la escritura.
+          examples:
+          - 3f2b8c1e-6d4a-4e2b-9c7d-1a2b3c4d5e6f
+          title: Idempotency-Key
+        description: UUID generado por el cliente. Reintentar con la misma clave no duplica la escritura.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventoNuevo'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventoRegistrado'
+        '200':
+          description: 'Repetición con la misma Idempotency-Key: no se volvió a escribir.'
+          headers:
+            Idempotent-Replayed:
+              schema:
+                type: string
+                enum:
+                - 'true'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventoRegistrado'
+        '400':
+          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
+            base.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: VALIDACION
+                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - campo: path.codigo_iso
+                    mensaje: String should match pattern '^[A-Z]{3}$'
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '404':
+          description: Recurso inexistente.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: RECURSO_NO_ENCONTRADO
+                  mensaje: No existe la selección 'XYZ'.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '409':
+          description: Conflicto con el estado actual del recurso o de la clave de idempotencia.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: CONFLICTO_ESTADO
+                  mensaje: 'El partido está Finalizado: el acta no admite eventos nuevos.'
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '503':
+          description: Una fuente de datos no está disponible.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_NO_DISPONIBLE
+                  mensaje: La fuente de datos 'mongodb' no está disponible.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: mongodb
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '504':
+          description: Una fuente de datos no respondió dentro del timeout.
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: DEPENDENCIA_TIMEOUT
+                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles:
+                  - dependencia: neo4j
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '500':
+          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
+          content:
+            application/json:
+              example:
+                error:
+                  codigo: ERROR_INTERNO
+                  mensaje: Ocurrió un error inesperado. Informe el request_id.
+                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+                  detalles: []
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+  /health:
+    get:
+      tags:
+      - Salud
+      summary: CU16 - Disponibilidad de las seis fuentes
+      description: Ejecuta una operación trivial en cada fuente, en paralelo y con el timeout de cada
+        adaptador. 200 si todas responden; 503 si al menos una falla, indicando cuál.
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salud'
+        '503':
+          description: Al menos una fuente no está disponible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salud'
+components:
+  schemas:
+    Acta:
+      properties:
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        sede:
+          type: string
+          title: Sede
+        fecha:
+          type: string
+          format: date
+          title: Fecha
+        estado:
+          $ref: '#/components/schemas/EstadoPartido'
+        arbitro:
+          $ref: '#/components/schemas/Arbitro'
+        eventos:
+          items:
+            $ref: '#/components/schemas/EventoActa'
+          type: array
+          title: Eventos
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_partido
+      - sede
+      - fecha
+      - estado
+      - arbitro
+      - eventos
+      title: Acta
+      example:
+        arbitro:
+          apellido: Tello
+          nombre: Facundo
+          rango: FIFA
+        codigo_partido: P-001
+        estado: En Juego
+        eventos:
+        - descripcion: Gol de ARG-10
+          minuto: 23
+          tipo: Gol
+        fecha: '2030-06-10'
+        sede: Estadio Monumental
+    Arbitro:
+      properties:
+        nombre:
+          type: string
+          title: Nombre
+        apellido:
+          type: string
+          title: Apellido
+        rango:
+          type: string
+          title: Rango
+      additionalProperties: false
+      type: object
+      required:
+      - nombre
+      - apellido
+      - rango
+      title: Arbitro
+    CambioEstado:
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoPartido'
+      additionalProperties: false
+      type: object
+      required:
+      - estado
+      title: CambioEstado
+    Comentario:
+      properties:
+        id_comentario:
+          type: string
+          title: Id Comentario
+          description: 'timeuuid: identidad y orden temporal del comentario.'
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        ventana:
+          type: string
+          title: Ventana
+          description: Bucket de 1 minuto AAAAMMDDHHMM (parte de la clave de partición).
+        id_usuario:
+          type: string
+          title: Id Usuario
+        usuario_alias:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Usuario Alias
+        equipo_apoyado:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Equipo Apoyado
+        texto:
+          type: string
+          title: Texto
+        idioma:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idioma
+        estado_moderacion:
+          type: string
+          title: Estado Moderacion
+        minuto_partido:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Minuto Partido
+        creado_en:
+          type: string
+          format: date-time
+          title: Creado En
+      additionalProperties: false
+      type: object
+      required:
+      - id_comentario
+      - codigo_partido
+      - ventana
+      - id_usuario
+      - texto
+      - estado_moderacion
+      - creado_en
+      title: Comentario
+    ComentarioNuevo:
+      properties:
+        id_usuario:
+          type: string
+          pattern: ^U-\d{4,}$
+          title: Id Usuario
+          examples:
+          - U-1001
+        usuario_alias:
+          type: string
+          maxLength: 30
+          minLength: 3
+          pattern: ^[A-Za-z0-9_.]+$
+          title: Usuario Alias
+        equipo_apoyado:
+          type: string
+          pattern: ^[A-Z]{3}$
+          title: Equipo Apoyado
+        texto:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Texto
+        idioma:
+          $ref: '#/components/schemas/Idioma'
+        minuto_partido:
+          type: integer
+          maximum: 130.0
+          minimum: 0.0
+          title: Minuto Partido
+      additionalProperties: false
+      type: object
+      required:
+      - id_usuario
+      - usuario_alias
+      - equipo_apoyado
+      - texto
+      - idioma
+      - minuto_partido
+      title: ComentarioNuevo
+      description: 'Cuerpo de POST /partidos/{codigo_partido}/comentarios. Campos extra: 400.'
+      example:
+        equipo_apoyado: ARG
+        id_usuario: U-1001
+        idioma: es
+        minuto_partido: 67
+        texto: Que golazo, se viene la remontada
+        usuario_alias: hincha_albiceleste
+    Confederacion:
+      type: string
+      enum:
+      - CONMEBOL
+      - UEFA
+      - CAF
+      - AFC
+      - CONCACAF
+      - OFC
+      title: Confederacion
+    Dependencia:
+      properties:
+        nombre:
+          type: string
+          title: Nombre
+        estado:
+          $ref: '#/components/schemas/EstadoDependencia'
+        latencia_ms:
+          type: number
+          title: Latencia Ms
+      additionalProperties: false
+      type: object
+      required:
+      - nombre
+      - estado
+      - latencia_ms
+      title: Dependencia
+    EquipoDetalle:
+      properties:
+        codigo_iso:
+          type: string
+          title: Codigo Iso
+        nombre:
+          type: string
+          title: Nombre
+        confederacion:
+          type: string
+          title: Confederacion
+        grupo:
+          type: string
+          title: Grupo
+        ranking_fifa:
+          type: integer
+          title: Ranking Fifa
+        director_tecnico:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Director Tecnico
+        pais_anfitrion:
+          type: boolean
+          title: Pais Anfitrion
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_iso
+      - nombre
+      - confederacion
+      - grupo
+      - ranking_fifa
+      - pais_anfitrion
+      title: EquipoDetalle
+      example:
+        codigo_iso: ARG
+        confederacion: CONMEBOL
+        director_tecnico: Martinez
+        grupo: A
+        nombre: Argentina
+        pais_anfitrion: true
+        ranking_fifa: 1
+    EquipoEnPartido:
+      properties:
+        codigo_iso:
+          type: string
+          title: Codigo Iso
+        nombre:
+          type: string
+          title: Nombre
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_iso
+      - nombre
+      title: EquipoEnPartido
+    EquipoResumen:
+      properties:
+        codigo_iso:
+          type: string
+          title: Codigo Iso
+        nombre:
+          type: string
+          title: Nombre
+        confederacion:
+          type: string
+          title: Confederacion
+        grupo:
+          type: string
+          title: Grupo
+        ranking_fifa:
+          type: integer
+          title: Ranking Fifa
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_iso
+      - nombre
+      - confederacion
+      - grupo
+      - ranking_fifa
+      title: EquipoResumen
+    ErrorCuerpo:
+      properties:
+        codigo:
+          type: string
+          title: Codigo
+          description: Tipo de problema, estable para el consumidor.
+        mensaje:
+          type: string
+          title: Mensaje
+          description: Descripción apta para el consumidor, sin detalle técnico.
+        request_id:
+          type: string
+          title: Request Id
+          description: Identificador para correlacionar con los logs.
+        detalles:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Detalles
+      additionalProperties: false
+      type: object
+      required:
+      - codigo
+      - mensaje
+      - request_id
+      title: ErrorCuerpo
+    ErrorRespuesta:
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorCuerpo'
+      additionalProperties: false
+      type: object
+      required:
+      - error
+      title: ErrorRespuesta
+      example:
+        error:
+          codigo: RECURSO_NO_ENCONTRADO
+          detalles: []
+          mensaje: No existe la selección 'XYZ'.
+          request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
+    EstadisticasPartido:
+      properties:
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        desde:
+          type: string
+          format: date-time
+          title: Desde
+        hasta:
+          type: string
+          format: date-time
+          title: Hasta
+        resolucion:
+          $ref: '#/components/schemas/Resolucion'
+        series:
+          items:
+            $ref: '#/components/schemas/SerieEquipo'
+          type: array
+          title: Series
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_partido
+      - desde
+      - hasta
+      - resolucion
+      - series
+      title: EstadisticasPartido
+    EstadoDependencia:
+      type: string
+      enum:
+      - ok
+      - caida
+      - timeout
+      title: EstadoDependencia
+    EstadoPartido:
+      type: string
+      enum:
+      - Programado
+      - En Juego
+      - Finalizado
+      title: EstadoPartido
+    EventoActa:
+      properties:
+        minuto:
+          type: integer
+          title: Minuto
+        tipo:
+          type: string
+          title: Tipo
+        descripcion:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Descripcion
+      additionalProperties: false
+      type: object
+      required:
+      - minuto
+      - tipo
+      title: EventoActa
+    EventoGrafo:
+      properties:
+        id_evento:
+          type: string
+          title: Id Evento
+        tipo:
+          type: string
+          title: Tipo
+        minuto:
+          type: integer
+          title: Minuto
+        jugador:
+          anyOf:
+          - $ref: '#/components/schemas/Protagonista'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      required:
+      - id_evento
+      - tipo
+      - minuto
+      title: EventoGrafo
+    EventoNuevo:
+      properties:
+        minuto:
+          type: integer
+          maximum: 130.0
+          minimum: 1.0
+          title: Minuto
+        tipo:
+          $ref: '#/components/schemas/TipoEvento'
+        descripcion:
+          type: string
+          maxLength: 200
+          title: Descripcion
+          default: ''
+      additionalProperties: false
+      type: object
+      required:
+      - minuto
+      - tipo
+      title: EventoNuevo
+      example:
+        descripcion: Gol de ARG-9
+        minuto: 67
+        tipo: Gol
+    EventoRegistrado:
+      properties:
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        evento:
+          $ref: '#/components/schemas/EventoActa'
+        acta:
+          $ref: '#/components/schemas/Acta'
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_partido
+      - evento
+      - acta
+      title: EventoRegistrado
+    EventosPartido:
+      properties:
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        eventos:
+          items:
+            $ref: '#/components/schemas/EventoGrafo'
+          type: array
+          title: Eventos
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_partido
+      - eventos
+      title: EventosPartido
+      example:
+        codigo_partido: P-001
+        eventos:
+        - id_evento: EV-001
+          jugador:
+            id_jugador: ARG-10
+            nombre: Andrés Fuentes
+          minuto: 23
+          tipo: Gol
+    FichaPartido:
+      properties:
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        fecha:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Fecha
+        fase:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Fase
+        local:
+          anyOf:
+          - $ref: '#/components/schemas/EquipoEnPartido'
+          - type: 'null'
+        visitante:
+          anyOf:
+          - $ref: '#/components/schemas/EquipoEnPartido'
+          - type: 'null'
+        sede:
+          anyOf:
+          - $ref: '#/components/schemas/Sede'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_partido
+      title: FichaPartido
+      example:
+        codigo_partido: P-001
+        fase: Grupos
+        fecha: '2030-06-10'
+        local:
+          codigo_iso: ARG
+          nombre: Argentina
+        sede:
+          ciudad: Buenos Aires
+          codigo_sede: MON
+          nombre: Estadio Monumental
+        visitante:
+          codigo_iso: ESP
+          nombre: Espana
+    Grupo:
+      type: string
+      enum:
+      - A
+      - B
+      - C
+      - D
+      - E
+      - F
+      - G
+      - H
+      - I
+      - J
+      - K
+      - L
+      - M
+      - N
+      - O
+      - P
+      title: Grupo
+    Idioma:
+      type: string
+      enum:
+      - es
+      - pt
+      - en
+      title: Idioma
+    JugadorDetalle:
+      properties:
+        id_jugador:
+          type: string
+          title: Id Jugador
+        nombre:
+          type: string
+          title: Nombre
+        dorsal:
+          type: integer
+          title: Dorsal
+        posicion:
+          type: string
+          title: Posicion
+        club_actual:
+          type: string
+          title: Club Actual
+        fecha_nacimiento:
+          type: string
+          format: date
+          title: Fecha Nacimiento
+        edad:
+          type: integer
+          title: Edad
+        altura_cm:
+          type: integer
+          title: Altura Cm
+        pie_habil:
+          type: string
+          title: Pie Habil
+        codigo_equipo:
+          type: string
+          title: Codigo Equipo
+      additionalProperties: false
+      type: object
+      required:
+      - id_jugador
+      - nombre
+      - dorsal
+      - posicion
+      - club_actual
+      - fecha_nacimiento
+      - edad
+      - altura_cm
+      - pie_habil
+      - codigo_equipo
+      title: JugadorDetalle
+      example:
+        altura_cm: 179
+        club_actual: No informado
+        codigo_equipo: ARG
+        dorsal: 10
+        edad: 25
+        fecha_nacimiento: '2004-10-18'
+        id_jugador: ARG-10
+        nombre: Andrés Fuentes
+        pie_habil: izquierdo
+        posicion: DEF
+    JugadorResumen:
+      properties:
+        id_jugador:
+          type: string
+          title: Id Jugador
+        nombre:
+          type: string
+          title: Nombre
+        dorsal:
+          type: integer
+          title: Dorsal
+        posicion:
+          type: string
+          title: Posicion
+        club_actual:
+          type: string
+          title: Club Actual
+      additionalProperties: false
+      type: object
+      required:
+      - id_jugador
+      - nombre
+      - dorsal
+      - posicion
+      - club_actual
+      title: JugadorResumen
+    MuroComentarios:
+      properties:
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        ventana:
+          type: string
+          title: Ventana
+        items:
+          items:
+            $ref: '#/components/schemas/Comentario'
+          type: array
+          title: Items
+        cursor_siguiente:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor Siguiente
+          description: id_comentario del último elemento; null si no hay más en la ventana.
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_partido
+      - ventana
+      - items
+      - cursor_siguiente
+      title: MuroComentarios
+    PaginaEquipos:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/EquipoResumen'
+          type: array
+          title: Items
+        page:
+          type: integer
+          minimum: 1.0
+          title: Page
+        size:
+          type: integer
+          minimum: 1.0
+          title: Size
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      - page
+      - size
+      - total
+      title: PaginaEquipos
+    PaginaJugadores:
+      properties:
+        codigo_iso:
+          type: string
+          title: Codigo Iso
+        items:
+          items:
+            $ref: '#/components/schemas/JugadorResumen'
+          type: array
+          title: Items
+        page:
+          type: integer
+          minimum: 1.0
+          title: Page
+        size:
+          type: integer
+          minimum: 1.0
+          title: Size
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_iso
+      - items
+      - page
+      - size
+      - total
+      title: PaginaJugadores
+    Posicion:
+      type: string
+      enum:
+      - ARQ
+      - DEF
+      - MED
+      - DEL
+      title: Posicion
+    Protagonista:
+      properties:
+        id_jugador:
+          type: string
+          title: Id Jugador
+        nombre:
+          type: string
+          title: Nombre
+      additionalProperties: false
+      type: object
+      required:
+      - id_jugador
+      - nombre
+      title: Protagonista
+    PuntoEstadistica:
+      properties:
+        instante:
+          type: string
+          format: date-time
+          title: Instante
+          description: Inicio de la ventana de agregación (UTC).
+        posesion_pct_prom:
+          type: number
+          title: Posesion Pct Prom
+          description: AVG(posesion_pct) en la ventana.
+        pases_completados_max:
+          type: integer
+          title: Pases Completados Max
+          description: MAX del contador acumulado = total al cierre.
+        tiros_max:
+          type: integer
+          title: Tiros Max
+          description: MAX del contador acumulado = total al cierre.
+        usuarios_activos_max:
+          type: integer
+          title: Usuarios Activos Max
+          description: Pico de usuarios en la ventana.
+      additionalProperties: false
+      type: object
+      required:
+      - instante
+      - posesion_pct_prom
+      - pases_completados_max
+      - tiros_max
+      - usuarios_activos_max
+      title: PuntoEstadistica
+    Resolucion:
+      type: string
+      enum:
+      - 10s
+      - 1m
+      - 5m
+      title: Resolucion
+    ResultadoCambioEstado:
+      properties:
+        cambiado:
+          type: boolean
+          title: Cambiado
+          description: false si el partido ya estaba en el estado pedido (idempotente).
+        acta:
+          $ref: '#/components/schemas/Acta'
+      additionalProperties: false
+      type: object
+      required:
+      - cambiado
+      - acta
+      title: ResultadoCambioEstado
+    Rival:
+      properties:
+        codigo_iso:
+          type: string
+          title: Codigo Iso
+        nombre:
+          type: string
+          title: Nombre
+        codigo_partido:
+          type: string
+          title: Codigo Partido
+        fecha:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Fecha
+        condicion:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Condicion
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_iso
+      - nombre
+      - codigo_partido
+      title: Rival
+    RivalesEquipo:
+      properties:
+        codigo_iso:
+          type: string
+          title: Codigo Iso
+        rivales:
+          items:
+            $ref: '#/components/schemas/Rival'
+          type: array
+          title: Rivales
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_iso
+      - rivales
+      title: RivalesEquipo
+    Salud:
+      properties:
+        estado:
+          type: string
+          title: Estado
+        dependencias:
+          items:
+            $ref: '#/components/schemas/Dependencia'
+          type: array
+          title: Dependencias
+      additionalProperties: false
+      type: object
+      required:
+      - estado
+      - dependencias
+      title: Salud
+    Sede:
+      properties:
+        codigo_sede:
+          type: string
+          title: Codigo Sede
+        nombre:
+          type: string
+          title: Nombre
+        ciudad:
+          type: string
+          title: Ciudad
+      additionalProperties: false
+      type: object
+      required:
+      - codigo_sede
+      - nombre
+      - ciudad
+      title: Sede
+    SerieEquipo:
+      properties:
+        equipo:
+          type: string
+          title: Equipo
+        puntos:
+          items:
+            $ref: '#/components/schemas/PuntoEstadistica'
+          type: array
+          title: Puntos
+      additionalProperties: false
+      type: object
+      required:
+      - equipo
+      - puntos
+      title: SerieEquipo
+    Sesion:
+      properties:
+        id_sesion:
+          type: string
+          title: Id Sesion
+        usuario_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Usuario Id
+        rol:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rol
+        estado:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Estado
+        ttl_restante_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ttl Restante S
+          description: Segundos hasta que la sesión expire.
+      additionalProperties: false
+      type: object
+      required:
+      - id_sesion
+      - usuario_id
+      - rol
+      - estado
+      - ttl_restante_s
+      title: Sesion
+      description: 'Vista pública de la sesión: no incluye dispositivo, páginas vistas ni marcas internas.'
+      example:
+        estado: activa
+        id_sesion: S-0001
+        rol: fan
+        ttl_restante_s: 1712
+        usuario_id: U-0001
+    TipoEvento:
+      type: string
+      enum:
+      - Gol
+      - Tarjeta Amarilla
+      - Tarjeta Roja
+      - Cambio
+      title: TipoEvento
+tags:
+- name: Equipos y jugadores (MongoDB)
+  description: Colecciones `equipos` y `jugadores` (Hito 4).
+- name: Partidos y relaciones (Neo4j)
+  description: Grafo de partidos, equipos, sedes y eventos (Hito 5).
+- name: Comentarios (Cassandra)
+  description: Muro por partición y publicación (Hito 6).
+- name: Sesiones (Redis)
+  description: Sesiones con TTL (Hito 7).
+- name: Estadísticas (InfluxDB)
+  description: Ventanas temporales agregadas (Hito 8).
+- name: Actas oficiales (IRIS)
+  description: Entidad compleja con transiciones validadas (Hito 9).
+- name: Salud
+  description: Conectividad con las fuentes.

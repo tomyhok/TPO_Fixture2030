@@ -1,0 +1,41 @@
+# =====================================================================
+# Hito 10 - API en un contenedor, en la misma red que las bases (opcional)
+# =====================================================================
+# Se usa como archivo adicional del compose de la raíz, por eso las rutas
+# son relativas a la raíz del repositorio. Desde la raíz:
+#
+#   docker compose -f docker-compose.yml -f fixture2030-hito-10-api-integrada/docker-compose.api.yml up -d --build api
+#
+# Diferencia con la ejecución en la notebook: dentro de la red de Docker
+# cada base se alcanza por el nombre del servicio (mongodb, neo4j, ...) y no
+# por 127.0.0.1. Las credenciales salen del mismo .env local (no versionado).
+# La API del contenedor queda publicada en el puerto 8001 para no chocar con
+# la de la notebook (8000).
+# =====================================================================
+services:
+  api:
+    build: ./fixture2030-hito-10-api-integrada
+    container_name: fixture2030-api
+    restart: unless-stopped
+    env_file: ./fixture2030-hito-10-api-integrada/.env
+    environment:
+      MONGO_HOST: mongodb
+      NEO4J_URI: bolt://neo4j:7687
+      CASSANDRA_HOSTS: cassandra
+      REDIS_HOST: redis
+      INFLUX_URL: http://influxdb:8181
+      INFLUX_TOKEN_FILE: /run/secrets/influx_token
+      IRIS_HOST: iris
+      API_PORT: "8001"
+    volumes:
+      # Token de InfluxDB generado en el Hito 8 (excluido del repositorio), solo lectura.
+      - ./fixture2030-influxDB/.influxdb3-token:/run/secrets/influx_token:ro
+    ports:
+      - "127.0.0.1:8001:8000"
+    depends_on:
+      - mongodb
+      - neo4j
+      - cassandra
+      - redis
+      - influxdb
+      - iris

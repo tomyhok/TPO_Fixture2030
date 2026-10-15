@@ -1,0 +1,66 @@
+# Dependencia caída: docker stop fixture2030-redis
+# Generado: 2026-10-15T18:54:28Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+> docker stop fixture2030-redis
+fixture2030-redis
+
+------------------------------------------------------------------
+## CU10 con Redis caído -> 503/504, nunca 200 vacío
+$ curl -i -X GET http://127.0.0.1:8000/sesiones/S-0001
+
+HTTP/1.1 504 Gateway Timeout
+content-type: application/json
+x-request-id: 6cbd3c65-c2d8-4431-a499-7caa1395a4d0
+
+{"error":{"codigo":"DEPENDENCIA_TIMEOUT","mensaje":"La fuente de datos 'redis' no respondió dentro del tiempo límite.","request_id":"6cbd3c65-c2d8-4431-a499-7caa1395a4d0","detalles":[{"dependencia":"redis"}]}}
+
+
+------------------------------------------------------------------
+## CU05 con Redis caído -> 200 degradado X-Cache: BYPASS (lee Neo4j)
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-002
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-cache: BYPASS
+x-request-id: 5c167ae8-ffb8-4372-b121-435c2b87a639
+
+{"codigo_partido":"P-002","fecha":"2030-06-12","fase":"Grupos","local":{"codigo_iso":"URU","nombre":"Uruguay"},"visitante":{"codigo_iso":"ARG","nombre":"Argentina"},"sede":{"codigo_sede":"CEN","nombre":"Estadio Centenario","ciudad":"Montevideo"}}
+
+
+------------------------------------------------------------------
+## CU09 con Redis caído -> no se escribe sin garantía de idempotencia
+$ curl -i -X POST http://127.0.0.1:8000/partidos/P-001/comentarios -H Content-Type:\ application/json -H Idempotency-Key:\ 18e99ab7-f33f-4c30-af9c-bd7d55ee32a9 -d \{\"id_usuario\":\"U-1001\"\,\"usuario_alias\":\"hincha_albiceleste\"\,\"equipo_apoyado\":\"ARG\"\,\"texto\":\"Evidencia\ Hito\ 10\ 20261015T185418:\ que\ golazo\"\,\"idioma\":\"es\"\,\"minuto_partido\":67\}
+
+HTTP/1.1 504 Gateway Timeout
+content-type: application/json
+x-request-id: d6ef1fe0-6f73-46ec-8167-d0d8a54926b8
+
+{"error":{"codigo":"DEPENDENCIA_TIMEOUT","mensaje":"La fuente de datos 'redis' no respondió dentro del tiempo límite.","request_id":"d6ef1fe0-6f73-46ec-8167-d0d8a54926b8","detalles":[{"dependencia":"redis"}]}}
+
+
+------------------------------------------------------------------
+## CU16 /health con Redis caído -> 503 indicando la fuente
+$ curl -i -X GET http://127.0.0.1:8000/health
+
+HTTP/1.1 503 Service Unavailable
+content-type: application/json
+x-request-id: 6569245d-6cc8-4c16-a917-0576d2ff0ccc
+
+{"estado":"degradado","dependencias":[{"nombre":"mongodb","estado":"ok","latencia_ms":1.9},{"nombre":"neo4j","estado":"ok","latencia_ms":3.7},{"nombre":"cassandra","estado":"ok","latencia_ms":9.1},{"nombre":"redis","estado":"timeout","latencia_ms":2011.9},{"nombre":"influxdb","estado":"ok","latencia_ms":24.4},{"nombre":"iris","estado":"ok","latencia_ms":1.0}]}
+
+
+> docker start fixture2030-redis
+fixture2030-redis
+
+------------------------------------------------------------------
+## CU10 Redis de nuevo disponible -> la API se recupera sin reiniciarse
+$ curl -i -X GET http://127.0.0.1:8000/sesiones/S-0001
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 9a78e75d-7562-4ae1-b44e-76a3d1c75c5e
+
+{"error":{"codigo":"SESION_NO_VIGENTE","mensaje":"No existe una sesión vigente con id 'S-0001'.","request_id":"9a78e75d-7562-4ae1-b44e-76a3d1c75c5e","detalles":[]}}
+
+

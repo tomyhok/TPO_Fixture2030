@@ -15,12 +15,16 @@ con tres motores de persistencia:
 - **InfluxDB** (Hito 8): base de series temporales (InfluxDB 3 Core) para métricas en vivo.
 - **IRIS** (Hito 9): base orientada a objetos / multimodelo para gestionar 
   entidades complejas con relaciones directas y validaciones encapsuladas.
+- **API REST integrada** (Hito 10): API HTTP (FastAPI) que expone los seis
+  modulos mediante adaptadores separados, con contrato OpenAPI y pruebas.
 
 ## Requisitos
 
 - Docker Desktop con Docker Compose.
-- Puertos disponibles: `27017`, `7474`, `7687`, `9042` y `6379`.
-- Python 3 en el host, solo para el generador de datos de Cassandra.
+- Puertos disponibles: `27017`, `7474`, `7687`, `9042`, `6379`, `8181`, `1972`,
+  `52773` y `8000` (API del Hito 10).
+- Python 3 en el host para el generador de datos de Cassandra, y Python 3.12
+  para la API del Hito 10.
 
 No es necesario instalar MongoDB, `mongosh`, Neo4j, `cqlsh` ni `redis-cli` localmente: las
 herramientas se ejecutan dentro de los containers.
@@ -286,6 +290,23 @@ cd fixture2030-influxDB
 bash scripts/inicializacion.sh
 ```
 
+## API REST integrada (Hito 10)
+
+API que integra los seis modulos. La guia completa (configuracion, preparacion
+de datos, ejecucion, pruebas y evidencia) esta en
+[`fixture2030-hito-10-api-integrada/README.md`](fixture2030-hito-10-api-integrada/README.md).
+
+```bash
+cd fixture2030-hito-10-api-integrada
+cp .env.example .env                 # completar las contrasenas
+bash scripts/preparar_datos.sh       # datos de muestra de las seis fuentes
+bash scripts/iniciar_api.sh          # Swagger UI: http://127.0.0.1:8000/docs
+```
+
+> **Cambio en IRIS:** `ISC_DATA_DIRECTORY` paso de `/durable` a `/durable/iris`
+> (recomendacion de InterSystems). Con `/durable`, IRIS exige un directorio
+> vacio y no volvia a iniciar sobre el bind mount `~/docker/data/iris` con datos.
+
 ## Estructura del proyecto
 
 ```text
@@ -322,6 +343,13 @@ fixture2030-iris/
   docs/evidencia/                   Capturas de validación y ejecución
   README.md                         Documentación del modelo, UML y matriz de integridad
   docker-compose.yml                Compose independiente del modulo
+fixture2030-hito-10-api-integrada/
+  app/                              API: rutas, servicios, adaptadores, schemas y config
+  iris/                             Fachada Fixture.API que usa el adaptador IRIS
+  openapi/                          Contrato OpenAPI generado del codigo
+  scripts/                          Inicio, preparacion de datos, conectividad, pruebas y evidencia
+  tests/                            Pruebas unitarias y de integracion
+  docs/                             Casos de uso, arquitectura, contratos, conectividad y evidencia
 ```
 
 Los Compose dentro de los modulos se conservan como referencia y para ejecutar

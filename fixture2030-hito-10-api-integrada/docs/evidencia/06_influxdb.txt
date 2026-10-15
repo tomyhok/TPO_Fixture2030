@@ -1,0 +1,73 @@
+# InfluxDB - estadísticas temporales (CU12)
+# Generado: 2026-10-15T18:54:24Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+------------------------------------------------------------------
+## CU12 ventana de 15 min a 5m, ambos equipos
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/estadisticas\?desde=2030-06-10T20:00:00Z\&hasta=2030-06-10T20:15:00Z\&resolucion=5m
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 35f31c16-387c-404e-9d8d-c7a3b312ef8b
+
+{"codigo_partido":"P-001","desde":"2030-06-10T20:00:00Z","hasta":"2030-06-10T20:15:00Z","resolucion":"5m","series":[{"equipo":"ARG","puntos":[{"instante":"2030-06-10T20:00:00Z","posesion_pct_prom":49.95,"pases_completados_max":189,"tiros_max":1,"usuarios_activos_max":182615},{"instante":"2030-06-10T20:05:00Z","posesion_pct_prom":47.2,"pases_completados_max":363,"tiros_max":2,"usuarios_activos_max":197154},{"instante":"2030-06-10T20:10:00Z","posesion_pct_prom":49.14,"pases_completados_max":530,"tiros_max":2,"usuarios_activos_max":204384}]},{"equipo":"ESP","puntos":[{"instante":"2030-06-10T20:00:00Z","posesion_pct_prom":50.05,"pases_completados_max":171,"tiros_max":0,"usuarios_activos_max":88407},{"instante":"2030-06-10T20:05:00Z","posesion_pct_prom":52.8,"pases_completados_max":342,"tiros_max":0,"usuarios_activos_max":109245},{"instante":"2030-06-10T20:10:00Z","posesion_pct_prom":50.86,"pases_completados_max":504,"tiros_max":2,"usuarios_activos_max":126807}]}]}
+
+
+------------------------------------------------------------------
+## CU12 un equipo a 1m
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/estadisticas\?desde=2030-06-10T20:00:00Z\&hasta=2030-06-10T20:03:00Z\&resolucion=1m\&equipo=ARG
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 957dcdee-eb94-49c8-b6bc-75c74f92f977
+
+{"codigo_partido":"P-001","desde":"2030-06-10T20:00:00Z","hasta":"2030-06-10T20:03:00Z","resolucion":"1m","series":[{"equipo":"ARG","puntos":[{"instante":"2030-06-10T20:00:00Z","posesion_pct_prom":49.25,"pases_completados_max":44,"tiros_max":0,"usuarios_activos_max":174940},{"instante":"2030-06-10T20:01:00Z","posesion_pct_prom":49.52,"pases_completados_max":75,"tiros_max":0,"usuarios_activos_max":172945},{"instante":"2030-06-10T20:02:00Z","posesion_pct_prom":49.48,"pases_completados_max":117,"tiros_max":1,"usuarios_activos_max":177675}]}]}
+
+
+> Ventana máxima (3 h) a 10s: cantidad de puntos devueltos
+{'ARG': 720, 'ESP': 720} (tope: 1081 por equipo; hay 2 h de datos)
+
+------------------------------------------------------------------
+## CU12 ventana sin puntos -> 200 series vacías
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/estadisticas\?desde=2031-01-01T00:00:00Z\&hasta=2031-01-01T01:00:00Z
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 0c38a696-0027-42b6-8103-ebdea3c9138e
+
+{"codigo_partido":"P-001","desde":"2031-01-01T00:00:00Z","hasta":"2031-01-01T01:00:00Z","resolucion":"1m","series":[]}
+
+
+------------------------------------------------------------------
+## CU12 intervalo invertido -> 400
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/estadisticas\?desde=2030-06-10T22:00:00Z\&hasta=2030-06-10T20:00:00Z
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: 0f0818d0-099d-47e1-9b38-de72f319739f
+
+{"error":{"codigo":"VALIDACION","mensaje":"El intervalo es inválido: 'desde' debe ser anterior a 'hasta'.","request_id":"0f0818d0-099d-47e1-9b38-de72f319739f","detalles":[{"campo":"query.desde","mensaje":"desde < hasta"}]}}
+
+
+------------------------------------------------------------------
+## CU12 intervalo mayor a 3 h -> 400
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/estadisticas\?desde=2030-06-10T20:00:00Z\&hasta=2030-06-11T20:00:00Z
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: 726eb345-536a-4c89-80eb-af0e1fa2039f
+
+{"error":{"codigo":"VALIDACION","mensaje":"El intervalo supera el máximo de 3 horas.","request_id":"726eb345-536a-4c89-80eb-af0e1fa2039f","detalles":[{"campo":"query.hasta","mensaje":"hasta - desde <= 3h"}]}}
+
+
+------------------------------------------------------------------
+## CU12 fecha sin zona horaria -> 400
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/estadisticas\?desde=2030-06-10T20:00:00\&hasta=2030-06-10T21:00:00
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: 441b69dd-a80f-4cc5-b242-19bf81ba8bbf
+
+{"error":{"codigo":"VALIDACION","mensaje":"Las fechas deben estar en ISO 8601 con zona horaria.","request_id":"441b69dd-a80f-4cc5-b242-19bf81ba8bbf","detalles":[{"campo":"query.desde","mensaje":"Debe incluir zona horaria (ej. Z)."},{"campo":"query.hasta","mensaje":"Debe incluir zona horaria (ej. Z)."}]}}
+
+

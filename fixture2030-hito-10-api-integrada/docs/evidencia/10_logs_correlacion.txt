@@ -1,0 +1,22 @@
+# Correlación entre la respuesta y los logs (RF18, RNF10)
+# Generado: 2026-10-15T18:54:43Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+Se enviaron dos requests con X-Request-ID propio. Líneas de logs/api.log con ese identificador:
+(ruta, método, dependencia, operación, resultado y duración; sin cuerpos ni credenciales)
+
+> POST /partidos/P-001/comentarios  X-Request-ID: evidencia-correlacion-1792090481
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador] request_id=evidencia-correlacion-1792090481 dependencia=redis operacion=idempotencia.set_nx resultado=ok duracion_ms=2.1
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador] request_id=evidencia-correlacion-1792090481 dependencia=neo4j operacion=partido.existe resultado=ok duracion_ms=3.4
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador] request_id=evidencia-correlacion-1792090481 dependencia=cassandra operacion=comentarios.batch_insert resultado=ok duracion_ms=4.2
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador] request_id=evidencia-correlacion-1792090481 dependencia=redis operacion=idempotencia.set_xx resultado=ok duracion_ms=1.9
+2026-10-15T18:54:42Z INFO [fixture2030.acceso] request_id=evidencia-correlacion-1792090481 metodo=POST ruta=/partidos/P-001/comentarios estado=201 duracion_ms=13.8
+
+> POST /partidos-oficiales/P-003/eventos  X-Request-ID: evidencia-correlacion-1792090481-iris
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador] request_id=evidencia-correlacion-1792090481-iris dependencia=redis operacion=idempotencia.set_nx resultado=ok duracion_ms=2.3
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador] request_id=evidencia-correlacion-1792090481-iris dependencia=iris operacion=Fixture.API.RegistrarEvento resultado=ok duracion_ms=1.8
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador.iris] request_id=evidencia-correlacion-1792090481-iris iris_detalle metodo=RegistrarEvento error=PARTIDO_FINALIZADO detalle=ERROR #5001: No se pueden agregar eventos a un partido finalizado
+2026-10-15T18:54:42Z INFO [fixture2030.adaptador] request_id=evidencia-correlacion-1792090481-iris dependencia=redis operacion=idempotencia.del resultado=ok duracion_ms=1.6
+2026-10-15T18:54:42Z INFO [fixture2030.acceso] request_id=evidencia-correlacion-1792090481-iris metodo=POST ruta=/partidos-oficiales/P-003/eventos estado=409 duracion_ms=7.5
+
+> Búsqueda de secretos en logs/api.log (password|token|secret): 0 coincidencias

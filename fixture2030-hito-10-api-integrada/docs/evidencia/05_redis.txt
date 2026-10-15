@@ -1,0 +1,68 @@
+# Redis - sesiones (CU10-CU11)
+# Generado: 2026-10-15T18:54:20Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+> Preparación: sesion:S-7001 (TTL 600 s) y sesion:S-7002 (TTL 2 s) creadas con redis-cli
+
+------------------------------------------------------------------
+## CU10 sesión vigente (no expone dispositivo ni paginas_vistas)
+$ curl -i -X GET http://127.0.0.1:8000/sesiones/S-7001
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 53ea0f32-48b8-48c9-a3ac-b63850cfa809
+
+{"id_sesion":"S-7001","usuario_id":"U-7001","rol":"fan","estado":"activa","ttl_restante_s":599}
+
+
+------------------------------------------------------------------
+## CU10 S-7002 antes de expirar
+$ curl -i -X GET http://127.0.0.1:8000/sesiones/S-7002
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: b9538d14-661a-429b-9e40-99f6bb770649
+
+{"id_sesion":"S-7002","usuario_id":"U-7002","rol":"fan","estado":"activa","ttl_restante_s":2}
+
+
+------------------------------------------------------------------
+## CU10 S-7002 después de 3 s -> 404 SESION_NO_VIGENTE
+$ curl -i -X GET http://127.0.0.1:8000/sesiones/S-7002
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 90bcb67f-c8bb-44bc-bf75-9bf2b8fd90a3
+
+{"error":{"codigo":"SESION_NO_VIGENTE","mensaje":"No existe una sesión vigente con id 'S-7002'.","request_id":"90bcb67f-c8bb-44bc-bf75-9bf2b8fd90a3","detalles":[]}}
+
+
+------------------------------------------------------------------
+## CU11 cerrar sesión -> 204
+$ curl -i -X DELETE http://127.0.0.1:8000/sesiones/S-7001
+
+HTTP/1.1 204 No Content
+x-request-id: f3a15840-0035-45c2-8136-eb072572128c
+
+
+
+------------------------------------------------------------------
+## CU11 cerrar otra vez -> 204 (idempotente)
+$ curl -i -X DELETE http://127.0.0.1:8000/sesiones/S-7001
+
+HTTP/1.1 204 No Content
+x-request-id: 54a88dbc-2d64-418e-b5ce-ddae894c1d18
+
+
+
+------------------------------------------------------------------
+## CU10 sesión cerrada -> 404
+$ curl -i -X GET http://127.0.0.1:8000/sesiones/S-7001
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 5d9991eb-4745-4e24-8ed0-fcc4a25546b4
+
+{"error":{"codigo":"SESION_NO_VIGENTE","mensaje":"No existe una sesión vigente con id 'S-7001'.","request_id":"5d9991eb-4745-4e24-8ed0-fcc4a25546b4","detalles":[]}}
+
+

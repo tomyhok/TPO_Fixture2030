@@ -1,0 +1,86 @@
+# Neo4j - partidos, eventos y relaciones (CU05-CU07), con caché Redis
+# Generado: 2026-10-15T18:54:16Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+------------------------------------------------------------------
+## CU05 ficha del partido, primera lectura -> X-Cache: MISS (Neo4j)
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-cache: MISS
+x-request-id: ba88e51b-13fd-414e-9fb9-1845765acce2
+
+{"codigo_partido":"P-001","fecha":"2030-06-10","fase":"Grupos","local":{"codigo_iso":"ARG","nombre":"Argentina"},"visitante":{"codigo_iso":"ESP","nombre":"Espana"},"sede":{"codigo_sede":"MON","nombre":"Estadio Monumental","ciudad":"Buenos Aires"}}
+
+
+------------------------------------------------------------------
+## CU05 segunda lectura -> X-Cache: HIT (Redis)
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-cache: HIT
+x-request-id: 1b5ce292-01c0-45a4-b2b8-3064ae4a494d
+
+{"codigo_partido":"P-001","fecha":"2030-06-10","fase":"Grupos","local":{"codigo_iso":"ARG","nombre":"Argentina"},"visitante":{"codigo_iso":"ESP","nombre":"Espana"},"sede":{"codigo_sede":"MON","nombre":"Estadio Monumental","ciudad":"Buenos Aires"}}
+
+
+> TTL de la entrada de caché
+300
+
+------------------------------------------------------------------
+## CU05 partido inexistente -> 404
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-999
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 954f8f93-a9bc-499f-8b41-406863c68ccf
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"No existe el partido 'P-999'.","request_id":"954f8f93-a9bc-499f-8b41-406863c68ccf","detalles":[]}}
+
+
+------------------------------------------------------------------
+## CU06 eventos con protagonista
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-001/eventos
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 452e7df3-d295-4aa8-aa9b-307ff1a8466c
+
+{"codigo_partido":"P-001","eventos":[{"id_evento":"EV-001","tipo":"Gol","minuto":23,"jugador":{"id_jugador":"ARG-10","nombre":"Andrés Fuentes"}}]}
+
+
+------------------------------------------------------------------
+## CU06 partido sin eventos -> 200 con lista vacía
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-002/eventos
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: e211e889-683e-4945-82e1-385c868320cf
+
+{"codigo_partido":"P-002","eventos":[]}
+
+
+------------------------------------------------------------------
+## CU06 partido inexistente -> 404
+$ curl -i -X GET http://127.0.0.1:8000/partidos/P-999/eventos
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 4847f22c-9e70-4018-82d3-042c903b6d41
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"No existe el partido 'P-999'.","request_id":"4847f22c-9e70-4018-82d3-042c903b6d41","detalles":[]}}
+
+
+------------------------------------------------------------------
+## CU07 rivales de una selección
+$ curl -i -X GET http://127.0.0.1:8000/equipos/ARG/rivales\?limit=10
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 6891929f-eb64-46b4-aee9-4e91b82114ea
+
+{"codigo_iso":"ARG","rivales":[{"codigo_iso":"ESP","nombre":"Espana","codigo_partido":"P-001","fecha":"2030-06-10","condicion":"local"},{"codigo_iso":"URU","nombre":"Uruguay","codigo_partido":"P-002","fecha":"2030-06-12","condicion":"visitante"}]}
+
+

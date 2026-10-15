@@ -1,0 +1,496 @@
+# Colección Postman ejecutada con Newman (scripts/ejecutar_postman.sh)
+# Generado: 2026-10-15T19:04:13Z con scripts/ejecutar_postman.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+Redis: sesiones S-0001..S-0010 recargadas (TTL 1800 s)
+{"ok":1,"partidos":["P-001","P-002","P-003"]}
+IRIS: actas P-001..P-003 reiniciadas
+(node:32120) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Fixture 2030 - API REST integrada (Hito 10)
+
+□ 00 Salud
+└ CU16 Health - las seis fuentes ok
+  GET http://127.0.0.1:8000/health [200 OK, 525B, 41ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  estado ok
+  √  seis dependencias ok
+
+□ 01 Equipos y jugadores (MongoDB)
+└ CU01 Ficha de una selección
+  GET http://127.0.0.1:8000/equipos/ARG [200 OK, 327B, 6ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  es Argentina
+  √  no expone _id
+
+└ CU01 Selección inexistente -> 404
+  GET http://127.0.0.1:8000/equipos/XYZ [404 Not Found, 338B, 6ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+└ CU01 Código inválido -> 400
+  GET http://127.0.0.1:8000/equipos/arg [400 Bad Request, 430B, 2ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo path.codigo_iso
+
+└ CU02 Listado por confederación (paginado)
+  GET http://127.0.0.1:8000/equipos?confederacion=CONMEBOL&page=1&size=3 [200 OK, 507B, 8ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  respeta size
+  √  todas CONMEBOL
+  √  ordenado por ranking
+  √  metadatos de paginación
+
+└ CU02 Página fuera de rango -> 200 vacío
+  GET http://127.0.0.1:8000/equipos?page=3&size=50 [200 OK, 219B, 7ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  items vacío
+  √  total 64
+
+└ CU02 size fuera de rango -> 400
+  GET http://127.0.0.1:8000/equipos?size=500 [400 Bad Request, 425B, 2ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.size
+
+└ CU03 Plantel filtrado por posición
+  GET http://127.0.0.1:8000/equipos/ARG/jugadores?posicion=ARQ [200 OK, 552B, 8ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  hay arqueros
+  √  todos ARQ
+
+└ CU03 Plantel de selección inexistente -> 404
+  GET http://127.0.0.1:8000/equipos/XYZ/jugadores [404 Not Found, 338B, 7ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+└ CU03 Posición inválida -> 400
+  GET http://127.0.0.1:8000/equipos/ARG/jugadores?posicion=Arquero [400 Bad Request, 433B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.posicion
+
+└ CU04 Ficha de un jugador
+  GET http://127.0.0.1:8000/jugadores/ARG-10 [200 OK, 390B, 6ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  ARG-10 de Argentina
+
+└ CU04 Jugador inexistente -> 404
+  GET http://127.0.0.1:8000/jugadores/ARG-99 [404 Not Found, 338B, 6ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+□ 02 Partidos y relaciones (Neo4j + caché Redis)
+└ CU05 Ficha del partido (MISS o HIT)
+  GET http://127.0.0.1:8000/partidos/P-001 [200 OK, 440B, 14ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  header X-Cache
+  √  ARG local vs ESP visitante
+  √  sede MON
+
+└ CU05 Ficha del partido otra vez -> HIT
+  GET http://127.0.0.1:8000/partidos/P-001 [200 OK, 439B, 4ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  X-Cache HIT (servido por Redis)
+
+└ CU05 Partido inexistente -> 404
+  GET http://127.0.0.1:8000/partidos/P-999 [404 Not Found, 337B, 7ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+└ CU06 Eventos con protagonista
+  GET http://127.0.0.1:8000/partidos/P-001/eventos [200 OK, 325B, 6ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  EV-001 gol de ARG-10
+
+└ CU06 Partido sin eventos -> 200 vacío
+  GET http://127.0.0.1:8000/partidos/P-002/eventos [200 OK, 216B, 7ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  eventos vacío
+
+└ CU06 Eventos de partido inexistente -> 404
+  GET http://127.0.0.1:8000/partidos/P-999/eventos [404 Not Found, 337B, 7ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+└ CU06 limit fuera de rango -> 400
+  GET http://127.0.0.1:8000/partidos/P-001/eventos?limit=500 [400 Bad Request, 427B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.limit
+
+└ CU07 Rivales de una selección
+  GET http://127.0.0.1:8000/equipos/ARG/rivales [200 OK, 425B, 10ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  rivales ESP y URU
+
+└ CU07 Rivales con limit=1
+  GET http://127.0.0.1:8000/equipos/ARG/rivales?limit=1 [200 OK, 315B, 8ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  un solo rival
+
+□ 03 Comentarios (Cassandra)
+└ CU08 Muro, página 1 (limit=3)
+  GET http://127.0.0.1:8000/partidos/P-001/comentarios?ventana=203006152015&limit=3 [200 OK, 1.3kB, 19ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  3 comentarios
+  √  del más reciente al más viejo
+  √  hay cursor_siguiente
+
+└ CU08 Muro, página 2 con cursor
+  GET http://127.0.0.1:8000/partidos/P-001/comentarios?ventana=203006152015&limit=3&cursor=fd576903-e505-11f5-8003-00000005f1c7 [200 OK, 941B, 20ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  2 comentarios restantes
+  √  sin repetir la página 1
+  √  no hay más páginas
+
+└ CU08 Ventana sin comentarios -> 200 vacío
+  GET http://127.0.0.1:8000/partidos/P-001/comentarios?ventana=203001010000 [200 OK, 263B, 18ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  items vacío
+
+└ CU08 Ventana imposible -> 400
+  GET http://127.0.0.1:8000/partidos/P-001/comentarios?ventana=203013152015 [400 Bad Request, 384B, 2ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.ventana
+
+└ CU08 Sin ventana -> 400
+  GET http://127.0.0.1:8000/partidos/P-001/comentarios [400 Bad Request, 402B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.ventana
+
+└ CU09 Publicar comentario -> 201
+  POST http://127.0.0.1:8000/partidos/P-001/comentarios [201 Created, 590B, 22ms]
+  √  Incluye X-Request-ID
+  √  HTTP 201
+  √  estado publicado
+  √  header Location
+
+└ CU09 Reintento con la misma clave -> 200 sin duplicar
+  POST http://127.0.0.1:8000/partidos/P-001/comentarios [200 OK, 612B, 7ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  Idempotent-Replayed
+  √  mismo id_comentario
+
+└ CU09 Verificar en el muro: una sola vez
+  GET http://127.0.0.1:8000/partidos/P-001/comentarios?ventana=202610151904&limit=100 [200 OK, 611B, 19ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  el comentario aparece una sola vez
+
+└ CU09 Misma clave con otro cuerpo -> 409
+  POST http://127.0.0.1:8000/partidos/P-001/comentarios [409 Conflict, 385B, 5ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 409
+  √  codigo CONFLICTO_IDEMPOTENCIA
+
+└ CU09 Partido inexistente -> 404
+  POST http://127.0.0.1:8000/partidos/P-999/comentarios [404 Not Found, 337B, 10ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+└ CU09 Sin Idempotency-Key -> 400
+  POST http://127.0.0.1:8000/partidos/P-001/comentarios [400 Bad Request, 411B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo header.Idempotency-Key
+
+└ CU09 Cuerpo inválido -> 400
+  POST http://127.0.0.1:8000/partidos/P-001/comentarios [400 Bad Request, 502B, 4ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo body.texto
+  √  rechaza campos extra
+
+□ 04 Sesiones (Redis)
+└ CU10 Sesión vigente
+  GET http://127.0.0.1:8000/sesiones/S-0001 [200 OK, 273B, 5ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  solo campos públicos
+  √  TTL restante positivo
+
+└ CU10 Sesión inexistente -> 404
+  GET http://127.0.0.1:8000/sesiones/S-9999 [404 Not Found, 350B, 4ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo SESION_NO_VIGENTE
+
+└ CU10 Id de sesión inválido -> 400
+  GET http://127.0.0.1:8000/sesiones/abc [400 Bad Request, 430B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo path.id_sesion
+
+└ CU11 Cerrar sesión -> 204
+  DELETE http://127.0.0.1:8000/sesiones/S-0010 [204 No Content, 133B, 7ms]
+  √  Incluye X-Request-ID
+  √  HTTP 204
+
+└ CU11 Cerrar otra vez -> 204 (idempotente)
+  DELETE http://127.0.0.1:8000/sesiones/S-0010 [204 No Content, 133B, 4ms]
+  √  Incluye X-Request-ID
+  √  HTTP 204
+
+└ CU10 Sesión cerrada -> 404
+  GET http://127.0.0.1:8000/sesiones/S-0010 [404 Not Found, 350B, 4ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo SESION_NO_VIGENTE
+
+□ 05 Estadísticas (InfluxDB)
+└ CU12 Partido completo a 5m, ambos equipos
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T22:00:00Z&resolucion=5m [200 OK, 6.84kB, 24ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  dos series ARG y ESP
+  √  24 ventanas de 5 min
+  √  la posesión suma 100
+
+└ CU12 Un equipo a 1m
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T20:03:00Z&resolucion=1m&equipo=ARG [200 OK, 723B, 15ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  solo ARG
+  √  3 ventanas de 1 min
+
+└ CU12 Ventana máxima (3 h a 10s) respeta el tope
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T23:00:00Z&resolucion=10s&equipo=ARG [200 OK, 97.69kB, 30ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  como máximo 1081 puntos
+
+└ CU12 Ventana sin puntos -> 200 vacío
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2031-01-01T00:00:00Z&hasta=2031-01-01T01:00:00Z [200 OK, 296B, 11ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  series vacío
+
+└ CU12 Intervalo invertido -> 400
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2030-06-10T22:00:00Z&hasta=2030-06-10T20:00:00Z [400 Bad Request, 411B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.desde
+
+└ CU12 Intervalo mayor a 3 h -> 400
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-11T20:00:00Z [400 Bad Request, 396B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.hasta
+
+└ CU12 Fecha sin zona horaria -> 400
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00&hasta=2030-06-10T21:00:00 [400 Bad Request, 492B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.desde
+
+└ CU12 Resolución inválida -> 400
+  GET http://127.0.0.1:8000/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T21:00:00Z&resolucion=1h [400 Bad Request, 426B, 2ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo query.resolucion
+
+□ 06 Actas oficiales (IRIS)
+└ CU13 Acta de un partido en juego
+  GET http://127.0.0.1:8000/partidos-oficiales/P-001 [200 OK, 407B, 4ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  En Juego
+  √  árbitro sin DNI
+
+└ CU13 Acta inexistente -> 404
+  GET http://127.0.0.1:8000/partidos-oficiales/P-999 [404 Not Found, 346B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+└ CU14 Programado -> Finalizado no permitido -> 409
+  PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado [409 Conflict, 473B, 5ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 409
+  √  codigo CONFLICTO_ESTADO
+  √  informa el estado actual
+
+└ CU14 Programado -> En Juego -> 200
+  PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado [200 OK, 376B, 8ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  cambiado
+  √  En Juego
+
+└ CU14 Repetir En Juego -> 200 sin cambios
+  PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado [200 OK, 377B, 5ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  cambiado false (idempotente)
+
+└ CU14 Estado inválido -> 400
+  PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado [400 Bad Request, 442B, 3ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo body.estado
+
+└ CU15 Registrar evento -> 201
+  POST http://127.0.0.1:8000/partidos-oficiales/P-002/eventos [201 Created, 510B, 9ms]
+  √  Incluye X-Request-ID
+  √  HTTP 201
+  √  evento registrado
+
+└ CU15 Reintento con la misma clave -> 200 sin duplicar
+  POST http://127.0.0.1:8000/partidos-oficiales/P-002/eventos [200 OK, 532B, 7ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  Idempotent-Replayed
+  √  el gol está una sola vez
+
+└ CU15 Minuto fuera de rango -> 400
+  POST http://127.0.0.1:8000/partidos-oficiales/P-002/eventos [400 Bad Request, 428B, 5ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+  √  detalla el campo body.minuto
+
+└ CU14 En Juego -> Finalizado -> 200
+  PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado [200 OK, 433B, 5ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  Finalizado
+
+└ CU15 Evento en partido Finalizado -> 409
+  POST http://127.0.0.1:8000/partidos-oficiales/P-002/eventos [409 Conflict, 394B, 10ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 409
+  √  codigo CONFLICTO_ESTADO
+
+└ CU14 Finalizado -> En Juego no permitido -> 409
+  PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado [409 Conflict, 469B, 5ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 409
+  √  codigo CONFLICTO_ESTADO
+
+└ CU13 Acta final de P-002
+  GET http://127.0.0.1:8000/partidos-oficiales/P-002 [200 OK, 408B, 5ms]
+  √  Incluye X-Request-ID
+  √  HTTP 200
+  √  Finalizado
+  √  un solo evento (ni duplicado ni tardío)
+
+□ 07 Errores generales
+└ Ruta inexistente -> 404
+  GET http://127.0.0.1:8000/no-existe [404 Not Found, 337B, 2ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+
+└ Método no permitido -> 405
+  PUT http://127.0.0.1:8000/equipos/ARG [405 Method Not Allowed, 360B, 2ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 405
+  √  codigo METODO_NO_PERMITIDO
+
+└ JSON malformado -> 400
+  POST http://127.0.0.1:8000/partidos/P-001/comentarios [400 Bad Request, 398B, 2ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 400
+  √  codigo VALIDACION
+
+└ X-Request-ID propio se reutiliza
+  GET http://127.0.0.1:8000/equipos/XYZ [404 Not Found, 302B, 5ms]
+  √  Incluye X-Request-ID
+  √  Error con el formato común
+  √  HTTP 404
+  √  codigo RECURSO_NO_ENCONTRADO
+  √  header reutilizado
+  √  request_id en el cuerpo
+
+┌─────────────────────────┬─────────────────┬─────────────────┐
+│                         │        executed │          failed │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              iterations │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│                requests │              64 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│            test-scripts │             128 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│      prerequest-scripts │               2 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              assertions │             264 │               0 │
+├─────────────────────────┴─────────────────┴─────────────────┤
+│ total run duration: 5.9s                                    │
+├─────────────────────────────────────────────────────────────┤
+│ total data received: 119kB (approx)                         │
+├─────────────────────────────────────────────────────────────┤
+│ average response time: 7ms [min: 2ms, max: 41ms, s.d.: 7ms] │
+└─────────────────────────────────────────────────────────────┘

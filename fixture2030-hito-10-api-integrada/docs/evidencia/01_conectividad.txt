@@ -1,0 +1,38 @@
+# Conectividad de las seis fuentes
+# Generado: 2026-10-15T18:54:12Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+=== Contenedores ===
+NAMES                   STATUS
+fixture2030-api         Up About a minute
+fixture2030-influxdb    Up 6 minutes
+fixture2030-iris        Up 51 minutes (healthy)
+fixture2030-mongodb     Up 57 minutes
+fixture2030-cassandra   Up 57 minutes (healthy)
+fixture2030-neo4j       Up 57 minutes
+fixture2030-redis       Up About a minute
+
+=== Conectividad desde la notebook (mismos adaptadores que la API) ===
+Timeouts: conexion=2.0s operacion=5.0s
+
+fuente     estado         ms  destino
+mongodb    ok           35.4  127.0.0.1:27017 db=fixture2030
+neo4j      ok           23.3  bolt://127.0.0.1:7687 db=neo4j
+cassandra  ok         1461.3  127.0.0.1:9042 keyspace=fixture2030
+redis      ok           16.8  127.0.0.1:6379 db=0
+influxdb   ok           17.7  http://127.0.0.1:8181 database=fixture2030
+iris       ok           32.4  127.0.0.1:1972 namespace=USER
+
+Resultado: todas las fuentes disponibles
+
+------------------------------------------------------------------
+## CU16 - /health con todas las fuentes
+$ curl -i -X GET http://127.0.0.1:8000/health
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 7ad0b0f0-27a8-4cf8-a755-3cdb859d6287
+
+{"estado":"ok","dependencias":[{"nombre":"mongodb","estado":"ok","latencia_ms":2.9},{"nombre":"neo4j","estado":"ok","latencia_ms":3.7},{"nombre":"cassandra","estado":"ok","latencia_ms":4.9},{"nombre":"redis","estado":"ok","latencia_ms":2.0},{"nombre":"influxdb","estado":"ok","latencia_ms":7.3},{"nombre":"iris","estado":"ok","latencia_ms":1.5}]}
+
+

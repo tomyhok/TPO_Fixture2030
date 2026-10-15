@@ -58,6 +58,19 @@
 <Inverse>Partido</Inverse>
 <Relationship>1</Relationship>
 </Property>
+<Property name="Codigo">
+<Description>
+Codigo de negocio del partido (ej. P-001), homologado con Neo4j, Cassandra, Redis
+e InfluxDB. Agregado en el Hito 10 para que la API no exponga el %ID interno.
+No es obligatorio para no romper los partidos creados por la demo del Hito 9.</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="10"/>
+</Property>
+
+<Index name="CodigoIndex">
+<Properties>Codigo</Properties>
+<Unique>1</Unique>
+</Index>
 </Class>
 
 <Class name="Fixture.Evento">

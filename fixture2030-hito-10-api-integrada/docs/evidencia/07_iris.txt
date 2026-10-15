@@ -1,0 +1,104 @@
+# IRIS - actas oficiales (CU13-CU15). Actas reiniciadas con Fixture.API.CargarMuestra()
+# Generado: 2026-10-15T18:54:26Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+------------------------------------------------------------------
+## CU13 acta de un partido en juego
+$ curl -i -X GET http://127.0.0.1:8000/partidos-oficiales/P-001
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: f9c4be0b-8c4e-4b30-a7d5-72c411c4ed0b
+
+{"codigo_partido":"P-001","sede":"Estadio Monumental","fecha":"2030-06-10","estado":"En Juego","arbitro":{"nombre":"Facundo","apellido":"Tello","rango":"FIFA"},"eventos":[{"minuto":23,"tipo":"Gol","descripcion":"Gol de ARG-10"}]}
+
+
+------------------------------------------------------------------
+## CU13 acta inexistente -> 404
+$ curl -i -X GET http://127.0.0.1:8000/partidos-oficiales/P-999
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 0c9c3dad-e34f-4276-a70e-80c95fa33e69
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"No existe el acta del partido 'P-999'.","request_id":"0c9c3dad-e34f-4276-a70e-80c95fa33e69","detalles":[]}}
+
+
+------------------------------------------------------------------
+## CU14 transición inválida Programado -> Finalizado -> 409
+$ curl -i -X PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado -H Content-Type:\ application/json -d \{\"estado\":\"Finalizado\"\}
+
+HTTP/1.1 409 Conflict
+content-type: application/json
+x-request-id: 0e08a77f-2a93-412c-87db-7ba8c1cd8c63
+
+{"error":{"codigo":"CONFLICTO_ESTADO","mensaje":"No se puede pasar de 'Programado' a 'Finalizado'. Transiciones permitidas: Programado -> En Juego -> Finalizado.","request_id":"0e08a77f-2a93-412c-87db-7ba8c1cd8c63","detalles":[{"estado_actual":"Programado","estado_pedido":"Finalizado"}]}}
+
+
+------------------------------------------------------------------
+## CU14 Programado -> En Juego -> 200 cambiado:true
+$ curl -i -X PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado -H Content-Type:\ application/json -d \{\"estado\":\"En\ Juego\"\}
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 404930ce-5bd4-43ec-b296-864249d07cfb
+
+{"cambiado":true,"acta":{"codigo_partido":"P-002","sede":"Estadio Centenario","fecha":"2030-06-12","estado":"En Juego","arbitro":{"nombre":"Facundo","apellido":"Tello","rango":"FIFA"},"eventos":[]}}
+
+
+------------------------------------------------------------------
+## CU14 repetir En Juego -> 200 cambiado:false (idempotente)
+$ curl -i -X PATCH http://127.0.0.1:8000/partidos-oficiales/P-002/estado -H Content-Type:\ application/json -d \{\"estado\":\"En\ Juego\"\}
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: eab02c2a-4b7e-4514-86fd-6cf49f5160ad
+
+{"cambiado":false,"acta":{"codigo_partido":"P-002","sede":"Estadio Centenario","fecha":"2030-06-12","estado":"En Juego","arbitro":{"nombre":"Facundo","apellido":"Tello","rango":"FIFA"},"eventos":[]}}
+
+
+------------------------------------------------------------------
+## CU15 registrar evento -> 201
+$ curl -i -X POST http://127.0.0.1:8000/partidos-oficiales/P-002/eventos -H Content-Type:\ application/json -H Idempotency-Key:\ 60ca67c2-22ba-4347-9314-9cb796f9ac32 -d \{\"minuto\":12\,\"tipo\":\"Gol\"\,\"descripcion\":\"Gol\ de\ URU-9\"\}
+
+HTTP/1.1 201 Created
+content-type: application/json
+x-request-id: 9c17690f-04a6-4489-8633-387df30a0c11
+
+{"codigo_partido":"P-002","evento":{"minuto":12,"tipo":"Gol","descripcion":"Gol de URU-9"},"acta":{"codigo_partido":"P-002","sede":"Estadio Centenario","fecha":"2030-06-12","estado":"En Juego","arbitro":{"nombre":"Facundo","apellido":"Tello","rango":"FIFA"},"eventos":[{"minuto":12,"tipo":"Gol","descripcion":"Gol de URU-9"}]}}
+
+
+------------------------------------------------------------------
+## CU15 reintento con la misma clave -> 200 sin duplicar
+$ curl -i -X POST http://127.0.0.1:8000/partidos-oficiales/P-002/eventos -H Content-Type:\ application/json -H Idempotency-Key:\ 60ca67c2-22ba-4347-9314-9cb796f9ac32 -d \{\"minuto\":12\,\"tipo\":\"Gol\"\,\"descripcion\":\"Gol\ de\ URU-9\"\}
+
+HTTP/1.1 200 OK
+content-type: application/json
+idempotent-replayed: true
+x-request-id: 10a7ee24-a83f-46b6-b1cc-5fe2f85c4482
+
+{"codigo_partido":"P-002","evento":{"minuto":12,"tipo":"Gol","descripcion":"Gol de URU-9"},"acta":{"codigo_partido":"P-002","sede":"Estadio Centenario","fecha":"2030-06-12","estado":"En Juego","arbitro":{"nombre":"Facundo","apellido":"Tello","rango":"FIFA"},"eventos":[{"minuto":12,"tipo":"Gol","descripcion":"Gol de URU-9"}]}}
+
+
+------------------------------------------------------------------
+## CU15 evento en partido Finalizado (P-003) -> 409 por %OnBeforeSave
+$ curl -i -X POST http://127.0.0.1:8000/partidos-oficiales/P-003/eventos -H Content-Type:\ application/json -H Idempotency-Key:\ dd23c5d6-4540-4203-9f82-c16085508014 -d \{\"minuto\":90\,\"tipo\":\"Gol\"\}
+
+HTTP/1.1 409 Conflict
+content-type: application/json
+x-request-id: 0ce5d6d0-7a87-49c9-822c-8c6ebcc95a1c
+
+{"error":{"codigo":"CONFLICTO_ESTADO","mensaje":"El partido está Finalizado: el acta no admite eventos nuevos.","request_id":"0ce5d6d0-7a87-49c9-822c-8c6ebcc95a1c","detalles":[{"estado_actual":"Finalizado"}]}}
+
+
+------------------------------------------------------------------
+## CU15 minuto fuera de rango -> 400 (antes de llegar a IRIS)
+$ curl -i -X POST http://127.0.0.1:8000/partidos-oficiales/P-002/eventos -H Content-Type:\ application/json -H Idempotency-Key:\ 3a6b0284-03b4-4434-b77d-e8ccc443aac9 -d \{\"minuto\":0\,\"tipo\":\"Gol\"\}
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: 2f2c6187-9a52-4c8f-9005-8520d1d318fb
+
+{"error":{"codigo":"VALIDACION","mensaje":"La solicitud tiene parámetros o cuerpo inválidos.","request_id":"2f2c6187-9a52-4c8f-9005-8520d1d318fb","detalles":[{"campo":"body.minuto","mensaje":"Input should be greater than or equal to 1"}]}}
+
+

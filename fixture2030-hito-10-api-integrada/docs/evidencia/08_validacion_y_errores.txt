@@ -1,0 +1,81 @@
+# Validación y formato de error común
+# Generado: 2026-10-15T18:54:27Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+------------------------------------------------------------------
+## Parámetro de ruta con formato inválido -> 400 (no se consulta la base)
+$ curl -i -X GET http://127.0.0.1:8000/equipos/arg
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: a462b1c7-d90c-4b57-9298-00cc358e1892
+
+{"error":{"codigo":"VALIDACION","mensaje":"La solicitud tiene parámetros o cuerpo inválidos.","request_id":"a462b1c7-d90c-4b57-9298-00cc358e1892","detalles":[{"campo":"path.codigo_iso","mensaje":"String should match pattern '^[A-Z]{3}$'"}]}}
+
+
+------------------------------------------------------------------
+## Query fuera de rango -> 400
+$ curl -i -X GET http://127.0.0.1:8000/equipos\?size=500
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: 30e021f6-fa90-41b6-8c51-52ed6aae2639
+
+{"error":{"codigo":"VALIDACION","mensaje":"La solicitud tiene parámetros o cuerpo inválidos.","request_id":"30e021f6-fa90-41b6-8c51-52ed6aae2639","detalles":[{"campo":"query.size","mensaje":"Input should be less than or equal to 50"}]}}
+
+
+------------------------------------------------------------------
+## Cuerpo con campos faltantes y extra -> 400
+$ curl -i -X POST http://127.0.0.1:8000/partidos/P-001/comentarios -H Content-Type:\ application/json -H Idempotency-Key:\ 686c6603-6910-4860-9331-110779d0e11a -d \{\"texto\":\"\"\,\"campo_extra\":1\}
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: 51a60746-8e25-4c84-bcfa-82bad070fcaf
+
+{"error":{"codigo":"VALIDACION","mensaje":"La solicitud tiene parámetros o cuerpo inválidos.","request_id":"51a60746-8e25-4c84-bcfa-82bad070fcaf","detalles":[{"campo":"body.id_usuario","mensaje":"Field required"},{"campo":"body.usuario_alias","mensaje":"Field required"},{"campo":"body.equipo_apoyado","mensaje":"Field required"},{"campo":"body.texto","mensaje":"String should have at least 1 character"},{"campo":"body.idioma","mensaje":"Field required"},{"campo":"body.minuto_partido","mensaje":"Field required"},{"campo":"body.campo_extra","mensaje":"Extra inputs are not permitted"}]}}
+
+
+------------------------------------------------------------------
+## Falta Idempotency-Key -> 400
+$ curl -i -X POST http://127.0.0.1:8000/partidos/P-001/comentarios -H Content-Type:\ application/json -d \{\"id_usuario\":\"U-1001\"\,\"usuario_alias\":\"hincha_albiceleste\"\,\"equipo_apoyado\":\"ARG\"\,\"texto\":\"Evidencia\ Hito\ 10\ 20261015T185418:\ que\ golazo\"\,\"idioma\":\"es\"\,\"minuto_partido\":67\}
+
+HTTP/1.1 400 Bad Request
+content-type: application/json
+x-request-id: 18ca9e2e-a2eb-453d-801a-9a1381752375
+
+{"error":{"codigo":"VALIDACION","mensaje":"La solicitud tiene parámetros o cuerpo inválidos.","request_id":"18ca9e2e-a2eb-453d-801a-9a1381752375","detalles":[{"campo":"header.Idempotency-Key","mensaje":"Field required"}]}}
+
+
+------------------------------------------------------------------
+## Ruta inexistente -> 404 con el formato común
+$ curl -i -X GET http://127.0.0.1:8000/no-existe
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 2480cd8b-001c-4682-85e8-197d3aa29b88
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"La ruta solicitada no existe.","request_id":"2480cd8b-001c-4682-85e8-197d3aa29b88","detalles":[]}}
+
+
+------------------------------------------------------------------
+## Método no permitido -> 405
+$ curl -i -X PUT http://127.0.0.1:8000/equipos/ARG
+
+HTTP/1.1 405 Method Not Allowed
+content-type: application/json
+x-request-id: 7dfde7d2-8965-4f4b-b471-76958b6b4c7a
+
+{"error":{"codigo":"METODO_NO_PERMITIDO","mensaje":"El método no está permitido para esta ruta.","request_id":"7dfde7d2-8965-4f4b-b471-76958b6b4c7a","detalles":[]}}
+
+
+------------------------------------------------------------------
+## X-Request-ID enviado por el cliente se reutiliza
+$ curl -i -X GET http://127.0.0.1:8000/equipos/XYZ -H X-Request-ID:\ evidencia-hito10-001
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: evidencia-hito10-001
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"No existe la selección 'XYZ'.","request_id":"evidencia-hito10-001","detalles":[]}}
+
+

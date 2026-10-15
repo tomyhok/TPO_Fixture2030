@@ -1,0 +1,24 @@
+# Contrato OpenAPI y Swagger UI
+# Generado: 2026-10-15T18:55:27Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+> GET /docs (Swagger UI): HTTP 200
+> GET /openapi.json servido por la API vs. openapi/openapi.yaml versionado:
+  idénticos
+  rutas: 14 | operaciones: 16
+  GET    /equipos                                         200 400 503 504 500
+  GET    /equipos/{codigo_iso}                            200 400 404 503 504 500
+  GET    /equipos/{codigo_iso}/jugadores                  200 400 404 503 504 500
+  GET    /jugadores/{id_jugador}                          200 400 404 503 504 500
+  GET    /partidos/{codigo_partido}                       200 400 404 503 504 500
+  GET    /partidos/{codigo_partido}/eventos               200 400 404 503 504 500
+  GET    /equipos/{codigo_iso}/rivales                    200 400 404 503 504 500
+  GET    /partidos/{codigo_partido}/comentarios           200 400 503 504 500
+  POST   /partidos/{codigo_partido}/comentarios           201 200 400 404 409 503 504 500
+  GET    /sesiones/{id_sesion}                            200 400 404 503 504 500
+  DELETE /sesiones/{id_sesion}                            204 400 503 504 500
+  GET    /partidos/{codigo_partido}/estadisticas          200 400 503 504 500
+  GET    /partidos-oficiales/{codigo_partido}             200 400 404 503 504 500
+  PATCH  /partidos-oficiales/{codigo_partido}/estado      200 400 404 409 503 504 500
+  POST   /partidos-oficiales/{codigo_partido}/eventos     201 200 400 404 409 503 504 500
+  GET    /health                                          200 503

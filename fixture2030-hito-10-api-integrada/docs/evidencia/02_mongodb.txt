@@ -1,0 +1,81 @@
+# MongoDB - equipos y jugadores (CU01-CU04)
+# Generado: 2026-10-15T18:54:16Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+------------------------------------------------------------------
+## CU01 ficha de una selección
+$ curl -i -X GET http://127.0.0.1:8000/equipos/ARG
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 34afabad-840a-4497-bc30-d9e152f6c40c
+
+{"codigo_iso":"ARG","nombre":"Argentina","confederacion":"CONMEBOL","grupo":"A","ranking_fifa":1,"director_tecnico":"Martinez","pais_anfitrion":true}
+
+
+------------------------------------------------------------------
+## CU01 selección inexistente -> 404
+$ curl -i -X GET http://127.0.0.1:8000/equipos/XYZ
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: d4972294-3d4d-4e33-939b-1d08b5136c81
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"No existe la selección 'XYZ'.","request_id":"d4972294-3d4d-4e33-939b-1d08b5136c81","detalles":[]}}
+
+
+------------------------------------------------------------------
+## CU02 listado paginado por ranking, filtro por confederación
+$ curl -i -X GET http://127.0.0.1:8000/equipos\?confederacion=CONMEBOL\&page=1\&size=3
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 843630b5-6cfa-430a-9596-6817222ea494
+
+{"items":[{"codigo_iso":"ARG","nombre":"Argentina","confederacion":"CONMEBOL","grupo":"A","ranking_fifa":1},{"codigo_iso":"BRA","nombre":"Brasil","confederacion":"CONMEBOL","grupo":"B","ranking_fifa":2},{"codigo_iso":"URU","nombre":"Uruguay","confederacion":"CONMEBOL","grupo":"C","ranking_fifa":3}],"page":1,"size":3,"total":10}
+
+
+------------------------------------------------------------------
+## CU02 página fuera de rango -> 200 vacío
+$ curl -i -X GET http://127.0.0.1:8000/equipos\?page=3\&size=50
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 6fbe9659-7f98-482c-8d7a-af02b51e7467
+
+{"items":[],"page":3,"size":50,"total":64}
+
+
+------------------------------------------------------------------
+## CU03 plantel filtrado por posición
+$ curl -i -X GET http://127.0.0.1:8000/equipos/ARG/jugadores\?posicion=ARQ
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 5f64812a-c04f-4bb9-bb7e-a608833c5a59
+
+{"codigo_iso":"ARG","items":[{"id_jugador":"ARG-1","nombre":"Lucas Herrera","dorsal":1,"posicion":"ARQ","club_actual":"No informado"},{"id_jugador":"ARG-2","nombre":"Mateo Navarro","dorsal":2,"posicion":"ARQ","club_actual":"No informado"},{"id_jugador":"ARG-3","nombre":"Diego Cabrera","dorsal":3,"posicion":"ARQ","club_actual":"No informado"}],"page":1,"size":26,"total":3}
+
+
+------------------------------------------------------------------
+## CU03 plantel de selección inexistente -> 404
+$ curl -i -X GET http://127.0.0.1:8000/equipos/XYZ/jugadores
+
+HTTP/1.1 404 Not Found
+content-type: application/json
+x-request-id: 6c6617be-63c3-4123-b70c-303268bc4c3f
+
+{"error":{"codigo":"RECURSO_NO_ENCONTRADO","mensaje":"No existe la selección 'XYZ'.","request_id":"6c6617be-63c3-4123-b70c-303268bc4c3f","detalles":[]}}
+
+
+------------------------------------------------------------------
+## CU04 ficha de un jugador
+$ curl -i -X GET http://127.0.0.1:8000/jugadores/ARG-10
+
+HTTP/1.1 200 OK
+content-type: application/json
+x-request-id: 100ad7d3-e0f5-49c4-9977-4bfc33366077
+
+{"id_jugador":"ARG-10","nombre":"Andrés Fuentes","dorsal":10,"posicion":"DEF","club_actual":"No informado","fecha_nacimiento":"2004-10-18","edad":25,"altura_cm":179,"pie_habil":"izquierdo","codigo_equipo":"ARG"}
+
+

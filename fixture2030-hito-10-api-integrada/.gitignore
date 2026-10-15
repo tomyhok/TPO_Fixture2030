@@ -1,0 +1,13 @@
+# Secretos y configuración local (RNF7): solo se versiona .env.example
+.env
+.env.*
+!.env.example
+
+# Entorno de Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Logs de ejecución local (pueden contener datos de prueba)
+logs/

@@ -1,0 +1,37 @@
+# Ambiente de ejecución
+# Generado: 2026-10-15T18:54:11Z con scripts/generar_evidencia.sh
+# API: http://127.0.0.1:8000 (notebook)
+
+> git
+commit 17b3693 (2026-10-09 16:48:29 -0300)
+
+> Sistema y Python
+Windows-11-10.0.26300-SP0 | Python 3.12.10
+
+> Docker
+Docker Engine 29.7.2
+
+> Contenedores
+NAMES                   IMAGE                                   STATUS
+fixture2030-api         tpo_fixture2030-api                     Up About a minute
+fixture2030-influxdb    influxdb:3-core                         Up 6 minutes
+fixture2030-iris        intersystems/iris-community:latest-cd   Up 51 minutes (healthy)
+fixture2030-mongodb     mongo:7.0                               Up 57 minutes
+fixture2030-cassandra   cassandra:latest                        Up 57 minutes (healthy)
+fixture2030-neo4j       neo4j:latest                            Up 57 minutes
+fixture2030-redis       redis:latest                            Up About a minute
+
+> Dependencias de la API
+fastapi==0.143.2
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
+pydantic-settings==2.16.0
+PyYAML==6.0.3
+pymongo==4.19.0
+neo4j==6.4.1
+cassandra-driver==3.30.1
+pyasyncore==1.0.5
+redis==8.1.0
+httpx==0.28.1
+intersystems-irispython==5.4.1
+pytest==9.1.1

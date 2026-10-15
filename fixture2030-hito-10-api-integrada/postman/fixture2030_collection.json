@@ -1,0 +1,1855 @@
+{
+  "info": {
+    "name": "Fixture 2030 - API REST integrada (Hito 10)",
+    "description": "Rutas principales y escenarios de error de los 16 casos de uso (docs/casos_de_uso.md). Cada request tiene pruebas automáticas y, además, todas verifican el header X-Request-ID y el formato de error común.\n\nAntes de correrla: API levantada (scripts/iniciar_api) y `bash scripts/reiniciar_muestra.sh` (recarga las sesiones de Redis y reinicia las actas de IRIS). Ejecutar la colección completa en orden con el Runner.\n\nLos escenarios de dependencia caída no están acá: requieren detener un contenedor (ver scripts/generar_evidencia.sh --con-caida y tests/integration/test_dependencias_caidas.py).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Se ejecuta después de cada request de la colección.",
+          "pm.test(\"Incluye X-Request-ID\", () => pm.response.to.have.header(\"X-Request-ID\"));",
+          "if (pm.response.code >= 400 && !pm.request.url.getPath().endsWith(\"/health\")) {",
+          "  pm.test(\"Error con el formato común\", () => {",
+          "    const e = pm.response.json().error;",
+          "    pm.expect(e).to.have.all.keys(\"codigo\", \"mensaje\", \"request_id\", \"detalles\");",
+          "    pm.expect(e.request_id).to.eql(pm.response.headers.get(\"X-Request-ID\"));",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "cursor",
+      "value": ""
+    },
+    {
+      "key": "idsPagina1",
+      "value": "[]"
+    },
+    {
+      "key": "idemComentario",
+      "value": ""
+    },
+    {
+      "key": "textoComentario",
+      "value": ""
+    },
+    {
+      "key": "idComentario",
+      "value": ""
+    },
+    {
+      "key": "ubicacionComentario",
+      "value": ""
+    },
+    {
+      "key": "idemEvento",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Salud",
+      "description": "CU16: conectividad con las seis fuentes.",
+      "item": [
+        {
+          "name": "CU16 Health - las seis fuentes ok",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"estado ok\", () => pm.expect(d.estado).to.eql(\"ok\"));",
+                  "pm.test(\"seis dependencias ok\", () => {",
+                  "  pm.expect(d.dependencias.map(x => x.nombre)).to.have.members([\"mongodb\",\"neo4j\",\"cassandra\",\"redis\",\"influxdb\",\"iris\"]);",
+                  "  d.dependencias.forEach(x => pm.expect(x.estado, x.nombre).to.eql(\"ok\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Equipos y jugadores (MongoDB)",
+      "description": "CU01-CU04.",
+      "item": [
+        {
+          "name": "CU01 Ficha de una selección",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/ARG",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"es Argentina\", () => { pm.expect(d.codigo_iso).to.eql(\"ARG\"); pm.expect(d.confederacion).to.eql(\"CONMEBOL\"); });",
+                  "pm.test(\"no expone _id\", () => pm.expect(d).to.not.have.property(\"_id\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU01 Selección inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/XYZ",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU01 Código inválido -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/arg",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo path.codigo_iso\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"path.codigo_iso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU02 Listado por confederación (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos?confederacion=CONMEBOL&page=1&size=3",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"respeta size\", () => pm.expect(d.items.length).to.be.at.most(3));",
+                  "pm.test(\"todas CONMEBOL\", () => d.items.forEach(e => pm.expect(e.confederacion).to.eql(\"CONMEBOL\")));",
+                  "pm.test(\"ordenado por ranking\", () => { const r = d.items.map(e => e.ranking_fifa); pm.expect(r).to.eql([...r].sort((a,b) => a-b)); });",
+                  "pm.test(\"metadatos de paginación\", () => { pm.expect(d.page).to.eql(1); pm.expect(d.size).to.eql(3); pm.expect(d.total).to.be.at.least(d.items.length); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU02 Página fuera de rango -> 200 vacío",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos?page=3&size=50",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"items vacío\", () => pm.expect(d.items).to.eql([]));",
+                  "pm.test(\"total 64\", () => pm.expect(d.total).to.eql(64));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU02 size fuera de rango -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos?size=500",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.size\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.size\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU03 Plantel filtrado por posición",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/ARG/jugadores?posicion=ARQ",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"hay arqueros\", () => pm.expect(d.total).to.be.above(0));",
+                  "pm.test(\"todos ARQ\", () => d.items.forEach(j => pm.expect(j.posicion).to.eql(\"ARQ\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU03 Plantel de selección inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/XYZ/jugadores",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU03 Posición inválida -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/ARG/jugadores?posicion=Arquero",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.posicion\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.posicion\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU04 Ficha de un jugador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/jugadores/ARG-10",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"ARG-10 de Argentina\", () => { pm.expect(d.id_jugador).to.eql(\"ARG-10\"); pm.expect(d.codigo_equipo).to.eql(\"ARG\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU04 Jugador inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/jugadores/ARG-99",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Partidos y relaciones (Neo4j + caché Redis)",
+      "description": "CU05-CU07.",
+      "item": [
+        {
+          "name": "CU05 Ficha del partido (MISS o HIT)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"header X-Cache\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.be.oneOf([\"HIT\",\"MISS\",\"BYPASS\"]));",
+                  "pm.test(\"ARG local vs ESP visitante\", () => { pm.expect(d.local.codigo_iso).to.eql(\"ARG\"); pm.expect(d.visitante.codigo_iso).to.eql(\"ESP\"); });",
+                  "pm.test(\"sede MON\", () => pm.expect(d.sede.codigo_sede).to.eql(\"MON\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU05 Ficha del partido otra vez -> HIT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"X-Cache HIT (servido por Redis)\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.eql(\"HIT\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU05 Partido inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-999",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU06 Eventos con protagonista",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/eventos",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const ev = pm.response.json().eventos;",
+                  "pm.test(\"EV-001 gol de ARG-10\", () => { pm.expect(ev[0].id_evento).to.eql(\"EV-001\"); pm.expect(ev[0].jugador.id_jugador).to.eql(\"ARG-10\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU06 Partido sin eventos -> 200 vacío",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-002/eventos",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"eventos vacío\", () => pm.expect(pm.response.json().eventos).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU06 Eventos de partido inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-999/eventos",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU06 limit fuera de rango -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/eventos?limit=500",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.limit\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.limit\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU07 Rivales de una selección",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/ARG/rivales",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"rivales ESP y URU\", () => pm.expect(pm.response.json().rivales.map(r => r.codigo_iso)).to.have.members([\"ESP\",\"URU\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU07 Rivales con limit=1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/ARG/rivales?limit=1",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"un solo rival\", () => pm.expect(pm.response.json().rivales).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Comentarios (Cassandra)",
+      "description": "CU08-CU09. La ventana 203006152015 tiene 5 comentarios de P-001 en la muestra del Hito 6.",
+      "item": [
+        {
+          "name": "CU08 Muro, página 1 (limit=3)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios?ventana=203006152015&limit=3",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"3 comentarios\", () => pm.expect(d.items).to.have.lengthOf(3));",
+                  "pm.test(\"del más reciente al más viejo\", () => { const t = d.items.map(c => c.creado_en); pm.expect(t).to.eql([...t].sort().reverse()); });",
+                  "pm.test(\"hay cursor_siguiente\", () => pm.expect(d.cursor_siguiente).to.be.a(\"string\"));",
+                  "pm.collectionVariables.set(\"cursor\", d.cursor_siguiente);",
+                  "pm.collectionVariables.set(\"idsPagina1\", JSON.stringify(d.items.map(c => c.id_comentario)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU08 Muro, página 2 con cursor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios?ventana=203006152015&limit=3&cursor={{cursor}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "const p1 = JSON.parse(pm.collectionVariables.get(\"idsPagina1\"));",
+                  "pm.test(\"2 comentarios restantes\", () => pm.expect(d.items).to.have.lengthOf(2));",
+                  "pm.test(\"sin repetir la página 1\", () => d.items.forEach(c => pm.expect(p1).to.not.include(c.id_comentario)));",
+                  "pm.test(\"no hay más páginas\", () => pm.expect(d.cursor_siguiente).to.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU08 Ventana sin comentarios -> 200 vacío",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios?ventana=203001010000",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"items vacío\", () => pm.expect(pm.response.json().items).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU08 Ventana imposible -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios?ventana=203013152015",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.ventana\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.ventana\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU08 Sin ventana -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.ventana\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.ventana\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU09 Publicar comentario -> 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemComentario}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"U-1001\",\n  \"usuario_alias\": \"hincha_albiceleste\",\n  \"equipo_apoyado\": \"ARG\",\n  \"texto\": \"{{textoComentario}}\",\n  \"idioma\": \"es\",\n  \"minuto_partido\": 67\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemComentario\", pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"textoComentario\", \"Postman Hito 10 \" + new Date().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"estado publicado\", () => pm.expect(d.estado_moderacion).to.eql(\"publicado\"));",
+                  "pm.test(\"header Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/partidos/P-001/comentarios?ventana=\"));",
+                  "pm.collectionVariables.set(\"idComentario\", d.id_comentario);",
+                  "pm.collectionVariables.set(\"ubicacionComentario\", pm.response.headers.get(\"Location\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU09 Reintento con la misma clave -> 200 sin duplicar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemComentario}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"U-1001\",\n  \"usuario_alias\": \"hincha_albiceleste\",\n  \"equipo_apoyado\": \"ARG\",\n  \"texto\": \"{{textoComentario}}\",\n  \"idioma\": \"es\",\n  \"minuto_partido\": 67\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Idempotent-Replayed\", () => pm.expect(pm.response.headers.get(\"Idempotent-Replayed\")).to.eql(\"true\"));",
+                  "pm.test(\"mismo id_comentario\", () => pm.expect(pm.response.json().id_comentario).to.eql(pm.collectionVariables.get(\"idComentario\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU09 Verificar en el muro: una sola vez",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{ubicacionComentario}}&limit=100",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const texto = pm.collectionVariables.get(\"textoComentario\");",
+                  "pm.test(\"el comentario aparece una sola vez\", () => pm.expect(pm.response.json().items.filter(c => c.texto === texto)).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU09 Misma clave con otro cuerpo -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemComentario}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"U-1001\",\n  \"usuario_alias\": \"hincha_albiceleste\",\n  \"equipo_apoyado\": \"ARG\",\n  \"texto\": \"{{textoComentario}}\",\n  \"idioma\": \"es\",\n  \"minuto_partido\": 68\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"codigo CONFLICTO_IDEMPOTENCIA\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"CONFLICTO_IDEMPOTENCIA\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU09 Partido inexistente -> 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos/P-999/comentarios",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"U-1001\",\n  \"usuario_alias\": \"hincha_albiceleste\",\n  \"equipo_apoyado\": \"ARG\",\n  \"texto\": \"{{textoComentario}}\",\n  \"idioma\": \"es\",\n  \"minuto_partido\": 67\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU09 Sin Idempotency-Key -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"U-1001\",\n  \"usuario_alias\": \"hincha_albiceleste\",\n  \"equipo_apoyado\": \"ARG\",\n  \"texto\": \"{{textoComentario}}\",\n  \"idioma\": \"es\",\n  \"minuto_partido\": 67\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo header.Idempotency-Key\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"header.Idempotency-Key\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU09 Cuerpo inválido -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"U-1001\",\n  \"usuario_alias\": \"hincha\",\n  \"equipo_apoyado\": \"ARG\",\n  \"texto\": \"\",\n  \"idioma\": \"es\",\n  \"minuto_partido\": 10,\n  \"estado_moderacion\": \"publicado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo body.texto\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"body.texto\"));",
+                  "",
+                  "pm.test(\"rechaza campos extra\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"body.estado_moderacion\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Sesiones (Redis)",
+      "description": "CU10-CU11. Las sesiones de muestra duran 30 min: correr scripts/reiniciar_muestra antes.",
+      "item": [
+        {
+          "name": "CU10 Sesión vigente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sesiones/S-0001",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"solo campos públicos\", () => pm.expect(Object.keys(d)).to.have.members([\"id_sesion\",\"usuario_id\",\"rol\",\"estado\",\"ttl_restante_s\"]));",
+                  "pm.test(\"TTL restante positivo\", () => pm.expect(d.ttl_restante_s).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU10 Sesión inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sesiones/S-9999",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo SESION_NO_VIGENTE\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"SESION_NO_VIGENTE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU10 Id de sesión inválido -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sesiones/abc",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo path.id_sesion\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"path.id_sesion\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU11 Cerrar sesión -> 204",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/sesiones/S-0010",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU11 Cerrar otra vez -> 204 (idempotente)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/sesiones/S-0010",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU10 Sesión cerrada -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sesiones/S-0010",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo SESION_NO_VIGENTE\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"SESION_NO_VIGENTE\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Estadísticas (InfluxDB)",
+      "description": "CU12. P-001 tiene datos entre 2030-06-10T20:00Z y 22:00Z.",
+      "item": [
+        {
+          "name": "CU12 Partido completo a 5m, ambos equipos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T22:00:00Z&resolucion=5m",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const s = pm.response.json().series;",
+                  "pm.test(\"dos series ARG y ESP\", () => pm.expect(s.map(x => x.equipo)).to.have.members([\"ARG\",\"ESP\"]));",
+                  "pm.test(\"24 ventanas de 5 min\", () => s.forEach(x => pm.expect(x.puntos).to.have.lengthOf(24)));",
+                  "pm.test(\"la posesión suma 100\", () => s[0].puntos.forEach((p, i) => pm.expect(p.posesion_pct_prom + s[1].puntos[i].posesion_pct_prom).to.be.closeTo(100, 0.05)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU12 Un equipo a 1m",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T20:03:00Z&resolucion=1m&equipo=ARG",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const s = pm.response.json().series;",
+                  "pm.test(\"solo ARG\", () => pm.expect(s.map(x => x.equipo)).to.eql([\"ARG\"]));",
+                  "pm.test(\"3 ventanas de 1 min\", () => pm.expect(s[0].puntos).to.have.lengthOf(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU12 Ventana máxima (3 h a 10s) respeta el tope",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T23:00:00Z&resolucion=10s&equipo=ARG",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"como máximo 1081 puntos\", () => pm.expect(pm.response.json().series[0].puntos.length).to.be.at.most(1081));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU12 Ventana sin puntos -> 200 vacío",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2031-01-01T00:00:00Z&hasta=2031-01-01T01:00:00Z",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"series vacío\", () => pm.expect(pm.response.json().series).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU12 Intervalo invertido -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2030-06-10T22:00:00Z&hasta=2030-06-10T20:00:00Z",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.desde\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.desde\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU12 Intervalo mayor a 3 h -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-11T20:00:00Z",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.hasta\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.hasta\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU12 Fecha sin zona horaria -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00&hasta=2030-06-10T21:00:00",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.desde\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.desde\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU12 Resolución inválida -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T21:00:00Z&resolucion=1h",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo query.resolucion\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"query.resolucion\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Actas oficiales (IRIS)",
+      "description": "CU13-CU15. Recorre el ciclo de vida del acta P-002: correr scripts/reiniciar_muestra antes para que empiece en Programado.",
+      "item": [
+        {
+          "name": "CU13 Acta de un partido en juego",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos-oficiales/P-001",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"En Juego\", () => pm.expect(d.estado).to.eql(\"En Juego\"));",
+                  "pm.test(\"árbitro sin DNI\", () => pm.expect(Object.keys(d.arbitro)).to.have.members([\"nombre\",\"apellido\",\"rango\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU13 Acta inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos-oficiales/P-999",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU14 Programado -> Finalizado no permitido -> 409",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/estado",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"Finalizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"codigo CONFLICTO_ESTADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"CONFLICTO_ESTADO\"));",
+                  "",
+                  "pm.test(\"informa el estado actual\", () => pm.expect(pm.response.json().error.detalles[0].estado_actual).to.eql(\"Programado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU14 Programado -> En Juego -> 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/estado",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"En Juego\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"cambiado\", () => pm.expect(d.cambiado).to.be.true);",
+                  "pm.test(\"En Juego\", () => pm.expect(d.acta.estado).to.eql(\"En Juego\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU14 Repetir En Juego -> 200 sin cambios",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/estado",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"En Juego\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"cambiado false (idempotente)\", () => pm.expect(pm.response.json().cambiado).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU14 Estado inválido -> 400",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/estado",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"Suspendido\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo body.estado\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"body.estado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU15 Registrar evento -> 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemEvento}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/eventos",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minuto\": 12,\n  \"tipo\": \"Gol\",\n  \"descripcion\": \"Gol de URU-9\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemEvento\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "pm.test(\"evento registrado\", () => pm.expect(pm.response.json().evento.minuto).to.eql(12));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU15 Reintento con la misma clave -> 200 sin duplicar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemEvento}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/eventos",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minuto\": 12,\n  \"tipo\": \"Gol\",\n  \"descripcion\": \"Gol de URU-9\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Idempotent-Replayed\", () => pm.expect(pm.response.headers.get(\"Idempotent-Replayed\")).to.eql(\"true\"));",
+                  "pm.test(\"el gol está una sola vez\", () => pm.expect(pm.response.json().acta.eventos.filter(e => e.minuto === 12)).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU15 Minuto fuera de rango -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/eventos",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minuto\": 0,\n  \"tipo\": \"Gol\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));",
+                  "pm.test(\"detalla el campo body.minuto\", () => pm.expect(pm.response.json().error.detalles.map(d => d.campo)).to.include(\"body.minuto\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU14 En Juego -> Finalizado -> 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/estado",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"Finalizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Finalizado\", () => pm.expect(pm.response.json().acta.estado).to.eql(\"Finalizado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU15 Evento en partido Finalizado -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/eventos",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minuto\": 95,\n  \"tipo\": \"Gol\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"codigo CONFLICTO_ESTADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"CONFLICTO_ESTADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU14 Finalizado -> En Juego no permitido -> 409",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002/estado",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"En Juego\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"codigo CONFLICTO_ESTADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"CONFLICTO_ESTADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CU13 Acta final de P-002",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/partidos-oficiales/P-002",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json();",
+                  "pm.test(\"Finalizado\", () => pm.expect(d.estado).to.eql(\"Finalizado\"));",
+                  "pm.test(\"un solo evento (ni duplicado ni tardío)\", () => pm.expect(d.eventos.map(e => e.minuto)).to.eql([12]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Errores generales",
+      "description": "Formato común, 404/405 y correlación por X-Request-ID.",
+      "item": [
+        {
+          "name": "Ruta inexistente -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/no-existe",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Método no permitido -> 405",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/equipos/ARG",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 405\", () => pm.response.to.have.status(405));",
+                  "pm.test(\"codigo METODO_NO_PERMITIDO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"METODO_NO_PERMITIDO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON malformado -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/partidos/P-001/comentarios",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{no es json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"codigo VALIDACION\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"VALIDACION\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "X-Request-ID propio se reutiliza",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Request-ID",
+                "value": "postman-hito10-001"
+              }
+            ],
+            "url": "{{baseUrl}}/equipos/XYZ",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"codigo RECURSO_NO_ENCONTRADO\", () => pm.expect(pm.response.json().error.codigo).to.eql(\"RECURSO_NO_ENCONTRADO\"));",
+                  "",
+                  "pm.test(\"header reutilizado\", () => pm.expect(pm.response.headers.get(\"X-Request-ID\")).to.eql(\"postman-hito10-001\"));",
+                  "pm.test(\"request_id en el cuerpo\", () => pm.expect(pm.response.json().error.request_id).to.eql(\"postman-hito10-001\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

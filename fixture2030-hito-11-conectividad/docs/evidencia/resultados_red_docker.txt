@@ -1,0 +1,183 @@
+# Diagnóstico ejecutado dentro de la red de Docker Compose
+# Generado: 2026-10-17T00:33:03Z con scripts/generar_evidencia.sh (commit db0f5fc, origen: notebook)
+
+
+==================================================================
+## Diagnóstico desde la red Docker 'tpo_fixture2030_default' (imagen tpo_fixture2030-api): hosts = nombres de servicio
+## 2026-10-17T00:33:03Z
+==================================================================
+Topología: contenedor efímero -> red tpo_fixture2030_default -> mongodb:27017, neo4j:7687/7474, cassandra:9042,
+redis:6379, influxdb:8181, iris:1972/52773 (puertos INTERNOS; no pasan por los puertos publicados).
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — origen: contenedor en la red tpo_fixture2030_default
+  inicio_utc     2026-10-17T00:33:05Z
+  commit         no disponible (git no instalado)
+  origen         contenedor Docker (Linux); localhost = el propio contenedor
+  python         3.12.15
+  drivers        pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1
+  configuracion  solo valores por defecto
+  modo           nativo
+  productos      mongodb, neo4j, cassandra, redis, influxdb, iris
+  capas          autenticacion, autorizacion, configuracion, contenedor, contexto, lectura, portal_http, protocolo, resolucion, sonda, tcp
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+  ADVERTENCIA    1 secreto(s) coinciden con un identificador público de la configuración (nombre de base, host...): no son secretos efectivos, conviene cambiarlos
+====================================================================================================
+
+--- mongodb ---
+[OK  ] mongodb   configuracion      0.0 ms  variables: MONGO_HOST=mongodb; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: variable de entorno]
+[SKIP] mongodb   contenedor         0.0 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] mongodb   resolucion        16.8 ms  getaddrinfo: 'mongodb' -> 172.19.0.7
+[OK  ] mongodb   tcp                0.7 ms  connect(): 172.19.0.7:27017 listener aceptó la conexión
+[OK  ] mongodb   protocolo          2.6 ms  hello (sin credenciales): primario=True, wire=21, MongoDB 7.0.43
+[OK  ] mongodb   autenticacion      9.8 ms  connectionStatus: autenticado como admin@admin (roles: root)
+[OK  ] mongodb   autorizacion       0.8 ms  listCollections fixture2030: permitido en 'fixture2030' (2 colecciones)
+[OK  ] mongodb   contexto           0.0 ms  colecciones esperadas: database 'fixture2030' con las colecciones del módulo: equipos, jugadores
+[OK  ] mongodb   lectura            1.5 ms  find_one + count_documents: equipos.find_one(_id='ARG') -> Argentina (grupo A); jugadores.count_documents(codigo_equipo='ARG', limit=100) = 23
+[OK  ] mongodb   sonda              0.7 ms  documento inexistente: equipos.find_one(_id='ZZZ') -> None: ausencia válida, no es error
+[OK  ] mongodb   sonda              0.6 ms  colección inexistente: fixture2030.coleccion_inexistente_h11.find_one() -> None: MongoDB no da error; la API lo detecta en /health/dependencias verificando las colecciones
+[OK  ] mongodb   sonda              0.4 ms  database inexistente: fixture2030_inexistente_h11.listCollections -> []: lista vacía sin error (por eso la capa de contexto verifica colecciones)
+
+--- neo4j ---
+[OK  ] neo4j     configuracion      0.0 ms  variables: NEO4J_URI=bolt://neo4j:7687; NEO4J_HTTP_URL=http://neo4j:7474; NEO4J_USER=neo4j; NEO4J_PASSWORD (definida, oculta); NEO4J_DATABASE=neo4j [origen: variable de entorno]
+[SKIP] neo4j     contenedor         0.1 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] neo4j     portal_http       12.1 ms  GET Browser/discovery: HTTP 200: Neo4j 2026.07.1 community; anuncia bolt_direct=bolt://neo4j:7687. La API no usa este puerto: no prueba Bolt
+[OK  ] neo4j     resolucion         0.6 ms  getaddrinfo: 'neo4j' -> 172.19.0.5
+[OK  ] neo4j     tcp                0.2 ms  connect(): 172.19.0.5:7687 listener aceptó la conexión
+[OK  ] neo4j     protocolo          1.2 ms  handshake Bolt: versión Bolt 5.8 negociada (magic 0x6060B017)
+[OK  ] neo4j     autenticacion      5.2 ms  verify_authentication: usuario 'neo4j' autenticado por Bolt
+[OK  ] neo4j     autorizacion       5.4 ms  SHOW CURRENT USER: identidad 'neo4j' reconocida; roles=null (Community: sin RBAC, toda identidad autenticada puede leer)
+[OK  ] neo4j     contexto           7.5 ms  db.info() en 'neo4j': database 'neo4j' seleccionada; etiquetas: Equipo, Jugador, Sede, Partido, Evento
+[OK  ] neo4j     lectura            5.5 ms  MATCH parametrizado: Partido P-001 (2030-06-10): equipos ARG, ESP [Cypher parametrizado, LIMIT 1, timeout de operación]
+[OK  ] neo4j     sonda              4.8 ms  partido inexistente: partido P-999 -> sin filas: partido inexistente (la API responde 404)
+[OK  ] neo4j     sonda              5.0 ms  resultado vacío: partido P-002 existe con 0 eventos: resultado vacío válido (la API responde 200 con lista vacía)
+[OK  ] neo4j     sonda              4.8 ms  database inexistente: database 'noexiste_h11' -> Neo.ClientError.Database.DatabaseNotFound: error de contexto, no de conexión (la API lo traduce a 503)
+[OK  ] neo4j     sonda              0.7 ms  error de conexión: bolt://127.0.0.1:49119 sin listener -> ServiceUnavailable: error de conexión, distinto de 'sin filas'
+
+--- cassandra ---
+[OK  ] cassandra configuracion      0.0 ms  variables: CASSANDRA_HOSTS=cassandra; CASSANDRA_PORT=9042; CASSANDRA_KEYSPACE=fixture2030; CASSANDRA_DC=datacenter1; CASSANDRA_TABLA=comentarios_por_partido [origen: defecto, variable de entorno]
+[SKIP] cassandra contenedor         0.1 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] cassandra resolucion         0.5 ms  getaddrinfo: 'cassandra' -> 172.19.0.3
+[OK  ] cassandra tcp                0.3 ms  connect(): 172.19.0.3:9042 listener aceptó la conexión
+[OK  ] cassandra protocolo          1.0 ms  frame OPTIONS: OPTIONS -> SUPPORTED: CQL 3.4.7; protocolos 3/v3, 4/v4, 5/v5, 6/v6-beta
+[OK  ] cassandra autenticacion      1.7 ms  frame STARTUP: STARTUP -> READY: el servidor no exige autenticación (AllowAllAuthenticator del laboratorio; cualquier cliente que alcance el puerto puede operar)
+[OK  ] cassandra autorizacion      36.4 ms  sesión + system.local: sesión del driver abierta; SELECT system.local permitido: Cassandra 5.0.9, cluster 'Fixture2030_Cassandra', DC 'datacenter1'
+[OK  ] cassandra contexto           0.0 ms  metadata keyspace/tabla: keyspace 'fixture2030' ({'class': 'SimpleStrategy', 'replication_factor': '1'}); comentarios_por_partido: partición (id_partido, ventana, shard), clustering (id_comentario); DC 'datacenter1' coincide
+[OK  ] cassandra lectura            7.7 ms  SELECT por partición: partición completa (P-001, 203006152015, shard 0..3), LIMIT 5 c/u: 5 filas [2, 3, 0, 0]
+[OK  ] cassandra sonda              1.3 ms  tabla inexistente: InvalidRequest: Error from server: code=2200 [Invalid query] message="table tabla_inexistente_h11 does not -> consulta inválida (respuesta del servidor), no timeout
+[OK  ] cassandra sonda              0.8 ms  keyspace inexistente: InvalidRequest: Error from server: code=2200 [Invalid query] message="keyspace keyspace_inexistente_h11 do -> contexto inexistente informado por el servidor
+[OK  ] cassandra sonda              1.3 ms  partición incompleta: InvalidRequest: Error from server: code=2200 [Invalid query] message="Cannot execute this query as it migh -> el modelo exige la clave de partición completa (sin ALLOW FILTERING)
+[OK  ] cassandra sonda           1003.4 ms  timeout de conexión: 10.255.255.1:9042 -> NoHostAvailable(OSError) en 1002 ms: timeout de conexión (sin respuesta del servidor), distinto de InvalidRequest (el servidor respondió)
+
+--- redis ---
+[OK  ] redis     configuracion      0.0 ms  variables: REDIS_HOST=redis; REDIS_PORT=6379; REDIS_PASSWORD (vacía); REDIS_DB=0; REDIS_CLAVE_PRUEBA=sesion:S-0001 [origen: defecto, variable de entorno]
+[SKIP] redis     contenedor         0.1 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] redis     resolucion         0.9 ms  getaddrinfo: 'redis' -> 172.19.0.6
+[OK  ] redis     tcp                0.3 ms  connect(): 172.19.0.6:6379 listener aceptó la conexión
+[OK  ] redis     protocolo          0.3 ms  PING (RESP crudo): RESP: PING -> +PONG
+[OK  ] redis     autenticacion      3.1 ms  ACL WHOAMI: sin contraseña configurada; el servidor acepta la conexión como 'default' (laboratorio)
+[OK  ] redis     autorizacion       0.3 ms  DBSIZE: permitido: 6 claves en la base lógica
+[OK  ] redis     contexto           1.0 ms  CLIENT INFO + INFO keyspace: Redis 8.10.2; base lógica db=0: 6 claves, 3 con TTL
+[WARN] redis     lectura            0.4 ms  EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2
+        observación: Redis respondió normalmente: la clave no existe (nunca se cargó o ya venció su TTL). Ausente y expirada se ven igual (-2); ninguna de las dos es 'Redis caído'.
+[OK  ] redis     sonda              0.6 ms  clave ausente: EXISTS diag:h11:inexistente:ac5622de = 0, PTTL = -2: ausencia válida (nil), no es error
+[SKIP] redis     sonda              0.0 ms  clave expirada: desactivada (REDIS_SONDA_EXPIRACION=0): escribe una clave diag: de 1,5 s
+[OK  ] redis     sonda              5.1 ms  Redis no disponible: 127.0.0.1:44669 sin servidor -> ConnectionError en 2 ms: excepción, distinta de nil (la API responde 503/504, nunca 404).
+
+--- influxdb ---
+[OK  ] influxdb  configuracion      0.0 ms  variables: INFLUX_URL=http://influxdb:8181; INFLUX_DATABASE=fixture2030; INFLUX_TOKEN (vacía); INFLUX_TOKEN_FILE=/run/secrets/influx_token [origen: variable de entorno]
+[OK  ] influxdb  configuracion              origen del token: token leído de archivo run/secrets/influx_token (valor oculto)
+[SKIP] influxdb  contenedor         0.1 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] influxdb  resolucion         1.1 ms  getaddrinfo: 'influxdb' -> 172.19.0.4
+[OK  ] influxdb  tcp                0.4 ms  connect(): 172.19.0.4:8181 listener aceptó la conexión
+[OK  ] influxdb  protocolo          2.1 ms  GET /health (sin token): sin token -> 401: el servicio HTTP responde y exige token también en /health (InfluxDB 3 Core con autorización activa)
+[OK  ] influxdb  autenticacion      1.5 ms  GET /health (con token): con token -> 200 OK (token de archivo run/secrets/influx_token)
+[OK  ] influxdb  autorizacion       1.5 ms  listar databases: listado de databases permitido: _internal, fixture2030
+[OK  ] influxdb  contexto           4.8 ms  database + tabla: database 'fixture2030' con la tabla 'estadisticas_partido'
+[OK  ] influxdb  lectura           26.2 ms  COUNT acotado por tiempo: COUNT(*) = 1800 en partido P-001, [2030-06-10T20:00:00Z, 2030-06-10T20:15:00Z) (primero 2030-06-10T20:00:00, último 2030-06-10T20:14:59)
+[OK  ] influxdb  lectura           20.7 ms  agregación date_bin: date_bin(5 min) + AVG(posesion_pct): 3 bloques [50.0, 50.0, 50.0]
+[OK  ] influxdb  sonda              2.6 ms  token inválido: token inválido -> HTTP 401: servicio accesible, autorización rechazada (no es caída)
+[OK  ] influxdb  sonda              1.6 ms  database inexistente: database inexistente -> HTTP 404 {'error': 'query error: database not found: fixture2030_inexistente_h1: error de contexto
+[OK  ] influxdb  sonda              6.1 ms  ventana sin puntos: ventana 2031-01-01 sin datos -> HTTP 200, COUNT(*) = 0: ausencia de puntos válida (la API responde 200 con series vacías)
+
+--- iris ---
+[OK  ] iris      configuracion      0.0 ms  variables: IRIS_HOST=iris; IRIS_PORT=1972; IRIS_PORTAL_URL=http://iris:52773/csp/sys/UtilHome.csp; IRIS_NAMESPACE=USER; IRIS_USER=fixture_api; IRIS_PASSWORD (definida, oculta) [origen: variable de entorno]
+[SKIP] iris      contenedor         0.4 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] iris      portal_http        6.4 ms  GET Management Portal: HTTP 200: el Management Portal responde. La API no usa este puerto: no prueba el Superserver
+[OK  ] iris      resolucion         0.8 ms  getaddrinfo: 'iris' -> 172.19.0.2
+[OK  ] iris      tcp                0.4 ms  connect(): 172.19.0.2:1972 listener aceptó la conexión
+[OK  ] iris      protocolo         21.6 ms  handshake Superserver: el Superserver completó el handshake
+[OK  ] iris      autenticacion     21.6 ms  login en USER: usuario 'fixture_api' aceptado en el namespace 'USER'
+[OK  ] iris      autorizacion       0.9 ms  %SYSTEM.Version.GetNumber: Native API puede ejecutar métodos de clase: IRIS 2026.2
+[OK  ] iris      contexto           1.1 ms  namespace + clase: namespace activo 'USER'; clase Fixture.API compilada
+[OK  ] iris      lectura            1.3 ms  ObtenerActa: Fixture.API.ObtenerActa('P-001') -> estado 'En Juego', sede 'Estadio Monumental', 1 eventos, árbitro con rango FIFA
+[OK  ] iris      sonda              0.8 ms  objeto inexistente: ObtenerActa('P-999') -> {'ok': 0, 'error': 'NO_ENCONTRADO'}: objeto inexistente es respuesta de negocio (la API responde 404), no falla de conexión
+[OK  ] iris      sonda              0.7 ms  clase inexistente: <CLASS DOES NOT EXIST>XDCall+11^%SYS.DBSRV.1: error de metadato, no de conexión
+[OK  ] iris      sonda              0.4 ms  namespace incorrecto: %SYS.Namespace.Exists('NOEXISTE_H11') = 0: con un namespace inexistente iris.connect devuelve 'Access Denied', igual que una credencial inválida; esta consulta los distingue sin provocar logins fallidos
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    -          1.5
+           -> todas las capas ejecutadas terminaron OK
+neo4j      disponible      OK    OK    OK    OK    OK    OK    OK    OK    4/4    -          5.5
+           -> todas las capas ejecutadas terminaron OK
+cassandra  disponible      OK    OK    OK    OK    OK    OK    OK    OK    4/4    -          7.7
+           -> todas las capas ejecutadas terminaron OK
+redis      disponible      OK    OK    OK    OK    OK    OK    OK    WARN  2/2    -          0.4
+           -> observación: EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2
+influxdb   disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    -         26.2
+           -> todas las capas ejecutadas terminaron OK
+iris       disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    -          1.3
+           -> todas las capas ejecutadas terminaron OK
+
+Total: 78 | OK: 70 | WARN: 1 | FAIL: 0 | SKIP: 7 | duración 1.7 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.
+
+==================================================================
+## Misma configuración de la notebook (127.0.0.1) ejecutada dentro de un contenedor
+## 2026-10-17T00:33:07Z
+==================================================================
+Se espera connection refused: dentro del contenedor 127.0.0.1 es el propio contenedor, no la notebook.
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — origen: contenedor con hosts de la notebook (configuración equivocada)
+  inicio_utc     2026-10-17T00:33:08Z
+  commit         no disponible (git no instalado)
+  origen         contenedor Docker (Linux); localhost = el propio contenedor
+  python         3.12.15
+  drivers        pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1
+  configuracion  solo valores por defecto
+  modo           tcp
+  productos      mongodb, redis
+  capas          configuracion, contenedor, resolucion, tcp
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+  ADVERTENCIA    1 secreto(s) coinciden con un identificador público de la configuración (nombre de base, host...): no son secretos efectivos, conviene cambiarlos
+====================================================================================================
+
+--- mongodb ---
+[OK  ] mongodb   configuracion      0.0 ms  variables: MONGO_HOST=127.0.0.1; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: variable de entorno]
+[SKIP] mongodb   contenedor         0.1 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] mongodb   resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[FAIL] mongodb   tcp                0.2 ms  connect(): 127.0.0.1:27017 connection refused tras 0 ms
+        hipótesis: El host responde pero nadie escucha en ese puerto: contenedor detenido, puerto no publicado o puerto equivocado. Un contenedor 'Up' no garantiza que este puerto esté publicado.
+        siguiente paso: docker ps -a / docker port <contenedor>; verificar MONGO_PORT contra el compose.
+
+--- redis ---
+[OK  ] redis     configuracion      0.0 ms  variables: REDIS_HOST=127.0.0.1; REDIS_PORT=6379; REDIS_PASSWORD (vacía); REDIS_DB=0; REDIS_CLAVE_PRUEBA=sesion:S-0001 [origen: defecto, variable de entorno]
+[SKIP] redis     contenedor         0.1 ms  docker inspect: diagnóstico ejecutado dentro de un contenedor: no se consulta el daemon de Docker
+[OK  ] redis     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[FAIL] redis     tcp                0.2 ms  connect(): 127.0.0.1:6379 connection refused tras 0 ms
+        hipótesis: El host responde pero nadie escucha en ese puerto: contenedor detenido, puerto no publicado o puerto equivocado. Un contenedor 'Up' no garantiza que este puerto esté publicado.
+        siguiente paso: docker ps -a / docker port <contenedor>; verificar REDIS_PORT contra el compose.
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no disponible   OK    OK    FAIL  -     -     -     -     -     -      -            -
+           -> falla en tcp: 127.0.0.1:27017 connection refused tras 0 ms -> docker ps -a / docker port <contenedor>; verificar MONGO_PORT contra el compose.
+redis      no disponible   OK    OK    FAIL  -     -     -     -     -     -      -            -
+           -> falla en tcp: 127.0.0.1:6379 connection refused tras 0 ms -> docker ps -a / docker port <contenedor>; verificar REDIS_PORT contra el compose.
+
+Total: 8 | OK: 4 | WARN: 0 | FAIL: 2 | SKIP: 2 | duración 0.0 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.

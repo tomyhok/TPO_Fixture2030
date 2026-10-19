@@ -83,6 +83,9 @@ def _traducir(exc: Exception) -> ErrorAPI | None:
     codigo = getattr(exc, "code", "") or ""
     if "TransactionTimedOut" in codigo:
         return timeout(DEPENDENCIA)
+    if codigo == "Neo.ClientError.Database.DatabaseNotFound":
+        # NEO4J_DATABASE apunta a una base que no existe (contexto incorrecto, Hito 11).
+        return no_disponible(DEPENDENCIA)
     if isinstance(
         exc,
         (

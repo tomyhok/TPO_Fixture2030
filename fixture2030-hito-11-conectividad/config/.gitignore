@@ -1,0 +1,3 @@
+# Configuración local con valores reales (RNF7): solo se versiona el ejemplo.
+*.env
+!configuracion-ejemplo.env

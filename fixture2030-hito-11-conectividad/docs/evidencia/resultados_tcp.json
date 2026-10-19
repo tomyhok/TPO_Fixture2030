@@ -1,0 +1,473 @@
+{
+  "meta": {
+    "etiqueta": "modo tcp",
+    "inicio_utc": "2026-10-17T00:32:44Z",
+    "commit": "db0f5fc (hito10, con cambios sin commitear)",
+    "origen": "notebook Windows 11 (Git Bash); 127.0.0.1 = puertos publicados por Docker",
+    "python": "3.12.10",
+    "drivers": "pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1",
+    "configuracion": "fixture2030-hito-10-api-integrada/.env",
+    "modo": "tcp",
+    "productos": "mongodb, neo4j, cassandra, redis, influxdb, iris",
+    "capas": "configuracion, contenedor, resolucion, tcp",
+    "timeouts_s": "tcp=3 conexion=2 operacion=5 api=15",
+    "fin_utc": "2026-10-17T00:32:45Z",
+    "duracion_s": 1.0,
+    "conteo": {
+      "OK": 25,
+      "WARN": 0,
+      "FAIL": 0,
+      "SKIP": 0
+    }
+  },
+  "matriz": [
+    {
+      "producto": "mongodb",
+      "estado": "desconocido",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "-",
+        "autenticacion": "-",
+        "autorizacion": "-",
+        "contexto": "-",
+        "lectura": "-"
+      },
+      "sondas": "-",
+      "api": "-",
+      "latencia_lectura_ms": null,
+      "diagnostico": "solo se probó hasta la capa 'tcp': no alcanza para declararlo disponible"
+    },
+    {
+      "producto": "neo4j",
+      "estado": "desconocido",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "-",
+        "autenticacion": "-",
+        "autorizacion": "-",
+        "contexto": "-",
+        "lectura": "-"
+      },
+      "sondas": "-",
+      "api": "-",
+      "latencia_lectura_ms": null,
+      "diagnostico": "solo se probó hasta la capa 'tcp': no alcanza para declararlo disponible"
+    },
+    {
+      "producto": "cassandra",
+      "estado": "desconocido",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "-",
+        "autenticacion": "-",
+        "autorizacion": "-",
+        "contexto": "-",
+        "lectura": "-"
+      },
+      "sondas": "-",
+      "api": "-",
+      "latencia_lectura_ms": null,
+      "diagnostico": "solo se probó hasta la capa 'tcp': no alcanza para declararlo disponible"
+    },
+    {
+      "producto": "redis",
+      "estado": "desconocido",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "-",
+        "autenticacion": "-",
+        "autorizacion": "-",
+        "contexto": "-",
+        "lectura": "-"
+      },
+      "sondas": "-",
+      "api": "-",
+      "latencia_lectura_ms": null,
+      "diagnostico": "solo se probó hasta la capa 'tcp': no alcanza para declararlo disponible"
+    },
+    {
+      "producto": "influxdb",
+      "estado": "desconocido",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "-",
+        "autenticacion": "-",
+        "autorizacion": "-",
+        "contexto": "-",
+        "lectura": "-"
+      },
+      "sondas": "-",
+      "api": "-",
+      "latencia_lectura_ms": null,
+      "diagnostico": "solo se probó hasta la capa 'tcp': no alcanza para declararlo disponible"
+    },
+    {
+      "producto": "iris",
+      "estado": "desconocido",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "-",
+        "autenticacion": "-",
+        "autorizacion": "-",
+        "contexto": "-",
+        "lectura": "-"
+      },
+      "sondas": "-",
+      "api": "-",
+      "latencia_lectura_ms": null,
+      "diagnostico": "solo se probó hasta la capa 'tcp': no alcanza para declararlo disponible"
+    }
+  ],
+  "resultados": [
+    {
+      "producto": "mongodb",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "MONGO_HOST=127.0.0.1; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: archivo fixture2030-hito-10-api-integrada/.env]",
+      "destino": "(configuración)",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 0.1,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-mongodb: running; puertos publicados: 27017/tcp -> 0.0.0.0:27017. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-mongodb",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 126.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-17T00:27:35.255385376Z"
+      }
+    },
+    {
+      "producto": "mongodb",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:27017",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:27017 listener aceptó la conexión",
+      "destino": "127.0.0.1:27017",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 1.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "NEO4J_URI=bolt://127.0.0.1:7687; NEO4J_HTTP_URL=http://127.0.0.1:7474; NEO4J_USER=neo4j; NEO4J_PASSWORD (definida, oculta); NEO4J_DATABASE=neo4j [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-neo4j: running; puertos publicados: 7474/tcp -> 0.0.0.0:7474, 7687/tcp -> 0.0.0.0:7687. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-neo4j",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 124.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-16T21:32:42.878280511Z"
+      }
+    },
+    {
+      "producto": "neo4j",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:7687",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:7687 listener aceptó la conexión",
+      "destino": "127.0.0.1:7687",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 13.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "CASSANDRA_HOSTS=127.0.0.1; CASSANDRA_PORT=9042; CASSANDRA_KEYSPACE=fixture2030; CASSANDRA_DC=datacenter1; CASSANDRA_TABLA=comentarios_por_partido [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-cassandra: running (healthy); puertos publicados: 9042/tcp -> 0.0.0.0:9042. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-cassandra",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 125.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-16T21:32:42.887033611Z"
+      }
+    },
+    {
+      "producto": "cassandra",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:9042",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:9042 listener aceptó la conexión",
+      "destino": "127.0.0.1:9042",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 12.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "REDIS_HOST=127.0.0.1; REDIS_PORT=6379; REDIS_PASSWORD (vacía); REDIS_DB=0; REDIS_CLAVE_PRUEBA=sesion:S-0001 [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-17T00:32:44Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-redis: running; puertos publicados: 6379/tcp -> 0.0.0.0:6379. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-redis",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 124.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-16T21:32:42.879767694Z"
+      }
+    },
+    {
+      "producto": "redis",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:6379",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:6379 listener aceptó la conexión",
+      "destino": "127.0.0.1:6379",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 0.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "INFLUX_URL=http://127.0.0.1:8181; INFLUX_DATABASE=fixture2030; INFLUX_TOKEN (vacía); INFLUX_TOKEN_FILE=../fixture2030-influxDB/.influxdb3-token [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "configuracion",
+      "prueba": "origen del token",
+      "estado": "OK",
+      "detalle": "token leído de archivo fixture2030-influxDB/.influxdb3-token (valor oculto)",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-influxdb: running; puertos publicados: 8181/tcp -> 0.0.0.0:8181. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-influxdb",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 122.9,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-16T21:32:42.876978194Z"
+      }
+    },
+    {
+      "producto": "influxdb",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:8181",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:8181 listener aceptó la conexión",
+      "destino": "127.0.0.1:8181",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 14.1,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "IRIS_HOST=127.0.0.1; IRIS_PORT=1972; IRIS_PORTAL_URL=http://127.0.0.1:52773/csp/sys/UtilHome.csp; IRIS_NAMESPACE=USER; IRIS_USER=fixture_api; IRIS_PASSWORD (definida, oculta) [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-iris: running (healthy); puertos publicados: 1972/tcp -> 0.0.0.0:1972, 52773/tcp -> 0.0.0.0:52773. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-iris",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 124.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-16T21:32:42.881704564Z"
+      }
+    },
+    {
+      "producto": "iris",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:1972",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:1972 listener aceptó la conexión",
+      "destino": "127.0.0.1:1972",
+      "instante": "2026-10-17T00:32:45Z",
+      "duracion_ms": 13.6,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    }
+  ],
+  "api": []
+}

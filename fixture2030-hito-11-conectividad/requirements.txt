@@ -1,0 +1,11 @@
+# Diagnóstico de conectividad - Hito 11 (Python 3.11+; probado con 3.12)
+# Son los mismos drivers y versiones que la API del Hito 10: por defecto los
+# scripts usan ../fixture2030-hito-10-api-integrada/.venv y no hace falta
+# instalar nada. El modo --modo tcp no necesita ninguno (solo biblioteca estándar).
+pymongo==4.19.0
+neo4j==6.4.1
+cassandra-driver==3.30.1
+# cassandra-driver necesita asyncore, que se quitó en Python 3.12
+pyasyncore==1.0.5
+redis==8.1.0
+intersystems-irispython==5.4.1

@@ -1,0 +1,59 @@
+# Modo API: rutas del Hito 10 con request ID y log asociado
+# Generado: 2026-10-17T00:33:09Z con scripts/generar_evidencia.sh (commit db0f5fc, origen: notebook)
+
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — modo api
+  inicio_utc     2026-10-17T00:33:09Z
+  commit         db0f5fc (hito10, con cambios sin commitear)
+  origen         notebook Windows 11 (Git Bash); 127.0.0.1 = puertos publicados por Docker
+  python         3.12.10
+  drivers        pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1
+  configuracion  fixture2030-hito-10-api-integrada/.env
+  modo           api
+  productos      mongodb, neo4j, cassandra, redis, influxdb, iris
+  capas          , api
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+  ADVERTENCIA    1 secreto(s) coinciden con un identificador público de la configuración (nombre de base, host...): no son secretos efectivos, conviene cambiarlos
+====================================================================================================
+
+--- API del Hito 10 (http://127.0.0.1:8000) ---
+[OK  ] api       api               23.4 ms  liveness: HTTP 200 -> exito | estado=up [no consulta bases]
+[OK  ] api       api               39.2 ms  readiness: HTTP 200 -> exito | listo=True estado=up no_disponibles=[] [diagnóstico reutilizado (TTL)]
+[OK  ] api       api               31.0 ms  diagnóstico por dependencia: HTTP 200 -> exito | estado=up mongodb=up neo4j=up cassandra=up redis=up influxdb=up iris=up
+[OK  ] api       api               29.7 ms  CU01 equipo: HTTP 200 -> exito | nombre=Argentina
+[OK  ] api       api                4.6 ms  CU01 equipo inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+[OK  ] api       api               24.1 ms  CU01 código inválido: HTTP 400 -> error_validacion | VALIDACION [no llega a la base]
+[OK  ] api       api                7.6 ms  CU03 plantel: HTTP 200 -> exito | items: 5
+[OK  ] api       api               33.8 ms  CU05 ficha de partido: HTTP 200 -> exito | codigo_partido=P-001
+[OK  ] api       api               27.2 ms  CU06 eventos: HTTP 200 -> exito | eventos: 1
+[OK  ] api       api               31.1 ms  CU06 partido sin eventos: HTTP 200 -> respuesta_vacia_valida | eventos: 0
+[OK  ] api       api               27.6 ms  CU06 partido inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+[OK  ] api       api               43.6 ms  CU08 muro de comentarios: HTTP 200 -> exito | items: 5
+[OK  ] api       api               45.1 ms  CU08 ventana sin comentarios: HTTP 200 -> respuesta_vacia_valida | items: 0
+[OK  ] api       api                4.2 ms  CU10 sesión: HTTP 404 -> recurso_inexistente | SESION_NO_VIGENTE [las sesiones de muestra expiran a los 30 min: 404 SESION_NO_VIGENTE también es válido]
+[OK  ] api       api               45.8 ms  CU12 estadísticas: HTTP 200 -> exito | series: 2
+[OK  ] api       api               33.6 ms  CU12 ventana sin puntos: HTTP 200 -> respuesta_vacia_valida | series: 0
+[OK  ] api       api               23.1 ms  CU12 intervalo invertido: HTTP 400 -> error_validacion | VALIDACION
+[OK  ] api       api               18.5 ms  CU13 acta oficial: HTTP 200 -> exito | eventos: 1
+[OK  ] api       api                4.6 ms  CU13 acta inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+  log asociado: 19/19 requests encontradas en API_LOG_FILE=../fixture2030-hito-10-api-integrada/logs/api.log
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+neo4j      no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+cassandra  no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+redis      no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+influxdb   no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+iris       no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+
+Total: 19 | OK: 19 | WARN: 0 | FAIL: 0 | SKIP: 0 | duración 1.0 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.

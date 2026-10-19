@@ -1,0 +1,48 @@
+# CLI oficiales dentro del contenedor de cada producto (otro origen)
+# Generado: 2026-10-17T00:32:55Z con scripts/generar_evidencia.sh (commit db0f5fc, origen: notebook)
+
+
+==================================================================
+## Clientes nativos dentro de los contenedores (origen: contenedor de cada producto)
+## 2026-10-17T00:32:55Z
+==================================================================
+
+$ mongosh (usuario de .env, database fixture2030): ping + lectura de equipos
+[OK]   mongodb (860 ms, origen: contenedor fixture2030-mongodb)
+       version=7.0.43 ping.ok=1 db=fixture2030 equipos=64 ARG=Argentina inexistente=null
+
+$ cypher-shell -a bolt://localhost:7687 -d neo4j --param 'codigo => "P-001"' (credenciales por NEO4J_USERNAME/NEO4J_PASSWORD)
+[OK]   neo4j (2515 ms, origen: contenedor fixture2030-neo4j)
+       codigo, fecha, equipos
+       "P-001", "2030-06-10", ["ARG", "ESP"]
+
+$ cqlsh -k fixture2030: lectura con la clave de partición completa
+[OK]   cassandra (722 ms, origen: contenedor fixture2030-cassandra)
+       
+        id_partido | ventana      | shard | usuario_alias  | creado_en
+       ------------+--------------+-------+----------------+---------------------------------
+             P-001 | 203006152015 |     1 | verdeamarelo10 | 2030-06-15 20:15:44.000000+0000
+             P-001 | 203006152015 |     1 | verdeamarelo10 | 2030-06-15 20:15:22.000000+0000
+             P-001 | 203006152015 |     1 | verdeamarelo10 | 2030-06-15 20:15:00.000000+0000
+       
+       (3 rows)
+
+$ redis-cli PING / EXISTS / PTTL / INFO keyspace
+[OK]   redis (321 ms, origen: contenedor fixture2030-redis)
+       PING=PONG EXISTS sesion:S-0001=0 PTTL=-2
+       db0:keys=6,expires=3,avg_ttl=79132155,subexpiry=0
+
+$ influxdb3 query --database fixture2030 (token por INFLUXDB3_AUTH_TOKEN)
+[OK]   influxdb (321 ms, origen: contenedor fixture2030-influxdb)
+       +--------+---------------------+---------------------+
+       | puntos | primero             | ultimo              |
+       +--------+---------------------+---------------------+
+       | 1800   | 2030-06-10T20:00:00 | 2030-06-10T20:14:59 |
+       +--------+---------------------+---------------------+
+
+$ iris session IRIS -U USER (terminal del contenedor, autenticación del sistema operativo)
+[OK]   iris (362 ms, origen: contenedor fixture2030-iris)
+       version=2026.2 namespace=USER
+       {"ok":1,"acta":{"codigo_partido":"P-001","sede":"Estadio Monumental","fecha":"2030-06-10","estado":"En Juego","arbitro":{"nombre":"Facundo","apellido":"Tello","rango":"FIFA"},"eventos":[{"minuto":23,"tipo":"Gol","descripcion":"Gol de ARG-10"}]}}
+       Nota: la terminal entra por el sistema operativo del contenedor, no por el Superserver (1972)
+       ni con el usuario de la API: no reemplaza la prueba de la Native API.

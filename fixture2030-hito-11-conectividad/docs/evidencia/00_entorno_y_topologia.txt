@@ -1,0 +1,47 @@
+# Entorno, contenedores, red y volúmenes
+# Generado: 2026-10-17T00:32:41Z con scripts/generar_evidencia.sh (commit db0f5fc, origen: notebook)
+
+
+==================================================================
+## Versiones
+## 2026-10-17T00:32:41Z
+==================================================================
+docker server 29.7.2
+python 3.12.10 (entorno virtual del Hito 10)
+{"estado":"up","version":"1.1.0","activa_desde_s":756.7}  <- API http://127.0.0.1:8000
+
+==================================================================
+## Contenedores y puertos publicados (host:puerto -> puerto interno)
+## 2026-10-17T00:32:41Z
+==================================================================
+NAMES                   IMAGE                                   STATUS                 PORTS
+fixture2030-influxdb    influxdb:3-core                         Up 3 hours             0.0.0.0:8181->8181/tcp, [::]:8181->8181/tcp
+fixture2030-iris        intersystems/iris-community:latest-cd   Up 3 hours (healthy)   0.0.0.0:1972->1972/tcp, [::]:1972->1972/tcp, 0.0.0.0:52773->52773/tcp, [::]:52773->52773/tcp
+fixture2030-mongodb     mongo:7.0                               Up 5 minutes           0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+fixture2030-cassandra   cassandra:latest                        Up 3 hours (healthy)   0.0.0.0:9042->9042/tcp, [::]:9042->9042/tcp
+fixture2030-neo4j       neo4j:latest                            Up 3 hours             0.0.0.0:7474->7474/tcp, [::]:7474->7474/tcp, 0.0.0.0:7687->7687/tcp, [::]:7687->7687/tcp
+fixture2030-redis       redis:latest                            Up 3 hours             0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+
+==================================================================
+## Red de Docker Compose: nombre de servicio -> IP interna
+## 2026-10-17T00:32:42Z
+==================================================================
+red: tpo_fixture2030_default
+
+fixture2030-cassandra 172.19.0.3/16
+fixture2030-influxdb 172.19.0.4/16
+fixture2030-iris 172.19.0.2/16
+fixture2030-mongodb 172.19.0.7/16
+fixture2030-neo4j 172.19.0.5/16
+fixture2030-redis 172.19.0.6/16
+
+==================================================================
+## Volúmenes (persistencia que ninguna prueba borra)
+## 2026-10-17T00:32:42Z
+==================================================================
+/fixture2030-mongodb: volume:9250390cc4c12808a7db66497b65ad3ec45f9c11338264d412cd7c406a50b724->/data/configdb volume:fixture_mongodb_data->/data/db 
+/fixture2030-neo4j: volume:fixture2030-neo4j_neo4j_data->/data volume:fixture2030-neo4j_neo4j_logs->/logs volume:fixture2030-neo4j_neo4j_plugins->/plugins volume:fixture2030-neo4j_neo4j_import->/var/lib/neo4j/import 
+/fixture2030-cassandra: bind:~/docker/data->/data bind:~/docker/data->/var/lib/cassandra 
+/fixture2030-redis: bind:~/docker/data->/data 
+/fixture2030-influxdb: bind:~/docker/data->/var/lib/influxdb3/data 
+/fixture2030-iris: bind:~/docker/data->/durable 

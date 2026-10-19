@@ -125,3 +125,12 @@ en `logs/api.log`, que está excluido del repositorio. La evidencia
 **Archivos excluidos del repositorio** (`.gitignore` del hito y de la raíz):
 `.env`, `.env.*` (salvo `.env.example`), `.venv/`, `logs/`, `__pycache__/`,
 `.pytest_cache/`, `fixture2030-influxDB/.influxdb3-token`, `*.lp`.
+
+## 7. Evaluación por capas (Hito 11)
+
+La verificación de este documento (`scripts/verificar_conectividad.*` y
+`GET /health`) responde "¿responde cada fuente?". El Hito 11 la amplía: separa
+configuración, resolución, TCP, protocolo, autenticación, autorización,
+contexto, lectura y ruta de la API; prueba fallas controladas, y agrega a la API
+`GET /health/live`, `GET /health/ready` y `GET /health/dependencias`. Ver
+[`../../fixture2030-hito-11-conectividad/README.md`](../../fixture2030-hito-11-conectividad/README.md).

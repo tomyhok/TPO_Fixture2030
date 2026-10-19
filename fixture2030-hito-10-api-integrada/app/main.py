@@ -10,13 +10,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app import VERSION
 from app.config.settings import Settings, obtener_settings
 from app.core.http import instalar_manejadores, instalar_middleware, instalar_openapi
 from app.core.observabilidad import configurar_logs, logger
 from app.dependencias import Adaptadores, crear_adaptadores, crear_servicios
 from app.routes import actas, comentarios, equipos, estadisticas, partidos, salud, sesiones
 
-VERSION = "1.0.0"
 
 DESCRIPCION = """
 API REST que integra los módulos NoSQL del Fixture Mundial 2030. Cada ruta resuelve un
@@ -46,7 +46,10 @@ TAGS = [
     {"name": "Sesiones (Redis)", "description": "Sesiones con TTL (Hito 7)."},
     {"name": "Estadísticas (InfluxDB)", "description": "Ventanas temporales agregadas (Hito 8)."},
     {"name": "Actas oficiales (IRIS)", "description": "Entidad compleja con transiciones validadas (Hito 9)."},
-    {"name": "Salud", "description": "Conectividad con las fuentes."},
+    {
+        "name": "Salud",
+        "description": "Liveness, readiness y diagnóstico de conectividad por fuente (Hitos 10 y 11).",
+    },
 ]
 
 

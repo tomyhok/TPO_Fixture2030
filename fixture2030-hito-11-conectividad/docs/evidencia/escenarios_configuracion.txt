@@ -1,0 +1,453 @@
+# Configuración incorrecta y corrección; API con configuración errónea (RF17, RF20)
+# Generado: 2026-10-17T00:33:51Z con scripts/generar_evidencia.sh (commit db0f5fc, origen: notebook)
+
+
+==================================================================
+## A1 host incorrecto: nombre de servicio Docker desde la notebook
+## 2026-10-17T00:33:51Z
+==================================================================
+Cambio aplicado (solo para este proceso): MONGO_HOST=mongodb
+--- mongodb ---
+[FAIL] mongodb   resolucion      2783.4 ms  getaddrinfo: host 'mongodb' no resuelto (getaddrinfo failed)
+        hipótesis: El nombre no existe en este entorno. Un nombre de servicio de Docker Compose (mongodb, neo4j, ...) solo resuelve dentro de la red de Compose, no en la notebook.
+        siguiente paso: Desde la notebook usar 127.0.0.1 y el puerto publicado; desde un contenedor usar el nombre del servicio y ejecutar el diagnóstico en esa misma red.
+[SKIP] mongodb   tcp                        connect(): no evaluada: falló la capa 'resolucion'
+[SKIP] mongodb   protocolo                  hello (sin credenciales): no evaluada: falló la capa 'resolucion'
+[SKIP] mongodb   autenticacion              connectionStatus: no evaluada: falló la capa 'resolucion'
+[SKIP] mongodb   autorizacion               listCollections fixture2030: no evaluada: falló la capa 'resolucion'
+[SKIP] mongodb   contexto                   colecciones esperadas: no evaluada: falló la capa 'resolucion'
+[SKIP] mongodb   lectura                    find_one + count_documents: no evaluada: falló la capa 'resolucion'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no disponible   OK    FAIL  SKIP  SKIP  SKIP  SKIP  SKIP  SKIP  -      -            -
+           -> falla en resolucion: host 'mongodb' no resuelto (getaddrinfo failed) -> Desde la notebook usar 127.0.0.1 y el puerto publicado; desde un contenedor usar el nombre del servicio y ejecutar el diagnóstico en esa misma red.
+
+Total: 9 | OK: 2 | WARN: 0 | FAIL: 1 | SKIP: 6 | duración 3.4 s
+
+==================================================================
+## A2 puerto equivocado: Bolt apuntando al puerto HTTP 7474
+## 2026-10-17T00:33:57Z
+==================================================================
+Cambio aplicado (solo para este proceso): NEO4J_URI=bolt://127.0.0.1:7474
+--- neo4j ---
+[OK  ] neo4j     portal_http       58.2 ms  GET Browser/discovery: HTTP 200: Neo4j 2026.07.1 community; anuncia bolt_direct=bolt://127.0.0.1:7687. La API no usa este puerto: no prueba Bolt
+[OK  ] neo4j     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] neo4j     tcp                0.4 ms  connect(): 127.0.0.1:7474 listener aceptó la conexión
+[FAIL] neo4j     protocolo          4.0 ms  handshake Bolt: el puerto respondió HTTP (HTTP/1.1 400 Bad Request), no Bolt
+        hipótesis: Puerto incorrecto: se apunta al puerto HTTP del Browser (7474) en lugar de Bolt (7687).
+        siguiente paso: Corregir el puerto de NEO4J_URI.
+[SKIP] neo4j     autenticacion              verify_authentication: no evaluada: falló la capa 'protocolo'
+[SKIP] neo4j     autorizacion               SHOW CURRENT USER: no evaluada: falló la capa 'protocolo'
+[SKIP] neo4j     contexto                   db.info() en 'neo4j': no evaluada: falló la capa 'protocolo'
+[SKIP] neo4j     lectura                    MATCH parametrizado: no evaluada: falló la capa 'protocolo'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+neo4j      no disponible   OK    OK    OK    FAIL  SKIP  SKIP  SKIP  SKIP  -      -            -
+           -> falla en protocolo: el puerto respondió HTTP (HTTP/1.1 400 Bad Request), no Bolt -> Corregir el puerto de NEO4J_URI.
+
+Total: 10 | OK: 5 | WARN: 0 | FAIL: 1 | SKIP: 4 | duración 0.7 s
+
+==================================================================
+## A3 puerto no publicado: Redis en 6380
+## 2026-10-17T00:33:58Z
+==================================================================
+Cambio aplicado (solo para este proceso): REDIS_PORT=6380
+--- redis ---
+[OK  ] redis     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[FAIL] redis     tcp             2043.3 ms  connect(): 127.0.0.1:6380 connection refused tras 2042 ms (Windows reintenta el SYN: el rechazo local tarda ~2 s)
+        hipótesis: El host responde pero nadie escucha en ese puerto: contenedor detenido, puerto no publicado o puerto equivocado. Un contenedor 'Up' no garantiza que este puerto esté publicado.
+        siguiente paso: docker ps -a / docker port <contenedor>; verificar REDIS_PORT contra el compose.
+[SKIP] redis     protocolo                  PING (RESP crudo): no evaluada: falló la capa 'tcp'
+[SKIP] redis     autenticacion              ACL WHOAMI: no evaluada: falló la capa 'tcp'
+[SKIP] redis     autorizacion               DBSIZE: no evaluada: falló la capa 'tcp'
+[SKIP] redis     contexto                   CLIENT INFO + INFO keyspace: no evaluada: falló la capa 'tcp'
+[SKIP] redis     lectura                    EXISTS/TYPE/PTTL: no evaluada: falló la capa 'tcp'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+redis      no disponible   OK    OK    FAIL  SKIP  SKIP  SKIP  SKIP  SKIP  -      -            -
+           -> falla en tcp: 127.0.0.1:6380 connection refused tras 2042 ms (Windows reintenta el SYN: el rechazo local tarda ~2 s) -> docker ps -a / docker port <contenedor>; verificar REDIS_PORT contra el compose.
+
+Total: 9 | OK: 3 | WARN: 0 | FAIL: 1 | SKIP: 5 | duración 2.6 s
+
+==================================================================
+## A4a contexto inexistente: keyspace de Cassandra
+## 2026-10-17T00:34:01Z
+==================================================================
+Cambio aplicado (solo para este proceso): CASSANDRA_KEYSPACE=fixture2030_inexistente
+--- cassandra ---
+[OK  ] cassandra resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] cassandra tcp                1.8 ms  connect(): 127.0.0.1:9042 listener aceptó la conexión
+[OK  ] cassandra protocolo         32.6 ms  frame OPTIONS: OPTIONS -> SUPPORTED: CQL 3.4.7; protocolos 3/v3, 4/v4, 5/v5, 6/v6-beta
+[OK  ] cassandra autenticacion      2.5 ms  frame STARTUP: STARTUP -> READY: el servidor no exige autenticación (AllowAllAuthenticator del laboratorio; cualquier cliente que alcance el puerto puede operar)
+[OK  ] cassandra autorizacion    1303.5 ms  sesión + system.local: sesión del driver abierta; SELECT system.local permitido: Cassandra 5.0.9, cluster 'Fixture2030_Cassandra', DC 'datacenter1'
+[FAIL] cassandra contexto           0.0 ms  metadata keyspace/tabla: keyspace 'fixture2030_inexistente' inexistente (keyspaces: fixture2030, system, system_auth, system_distributed, system_schema, system_traces, system_views, system_virtual_schema)
+        hipótesis: La red y el protocolo funcionan: el contexto configurado no existe. La API lo vería como NoHostAvailable al conectar con ese keyspace.
+        siguiente paso: Corregir CASSANDRA_KEYSPACE o ejecutar 01-keyspace.cql y 02-tablas.cql.
+[SKIP] cassandra lectura                    SELECT por partición: no evaluada: falló la capa 'contexto'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+cassandra  no disponible   OK    OK    OK    OK    OK    OK    FAIL  SKIP  -      -            -
+           -> falla en contexto: keyspace 'fixture2030_inexistente' inexistente (keyspaces: fixture2030, system, system_auth, system_distributed, system_schema, system_traces, system_views, system_virtual_schema) -> Corregir CASSANDRA_KEYSPACE o ejecutar 01-keyspace.cql y 02-tablas.cql.
+
+Total: 9 | OK: 7 | WARN: 0 | FAIL: 1 | SKIP: 1 | duración 1.8 s
+
+==================================================================
+## A4b contexto inexistente: database de Neo4j
+## 2026-10-17T00:34:03Z
+==================================================================
+Cambio aplicado (solo para este proceso): NEO4J_DATABASE=noexiste
+--- neo4j ---
+[OK  ] neo4j     portal_http       34.8 ms  GET Browser/discovery: HTTP 200: Neo4j 2026.07.1 community; anuncia bolt_direct=bolt://127.0.0.1:7687. La API no usa este puerto: no prueba Bolt
+[OK  ] neo4j     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] neo4j     tcp                0.4 ms  connect(): 127.0.0.1:7687 listener aceptó la conexión
+[OK  ] neo4j     protocolo         26.0 ms  handshake Bolt: versión Bolt 5.8 negociada (magic 0x6060B017)
+[OK  ] neo4j     autenticacion     28.1 ms  verify_authentication: usuario 'neo4j' autenticado por Bolt
+[OK  ] neo4j     autorizacion       7.4 ms  SHOW CURRENT USER: identidad 'neo4j' reconocida; roles=null (Community: sin RBAC, toda identidad autenticada puede leer)
+[FAIL] neo4j     contexto           8.7 ms  db.info() en 'noexiste': database inexistente (Neo.ClientError.Database.DatabaseNotFound)
+        hipótesis: NEO4J_DATABASE apunta a una base que no existe. Community solo tiene 'neo4j' y 'system'.
+        siguiente paso: Corregir NEO4J_DATABASE (SHOW DATABASES desde el Browser).
+[SKIP] neo4j     lectura                    MATCH parametrizado: no evaluada: falló la capa 'contexto'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+neo4j      no disponible   OK    OK    OK    OK    OK    OK    FAIL  SKIP  -      -            -
+           -> falla en contexto: database inexistente (Neo.ClientError.Database.DatabaseNotFound) -> Corregir NEO4J_DATABASE (SHOW DATABASES desde el Browser).
+
+Total: 10 | OK: 8 | WARN: 0 | FAIL: 1 | SKIP: 1 | duración 0.7 s
+
+==================================================================
+## A4c contexto inexistente: database de InfluxDB
+## 2026-10-17T00:34:05Z
+==================================================================
+Cambio aplicado (solo para este proceso): INFLUX_DATABASE=fixture2030_inexistente
+--- influxdb ---
+[OK  ] influxdb  resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] influxdb  tcp                1.4 ms  connect(): 127.0.0.1:8181 listener aceptó la conexión
+[OK  ] influxdb  protocolo         49.9 ms  GET /health (sin token): sin token -> 401: el servicio HTTP responde y exige token también en /health (InfluxDB 3 Core con autorización activa)
+[OK  ] influxdb  autenticacion      3.2 ms  GET /health (con token): con token -> 200 OK (token de archivo fixture2030-influxDB/.influxdb3-token)
+[OK  ] influxdb  autorizacion       2.6 ms  listar databases: listado de databases permitido: _internal, fixture2030
+[FAIL] influxdb  contexto           0.0 ms  database + tabla: database 'fixture2030_inexistente' inexistente (existen: _internal, fixture2030)
+        hipótesis: El servicio y el token funcionan; INFLUX_DATABASE apunta a otra base.
+        siguiente paso: Corregir INFLUX_DATABASE o crear la base con inicializacion.sh del Hito 8.
+[SKIP] influxdb  lectura                    COUNT acotado por tiempo: no evaluada: falló la capa 'contexto'
+[SKIP] influxdb  lectura                    agregación date_bin: no evaluada: falló la capa 'contexto'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+influxdb   no disponible   OK    OK    OK    OK    OK    OK    FAIL  SKIP  -      -            -
+           -> falla en contexto: database 'fixture2030_inexistente' inexistente (existen: _internal, fixture2030) -> Corregir INFLUX_DATABASE o crear la base con inicializacion.sh del Hito 8.
+
+Total: 11 | OK: 8 | WARN: 0 | FAIL: 1 | SKIP: 2 | duración 0.4 s
+
+==================================================================
+## A4d contexto inexistente: database de MongoDB (MongoDB no da error)
+## 2026-10-17T00:34:05Z
+==================================================================
+Cambio aplicado (solo para este proceso): MONGO_DATABASE=fixture2030_inexistente
+--- mongodb ---
+[OK  ] mongodb   resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] mongodb   tcp                1.3 ms  connect(): 127.0.0.1:27017 listener aceptó la conexión
+[OK  ] mongodb   protocolo          8.7 ms  hello (sin credenciales): primario=True, wire=21, MongoDB 7.0.43
+[OK  ] mongodb   autenticacion     27.5 ms  connectionStatus: autenticado como admin@admin (roles: root)
+[OK  ] mongodb   autorizacion       1.7 ms  listCollections fixture2030_inexistente: permitido en 'fixture2030_inexistente' (0 colecciones)
+[FAIL] mongodb   contexto           0.0 ms  colecciones esperadas: database 'fixture2030_inexistente' sin las colecciones equipos, jugadores
+        hipótesis: MongoDB no informa error por una database inexistente: devuelve listas vacías. MONGO_DATABASE apunta a otra base o no se ejecutó la carga del Hito 4.
+        siguiente paso: Verificar MONGO_DATABASE (show dbs) y ejecutar la carga del Hito 4.
+[SKIP] mongodb   lectura                    find_one + count_documents: no evaluada: falló la capa 'contexto'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no disponible   OK    OK    OK    OK    OK    OK    FAIL  SKIP  -      -            -
+           -> falla en contexto: database 'fixture2030_inexistente' sin las colecciones equipos, jugadores -> Verificar MONGO_DATABASE (show dbs) y ejecutar la carga del Hito 4.
+
+Total: 9 | OK: 7 | WARN: 0 | FAIL: 1 | SKIP: 1 | duración 0.6 s
+
+==================================================================
+## A4e contexto inexistente: namespace de IRIS (IRIS responde Access Denied)
+## 2026-10-17T00:34:07Z
+==================================================================
+Cambio aplicado (solo para este proceso): IRIS_NAMESPACE=NOEXISTE
+--- iris ---
+[OK  ] iris      portal_http       38.2 ms  GET Management Portal: HTTP 200: el Management Portal responde. La API no usa este puerto: no prueba el Superserver
+[OK  ] iris      resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] iris      tcp               15.7 ms  connect(): 127.0.0.1:1972 listener aceptó la conexión
+[OK  ] iris      protocolo       2056.4 ms  handshake Superserver: el Superserver respondió (rechazó el login: el protocolo funciona)
+[OK  ] iris      autenticacion   2056.4 ms  login en USER: credencial válida para 'fixture_api' (verificada en el namespace 'USER')
+[FAIL] iris      contexto                   namespace NOEXISTE: namespace 'NOEXISTE' inexistente (%SYS.Namespace.Exists = 0)
+        hipótesis: La credencial funciona: el problema es el contexto. IRIS lo informa como 'Access Denied'.
+        siguiente paso: Corregir IRIS_NAMESPACE (USER en el laboratorio).
+[SKIP] iris      autorizacion               %SYSTEM.Version.GetNumber: no evaluada: falló la capa 'contexto'
+[SKIP] iris      contexto                   namespace + clase: no evaluada: falló la capa 'contexto'
+[SKIP] iris      lectura                    ObtenerActa: no evaluada: falló la capa 'contexto'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+iris       no disponible   OK    OK    OK    OK    OK    SKIP  FAIL  SKIP  -      -            -
+           -> falla en contexto: namespace 'NOEXISTE' inexistente (%SYS.Namespace.Exists = 0) -> Corregir IRIS_NAMESPACE (USER en el laboratorio).
+
+Total: 11 | OK: 7 | WARN: 0 | FAIL: 1 | SKIP: 3 | duración 2.5 s
+
+==================================================================
+## A5 credencial inválida: MongoDB
+## 2026-10-17T00:34:10Z
+==================================================================
+Cambio aplicado (solo para este proceso): MONGO_PASSWORD=***
+--- mongodb ---
+[OK  ] mongodb   resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] mongodb   tcp                1.3 ms  connect(): 127.0.0.1:27017 listener aceptó la conexión
+[OK  ] mongodb   protocolo         28.9 ms  hello (sin credenciales): primario=True, wire=21, MongoDB 7.0.43
+[FAIL] mongodb   autenticacion     19.8 ms  connectionStatus: credencial rechazada (AuthenticationFailed, código 18)
+        hipótesis: MONGO_USER/MONGO_PASSWORD no coinciden con el usuario del servidor o MONGO_AUTH_DB es otra.
+        siguiente paso: Comparar el .env con MONGO_INITDB_ROOT_* del docker-compose.yml (sin publicar el valor).
+[SKIP] mongodb   autorizacion               listCollections fixture2030: no evaluada: falló la capa 'autenticacion'
+[SKIP] mongodb   contexto                   colecciones esperadas: no evaluada: falló la capa 'autenticacion'
+[SKIP] mongodb   lectura                    find_one + count_documents: no evaluada: falló la capa 'autenticacion'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no disponible   OK    OK    OK    OK    FAIL  SKIP  SKIP  SKIP  -      -            -
+           -> falla en autenticacion: credencial rechazada (AuthenticationFailed, código 18) -> Comparar el .env con MONGO_INITDB_ROOT_* del docker-compose.yml (sin publicar el valor).
+
+Total: 9 | OK: 5 | WARN: 0 | FAIL: 1 | SKIP: 3 | duración 0.6 s
+
+==================================================================
+## A6 timeout configurado demasiado bajo: InfluxDB
+## 2026-10-17T00:34:11Z
+==================================================================
+Cambio aplicado (solo para este proceso): TIMEOUT_OPERACION_S=0.001
+--- influxdb ---
+[OK  ] influxdb  resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] influxdb  tcp                1.5 ms  connect(): 127.0.0.1:8181 listener aceptó la conexión
+[OK  ] influxdb  protocolo         48.6 ms  GET /health (sin token): sin token -> 401: el servicio HTTP responde y exige token también en /health (InfluxDB 3 Core con autorización activa)
+[OK  ] influxdb  autenticacion     14.6 ms  GET /health (con token): con token -> 200 OK (token de archivo fixture2030-influxDB/.influxdb3-token)
+[OK  ] influxdb  autorizacion      16.3 ms  listar databases: listado de databases permitido: _internal, fixture2030
+[OK  ] influxdb  contexto          19.3 ms  database + tabla: database 'fixture2030' con la tabla 'estadisticas_partido'
+[FAIL] influxdb  lectura            9.4 ms  COUNT acotado por tiempo: timeout esperando la respuesta HTTP
+        hipótesis: El servicio aceptó la conexión pero no respondió a tiempo (arranque, saturación o puerto de otro protocolo).
+        siguiente paso: Repetir con un timeout mayor; revisar los logs del contenedor.
+[SKIP] influxdb  lectura                    agregación date_bin: no evaluada: falló la capa 'lectura'
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+influxdb   no disponible   OK    OK    OK    OK    OK    OK    OK    FAIL  -      -            -
+           -> falla en lectura: timeout esperando la respuesta HTTP -> Repetir con un timeout mayor; revisar los logs del contenedor.
+
+Total: 11 | OK: 9 | WARN: 0 | FAIL: 1 | SKIP: 1 | duración 0.4 s
+
+==================================================================
+## A7 corrección (RF20): misma evaluación con la configuración original
+## 2026-10-17T00:34:12Z
+==================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    disponible      OK    OK    OK    OK    OK    OK    OK    OK    -      -          3.2
+           -> todas las capas ejecutadas terminaron OK
+neo4j      disponible      OK    OK    OK    OK    OK    OK    OK    OK    -      -          5.2
+           -> todas las capas ejecutadas terminaron OK
+cassandra  disponible      OK    OK    OK    OK    OK    OK    OK    OK    -      -         75.1
+           -> todas las capas ejecutadas terminaron OK
+redis      disponible      OK    OK    OK    OK    OK    OK    OK    WARN  -      -          1.2
+           -> observación: EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2
+influxdb   disponible      OK    OK    OK    OK    OK    OK    OK    OK    -      -         21.0
+           -> todas las capas ejecutadas terminaron OK
+iris       disponible      OK    OK    OK    OK    OK    OK    OK    OK    -      -          2.1
+           -> todas las capas ejecutadas terminaron OK
+
+Total: 58 | OK: 57 | WARN: 1 | FAIL: 0 | SKIP: 0 | duración 3.8 s
+
+==================================================================
+## B1 API temporal (8002) con contexto/puertos incorrectos
+## 2026-10-17T00:34:16Z
+==================================================================
+Configuración de la instancia: MONGO_DATABASE=fixture2030_inexistente NEO4J_DATABASE=noexiste CASSANDRA_KEYSPACE=fixture2030_inexistente REDIS_PORT=6380 INFLUX_DATABASE=fixture2030_inexistente IRIS_PORT=1973
+(IRIS se rompe con un puerto no publicado y no con credenciales: un login fallido cuenta para el bloqueo)
+--- API del Hito 10 (http://127.0.0.1:8002) ---
+[OK  ] api       api               54.5 ms  liveness: HTTP 200 -> exito | estado=up [no consulta bases]
+[FAIL] api       api             2105.8 ms  readiness: HTTP 503 -> dependencia_no_disponible | listo=False estado=down no_disponibles=['mongodb', 'neo4j', 'cassandra', 'redis', 'influxdb', 'iris'] [diagnóstico reutilizado (TTL)]
+        hipótesis: API alcanzable, dependencia fallida: listo=False estado=down no_disponibles=['mongodb', 'neo4j', 'cassandra', 'redis', 'influxdb', 'iris']. La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[WARN] api       api             2070.5 ms  diagnóstico por dependencia: HTTP 200 -> exito | estado=down mongodb=down neo4j=down cassandra=down redis=down influxdb=down iris=down
+        observación: El diagnóstico de la API informa fuentes no disponibles: mongodb, neo4j, cassandra, redis, influxdb, iris.
+[FAIL] api       api                6.9 ms  CU01 equipo: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api                4.2 ms  CU01 equipo inexistente: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[OK  ] api       api               18.6 ms  CU01 código inválido: HTTP 400 -> error_validacion | VALIDACION [no llega a la base]
+[FAIL] api       api                7.1 ms  CU03 plantel: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api             2037.2 ms  CU05 ficha de partido: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api               10.1 ms  CU06 eventos: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api               10.1 ms  CU06 partido sin eventos: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api                9.1 ms  CU06 partido inexistente: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=neo4j). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api             1435.6 ms  CU08 muro de comentarios: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=cassandra)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=cassandra). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api             1412.3 ms  CU08 ventana sin comentarios: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=cassandra)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=cassandra). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api             2015.6 ms  CU10 sesión: HTTP 504 -> dependencia_timeout | DEPENDENCIA_TIMEOUT (dependencia=redis) [las sesiones de muestra expiran a los 30 min: 404 SESION_NO_VIGENTE también es válido]
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_TIMEOUT (dependencia=redis). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api               31.2 ms  CU12 estadísticas: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api                9.6 ms  CU12 ventana sin puntos: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[OK  ] api       api               19.0 ms  CU12 intervalo invertido: HTTP 400 -> error_validacion | VALIDACION
+[FAIL] api       api             2078.7 ms  CU13 acta oficial: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=iris)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=iris). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api             2045.3 ms  CU13 acta inexistente: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=iris)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=iris). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+  log asociado: 19/19 requests encontradas en API_LOG_FILE=~/AppData/Local/Temp/tmp.PXHFgEQjJ5/api_8002.log
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no probado      -     -     -     -     -     -     -     -     -      FAIL         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+neo4j      no probado      -     -     -     -     -     -     -     -     -      FAIL         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+cassandra  no probado      -     -     -     -     -     -     -     -     -      FAIL         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+redis      no probado      -     -     -     -     -     -     -     -     -      FAIL         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+influxdb   no probado      -     -     -     -     -     -     -     -     -      FAIL         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+iris       no probado      -     -     -     -     -     -     -     -     -      FAIL         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+
+Total: 19 | OK: 3 | WARN: 1 | FAIL: 15 | SKIP: 0 | duración 15.9 s
+
+# Log de la instancia temporal (resultado por dependencia y duración)
+2026-10-17T00:34:20Z WARNING [fixture2030.adaptador] request_id=h11-b83195-02 dependencia=influxdb operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:_RespuestaInvalida duracion_ms=5.8
+2026-10-17T00:34:20Z WARNING [fixture2030.adaptador] request_id=h11-b83195-02 dependencia=neo4j operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:ClientError duracion_ms=22.9
+2026-10-17T00:34:20Z WARNING [fixture2030.adaptador] request_id=h11-b83195-02 dependencia=mongodb operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:_ContextoIncompleto duracion_ms=35.0
+2026-10-17T00:34:22Z WARNING [fixture2030.adaptador] request_id=h11-b83195-02 dependencia=cassandra operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:NoHostAvailable duracion_ms=1441.5
+2026-10-17T00:34:22Z WARNING [fixture2030.adaptador] request_id=h11-b83195-02 dependencia=redis operacion=ping resultado=DEPENDENCIA_TIMEOUT:TimeoutError duracion_ms=2008.4
+2026-10-17T00:34:22Z WARNING [fixture2030.adaptador] request_id=h11-b83195-02 dependencia=iris operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:RuntimeError duracion_ms=2083.4
+2026-10-17T00:34:22Z INFO [fixture2030.servicio.salud] request_id=h11-b83195-02 diagnostico estado=down mongodb=down neo4j=down cassandra=down redis=down influxdb=down iris=down
+2026-10-17T00:34:22Z WARNING [fixture2030.adaptador] request_id=h11-b83195-03 dependencia=mongodb operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:_ContextoIncompleto duracion_ms=5.8
+2026-10-17T00:34:22Z WARNING [fixture2030.adaptador] request_id=h11-b83195-03 dependencia=influxdb operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:_RespuestaInvalida duracion_ms=4.8
+2026-10-17T00:34:22Z WARNING [fixture2030.adaptador] request_id=h11-b83195-03 dependencia=neo4j operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:ClientError duracion_ms=8.0
+2026-10-17T00:34:24Z WARNING [fixture2030.adaptador] request_id=h11-b83195-03 dependencia=cassandra operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:NoHostAvailable duracion_ms=1418.8
+2026-10-17T00:34:24Z WARNING [fixture2030.adaptador] request_id=h11-b83195-03 dependencia=redis operacion=ping resultado=DEPENDENCIA_TIMEOUT:TimeoutError duracion_ms=2016.7
+2026-10-17T00:34:24Z WARNING [fixture2030.adaptador] request_id=h11-b83195-03 dependencia=iris operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:RuntimeError duracion_ms=2060.2
+2026-10-17T00:34:24Z INFO [fixture2030.servicio.salud] request_id=h11-b83195-03 diagnostico estado=down mongodb=down neo4j=down cassandra=down redis=down influxdb=down iris=down
+2026-10-17T00:34:24Z WARNING [fixture2030.adaptador] request_id=h11-b83195-04 dependencia=mongodb operacion=equipos.find_one resultado=DEPENDENCIA_NO_DISPONIBLE:_ContextoIncompleto duracion_ms=2.6
+2026-10-17T00:34:24Z WARNING [fixture2030.adaptador] request_id=h11-b83195-05 dependencia=mongodb operacion=equipos.find_one resultado=DEPENDENCIA_NO_DISPONIBLE:_ContextoIncompleto duracion_ms=1.7
+2026-10-17T00:34:25Z WARNING [fixture2030.adaptador] request_id=h11-b83195-07 dependencia=mongodb operacion=equipos.exists resultado=DEPENDENCIA_NO_DISPONIBLE:_ContextoIncompleto duracion_ms=2.2
+2026-10-17T00:34:27Z WARNING [fixture2030.adaptador] request_id=h11-b83195-08 dependencia=redis operacion=cache_partido.get resultado=DEPENDENCIA_TIMEOUT:TimeoutError duracion_ms=2004.4
+2026-10-17T00:34:27Z WARNING [fixture2030.adaptador] request_id=h11-b83195-08 dependencia=neo4j operacion=partido.ficha resultado=DEPENDENCIA_NO_DISPONIBLE:ClientError duracion_ms=7.8
+2026-10-17T00:34:27Z WARNING [fixture2030.adaptador] request_id=h11-b83195-09 dependencia=neo4j operacion=partido.eventos resultado=DEPENDENCIA_NO_DISPONIBLE:ClientError duracion_ms=6.9
+2026-10-17T00:34:27Z WARNING [fixture2030.adaptador] request_id=h11-b83195-10 dependencia=neo4j operacion=partido.eventos resultado=DEPENDENCIA_NO_DISPONIBLE:ClientError duracion_ms=6.3
+2026-10-17T00:34:27Z WARNING [fixture2030.adaptador] request_id=h11-b83195-11 dependencia=neo4j operacion=partido.eventos resultado=DEPENDENCIA_NO_DISPONIBLE:ClientError duracion_ms=6.2
+2026-10-17T00:34:28Z WARNING [fixture2030.adaptador] request_id=h11-b83195-12 dependencia=cassandra operacion=comentarios_por_partido.select_ventana resultado=DEPENDENCIA_NO_DISPONIBLE:NoHostAvailable duracion_ms=1427.3
+2026-10-17T00:34:29Z WARNING [fixture2030.adaptador] request_id=h11-b83195-13 dependencia=cassandra operacion=comentarios_por_partido.select_ventana resultado=DEPENDENCIA_NO_DISPONIBLE:NoHostAvailable duracion_ms=1391.0
+2026-10-17T00:34:31Z WARNING [fixture2030.adaptador] request_id=h11-b83195-14 dependencia=redis operacion=sesion.hmget_ttl resultado=DEPENDENCIA_TIMEOUT:TimeoutError duracion_ms=2009.5
+
+==================================================================
+## B2 API temporal (8003) con TIMEOUT_OPERACION_S=0.001 (dependencia 'lenta')
+## 2026-10-17T00:34:36Z
+==================================================================
+--- API del Hito 10 (http://127.0.0.1:8003) ---
+[OK  ] api       api               33.4 ms  liveness: HTTP 200 -> exito | estado=up [no consulta bases]
+[OK  ] api       api             1482.6 ms  readiness: HTTP 200 -> exito | listo=True estado=degraded no_disponibles=['redis', 'influxdb'] [diagnóstico reutilizado (TTL)]
+[WARN] api       api               14.0 ms  diagnóstico por dependencia: HTTP 200 -> exito | estado=degraded mongodb=up neo4j=up cassandra=up redis=down influxdb=down iris=up
+        observación: El diagnóstico de la API informa fuentes no disponibles: redis, influxdb.
+[OK  ] api       api               32.8 ms  CU01 equipo: HTTP 200 -> exito | nombre=Argentina
+[OK  ] api       api               29.1 ms  CU01 equipo inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+[OK  ] api       api                3.7 ms  CU01 código inválido: HTTP 400 -> error_validacion | VALIDACION [no llega a la base]
+[OK  ] api       api               30.7 ms  CU03 plantel: HTTP 200 -> exito | items: 5
+[OK  ] api       api               33.6 ms  CU05 ficha de partido: HTTP 200 -> exito | codigo_partido=P-001
+[OK  ] api       api               31.3 ms  CU06 eventos: HTTP 200 -> exito | eventos: 1
+[OK  ] api       api               29.6 ms  CU06 partido sin eventos: HTTP 200 -> respuesta_vacia_valida | eventos: 0
+[OK  ] api       api               28.4 ms  CU06 partido inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+[OK  ] api       api               25.3 ms  CU08 muro de comentarios: HTTP 200 -> exito | items: 5
+[OK  ] api       api               45.0 ms  CU08 ventana sin comentarios: HTTP 200 -> respuesta_vacia_valida | items: 0
+[OK  ] api       api                4.8 ms  CU10 sesión: HTTP 404 -> recurso_inexistente | SESION_NO_VIGENTE [las sesiones de muestra expiran a los 30 min: 404 SESION_NO_VIGENTE también es válido]
+[FAIL] api       api               37.2 ms  CU12 estadísticas: HTTP 504 -> dependencia_timeout | DEPENDENCIA_TIMEOUT (dependencia=influxdb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_TIMEOUT (dependencia=influxdb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[OK  ] api       api               41.0 ms  CU12 ventana sin puntos: HTTP 200 -> respuesta_vacia_valida | series: 0
+[OK  ] api       api                3.4 ms  CU12 intervalo invertido: HTTP 400 -> error_validacion | VALIDACION
+[OK  ] api       api               22.1 ms  CU13 acta oficial: HTTP 200 -> exito | eventos: 1
+[OK  ] api       api               29.9 ms  CU13 acta inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+  log asociado: 19/19 requests encontradas en API_LOG_FILE=~/AppData/Local/Temp/tmp.PXHFgEQjJ5/api_8003.log
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+neo4j      no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+cassandra  no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+redis      no probado      -     -     -     -     -     -     -     -     -      WARN         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+influxdb   no probado      -     -     -     -     -     -     -     -     -      FAIL         -
+           -> todas las pruebas de la cadena quedaron en SKIP
+iris       no probado      -     -     -     -     -     -     -     -     -      OK           -
+           -> todas las pruebas de la cadena quedaron en SKIP
+
+Total: 19 | OK: 17 | WARN: 1 | FAIL: 1 | SKIP: 0 | duración 2.5 s
+
+# Log de la instancia temporal
+2026-10-17T00:34:40Z WARNING [fixture2030.adaptador] request_id=h11-3ee7f7-02 dependencia=influxdb operacion=ping resultado=DEPENDENCIA_TIMEOUT:ReadTimeout duracion_ms=9.7
+2026-10-17T00:34:40Z WARNING [fixture2030.adaptador] request_id=h11-3ee7f7-02 dependencia=redis operacion=ping resultado=DEPENDENCIA_TIMEOUT:TimeoutError duracion_ms=12.4
+2026-10-17T00:34:40Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-02 dependencia=neo4j operacion=ping resultado=ok duracion_ms=24.2
+2026-10-17T00:34:40Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-02 dependencia=mongodb operacion=ping resultado=ok duracion_ms=45.3
+2026-10-17T00:34:40Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-02 dependencia=iris operacion=ping resultado=ok duracion_ms=83.2
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-02 dependencia=cassandra operacion=ping resultado=ok duracion_ms=1475.6
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-03 dependencia=mongodb operacion=ping resultado=ok duracion_ms=3.0
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-03 dependencia=iris operacion=ping resultado=ok duracion_ms=2.0
+2026-10-17T00:34:42Z WARNING [fixture2030.adaptador] request_id=h11-3ee7f7-03 dependencia=influxdb operacion=ping resultado=DEPENDENCIA_TIMEOUT:ReadTimeout duracion_ms=3.1
+2026-10-17T00:34:42Z WARNING [fixture2030.adaptador] request_id=h11-3ee7f7-03 dependencia=redis operacion=ping resultado=DEPENDENCIA_TIMEOUT:TimeoutError duracion_ms=4.1
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-03 dependencia=neo4j operacion=ping resultado=ok duracion_ms=7.0
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-03 dependencia=cassandra operacion=ping resultado=ok duracion_ms=7.4
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-04 dependencia=mongodb operacion=equipos.find_one resultado=ok duracion_ms=3.1
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-05 dependencia=mongodb operacion=equipos.find_one resultado=ok duracion_ms=2.5
+2026-10-17T00:34:42Z INFO [fixture2030.adaptador] request_id=h11-3ee7f7-07 dependencia=mongodb operacion=equipos.exists resultado=ok duracion_ms=2.5
+
+Instancias temporales detenidas. La API principal y los datos no se modificaron.

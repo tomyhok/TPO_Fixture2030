@@ -34,6 +34,7 @@ from app.core.errores import DependenciaNoDisponible, DependenciaTimeout
         (mongo_adapter._traducir, mongo_errors.ExecutionTimeout("x"), DependenciaTimeout),
         (neo4j_adapter._traducir, neo4j_errors.ServiceUnavailable("x"), DependenciaNoDisponible),
         (neo4j_adapter._traducir, neo4j_errors.AuthError("x"), DependenciaNoDisponible),
+        (mongo_adapter._traducir, mongo_adapter._ContextoIncompleto("x"), DependenciaNoDisponible),
         (cassandra_adapter._traducir, NoHostAvailable("x", {}), DependenciaNoDisponible),
         (cassandra_adapter._traducir, Unavailable("x"), DependenciaNoDisponible),
         (cassandra_adapter._traducir, OperationTimedOut("x"), DependenciaTimeout),
@@ -71,6 +72,14 @@ def test_neo4j_transaccion_vencida_es_timeout():
     assert isinstance(neo4j_adapter._traducir(TransaccionVencida()), DependenciaTimeout)
 
 
+def test_neo4j_database_inexistente_es_dependencia_no_disponible():
+    # Hito 11: NEO4J_DATABASE incorrecta respondía 500; es un contexto inválido de la fuente.
+    class BaseInexistente(Exception):
+        code = "Neo.ClientError.Database.DatabaseNotFound"
+
+    assert isinstance(neo4j_adapter._traducir(BaseInexistente()), DependenciaNoDisponible)
+
+
 def test_cassandra_orden_por_timeuuid():
     viejo = cassandra_adapter.nuevo_timeuuid(datetime(2030, 6, 15, 20, 15, tzinfo=UTC))
     nuevo = cassandra_adapter.nuevo_timeuuid(datetime(2030, 6, 15, 20, 16, tzinfo=UTC))
@@ -94,3 +103,40 @@ def test_uuid_v4_no_es_cursor_valido():
 
     with pytest.raises(ErrorValidacion):
         validar_cursor(str(uuid.uuid4()))
+
+
+class _DatabaseFalsa:
+    """Database en memoria: MongoDB devuelve vacío sin error si el nombre es incorrecto."""
+
+    def __init__(self, colecciones):
+        self.colecciones = colecciones
+        self.listados = 0
+        self.equipos = self
+
+    def list_collection_names(self, filter=None):  # noqa: A002 - misma firma que pymongo
+        self.listados += 1
+        return list(self.colecciones)
+
+    def find_one(self, *args, **kwargs):
+        return None
+
+
+def test_mongo_database_incorrecta_no_se_confunde_con_recurso_inexistente():
+    # Hito 11: antes respondía 404 "no existe la selección"; ahora la fuente queda no disponible.
+    from app.config.settings import Settings
+
+    adaptador = mongo_adapter.MongoAdapter(Settings(_env_file=None))  # MongoClient no conecta hasta operar
+    adaptador._db = _DatabaseFalsa([])
+    with pytest.raises(DependenciaNoDisponible):
+        adaptador.obtener_equipo("ARG")
+
+
+def test_mongo_contexto_se_verifica_una_sola_vez():
+    from app.config.settings import Settings
+
+    adaptador = mongo_adapter.MongoAdapter(Settings(_env_file=None))
+    adaptador._db = _DatabaseFalsa(["equipos", "jugadores"])
+    assert adaptador.obtener_equipo("XYZ") is None  # ausencia válida
+    assert adaptador.obtener_equipo("ABC") is None
+    assert adaptador._db.listados == 1
+    adaptador.cerrar()

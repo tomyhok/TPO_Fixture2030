@@ -10,6 +10,7 @@ from typing import Any
 
 from fastapi import Request
 
+from app import VERSION
 from app.config.settings import Settings
 from app.services.actas_service import ActasService
 from app.services.comentarios_service import ComentariosService
@@ -80,7 +81,13 @@ def crear_servicios(a: Adaptadores, settings: Settings) -> Servicios:
         sesiones=SesionesService(a.redis),
         estadisticas=EstadisticasService(a.influxdb),
         actas=ActasService(a.iris, idempotencia),
-        salud=SaludService(a.como_dict()),
+        salud=SaludService(
+            a.como_dict(),
+            faltantes=settings.configuracion_faltante(),
+            ttl_cache_s=settings.health_cache_ttl_s,
+            umbral_lento_ms=settings.health_umbral_lento_ms,
+            version=VERSION,
+        ),
     )
 
 

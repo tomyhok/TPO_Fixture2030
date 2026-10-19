@@ -30,6 +30,9 @@ RUTAS_ESPERADAS = {
     ("patch", "/partidos-oficiales/{codigo_partido}/estado"),
     ("post", "/partidos-oficiales/{codigo_partido}/eventos"),
     ("get", "/health"),
+    ("get", "/health/live"),
+    ("get", "/health/ready"),
+    ("get", "/health/dependencias"),
 }
 
 
@@ -58,7 +61,7 @@ def test_no_se_documentan_respuestas_que_la_api_no_produce():
 
 def test_errores_documentados_usan_el_esquema_comun():
     for ruta, operaciones in _esquema()["paths"].items():
-        if ruta == "/health":
+        if ruta.startswith("/health"):
             continue
         for operacion in operaciones.values():
             for codigo in ("400", "500"):

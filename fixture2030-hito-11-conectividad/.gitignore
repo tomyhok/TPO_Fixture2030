@@ -1,0 +1,13 @@
+# Secretos y configuración local (RNF7)
+.env
+.env.*
+config/conectividad.env
+
+# Entorno de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Salidas locales que no son evidencia revisada
+tmp/
+*.tmp

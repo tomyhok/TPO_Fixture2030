@@ -1,0 +1,150 @@
+# Modo completo (matriz de conectividad)
+# Generado: 2026-10-17T00:33:10Z con scripts/generar_evidencia.sh (commit db0f5fc, origen: notebook)
+
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — modo completo
+  inicio_utc     2026-10-17T00:33:10Z
+  commit         db0f5fc (hito10, con cambios sin commitear)
+  origen         notebook Windows 11 (Git Bash); 127.0.0.1 = puertos publicados por Docker
+  python         3.12.10
+  drivers        pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1
+  configuracion  fixture2030-hito-10-api-integrada/.env
+  modo           completo
+  productos      mongodb, neo4j, cassandra, redis, influxdb, iris
+  capas          autenticacion, autorizacion, configuracion, contenedor, contexto, lectura, portal_http, protocolo, resolucion, sonda, tcp, api
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+  ADVERTENCIA    1 secreto(s) coinciden con un identificador público de la configuración (nombre de base, host...): no son secretos efectivos, conviene cambiarlos
+====================================================================================================
+
+--- mongodb ---
+[OK  ] mongodb   configuracion      0.1 ms  variables: MONGO_HOST=127.0.0.1; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: archivo fixture2030-hito-10-api-integrada/.env]
+[OK  ] mongodb   contenedor       131.4 ms  docker inspect: fixture2030-mongodb: running; puertos publicados: 27017/tcp -> 0.0.0.0:27017. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] mongodb   resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] mongodb   tcp                1.2 ms  connect(): 127.0.0.1:27017 listener aceptó la conexión
+[OK  ] mongodb   protocolo          6.1 ms  hello (sin credenciales): primario=True, wire=21, MongoDB 7.0.43
+[OK  ] mongodb   autenticacion     30.8 ms  connectionStatus: autenticado como admin@admin (roles: root)
+[OK  ] mongodb   autorizacion       1.4 ms  listCollections fixture2030: permitido en 'fixture2030' (2 colecciones)
+[OK  ] mongodb   contexto           0.0 ms  colecciones esperadas: database 'fixture2030' con las colecciones del módulo: equipos, jugadores
+[OK  ] mongodb   lectura            3.5 ms  find_one + count_documents: equipos.find_one(_id='ARG') -> Argentina (grupo A); jugadores.count_documents(codigo_equipo='ARG', limit=100) = 23
+[OK  ] mongodb   sonda              1.9 ms  documento inexistente: equipos.find_one(_id='ZZZ') -> None: ausencia válida, no es error
+[OK  ] mongodb   sonda              1.7 ms  colección inexistente: fixture2030.coleccion_inexistente_h11.find_one() -> None: MongoDB no da error; la API lo detecta en /health/dependencias verificando las colecciones
+[OK  ] mongodb   sonda              1.3 ms  database inexistente: fixture2030_inexistente_h11.listCollections -> []: lista vacía sin error (por eso la capa de contexto verifica colecciones)
+
+--- neo4j ---
+[OK  ] neo4j     configuracion      0.0 ms  variables: NEO4J_URI=bolt://127.0.0.1:7687; NEO4J_HTTP_URL=http://127.0.0.1:7474; NEO4J_USER=neo4j; NEO4J_PASSWORD (definida, oculta); NEO4J_DATABASE=neo4j [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]
+[OK  ] neo4j     contenedor       127.9 ms  docker inspect: fixture2030-neo4j: running; puertos publicados: 7474/tcp -> 0.0.0.0:7474, 7687/tcp -> 0.0.0.0:7687. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] neo4j     portal_http       44.6 ms  GET Browser/discovery: HTTP 200: Neo4j 2026.07.1 community; anuncia bolt_direct=bolt://127.0.0.1:7687. La API no usa este puerto: no prueba Bolt
+[OK  ] neo4j     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] neo4j     tcp               25.8 ms  connect(): 127.0.0.1:7687 listener aceptó la conexión
+[OK  ] neo4j     protocolo         18.2 ms  handshake Bolt: versión Bolt 5.8 negociada (magic 0x6060B017)
+[OK  ] neo4j     autenticacion      8.1 ms  verify_authentication: usuario 'neo4j' autenticado por Bolt
+[OK  ] neo4j     autorizacion       6.7 ms  SHOW CURRENT USER: identidad 'neo4j' reconocida; roles=null (Community: sin RBAC, toda identidad autenticada puede leer)
+[OK  ] neo4j     contexto          10.1 ms  db.info() en 'neo4j': database 'neo4j' seleccionada; etiquetas: Equipo, Jugador, Sede, Partido, Evento
+[OK  ] neo4j     lectura            5.9 ms  MATCH parametrizado: Partido P-001 (2030-06-10): equipos ARG, ESP [Cypher parametrizado, LIMIT 1, timeout de operación]
+[OK  ] neo4j     sonda              8.2 ms  partido inexistente: partido P-999 -> sin filas: partido inexistente (la API responde 404)
+[OK  ] neo4j     sonda              7.0 ms  resultado vacío: partido P-002 existe con 0 eventos: resultado vacío válido (la API responde 200 con lista vacía)
+[OK  ] neo4j     sonda              8.6 ms  database inexistente: database 'noexiste_h11' -> Neo.ClientError.Database.DatabaseNotFound: error de contexto, no de conexión (la API lo traduce a 503)
+[OK  ] neo4j     sonda           1011.0 ms  error de conexión: bolt://127.0.0.1:65126 sin listener -> ServiceUnavailable: error de conexión, distinto de 'sin filas'
+
+--- cassandra ---
+[OK  ] cassandra configuracion      0.0 ms  variables: CASSANDRA_HOSTS=127.0.0.1; CASSANDRA_PORT=9042; CASSANDRA_KEYSPACE=fixture2030; CASSANDRA_DC=datacenter1; CASSANDRA_TABLA=comentarios_por_partido [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]
+[OK  ] cassandra contenedor       131.7 ms  docker inspect: fixture2030-cassandra: running (healthy); puertos publicados: 9042/tcp -> 0.0.0.0:9042. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] cassandra resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] cassandra tcp                0.7 ms  connect(): 127.0.0.1:9042 listener aceptó la conexión
+[OK  ] cassandra protocolo          2.1 ms  frame OPTIONS: OPTIONS -> SUPPORTED: CQL 3.4.7; protocolos 3/v3, 4/v4, 5/v5, 6/v6-beta
+[OK  ] cassandra autenticacion      2.7 ms  frame STARTUP: STARTUP -> READY: el servidor no exige autenticación (AllowAllAuthenticator del laboratorio; cualquier cliente que alcance el puerto puede operar)
+[OK  ] cassandra autorizacion    1384.3 ms  sesión + system.local: sesión del driver abierta; SELECT system.local permitido: Cassandra 5.0.9, cluster 'Fixture2030_Cassandra', DC 'datacenter1'
+[OK  ] cassandra contexto           0.0 ms  metadata keyspace/tabla: keyspace 'fixture2030' ({'class': 'SimpleStrategy', 'replication_factor': '1'}); comentarios_por_partido: partición (id_partido, ventana, shard), clustering (id_comentario); DC 'datacenter1' coincide
+[OK  ] cassandra lectura           77.2 ms  SELECT por partición: partición completa (P-001, 203006152015, shard 0..3), LIMIT 5 c/u: 5 filas [2, 3, 0, 0]
+[OK  ] cassandra sonda             15.0 ms  tabla inexistente: InvalidRequest: Error from server: code=2200 [Invalid query] message="table tabla_inexistente_h11 does not -> consulta inválida (respuesta del servidor), no timeout
+[OK  ] cassandra sonda             15.8 ms  keyspace inexistente: InvalidRequest: Error from server: code=2200 [Invalid query] message="keyspace keyspace_inexistente_h11 do -> contexto inexistente informado por el servidor
+[OK  ] cassandra sonda             15.2 ms  partición incompleta: InvalidRequest: Error from server: code=2200 [Invalid query] message="Cannot execute this query as it migh -> el modelo exige la clave de partición completa (sin ALLOW FILTERING)
+[OK  ] cassandra sonda           1014.0 ms  timeout de conexión: 10.255.255.1:9042 -> NoHostAvailable(OSError) en 1013 ms: timeout de conexión (sin respuesta del servidor), distinto de InvalidRequest (el servidor respondió)
+
+--- redis ---
+[OK  ] redis     configuracion      0.0 ms  variables: REDIS_HOST=127.0.0.1; REDIS_PORT=6379; REDIS_PASSWORD (vacía); REDIS_DB=0; REDIS_CLAVE_PRUEBA=sesion:S-0001 [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]
+[OK  ] redis     contenedor       157.6 ms  docker inspect: fixture2030-redis: running; puertos publicados: 6379/tcp -> 0.0.0.0:6379. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] redis     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] redis     tcp               24.1 ms  connect(): 127.0.0.1:6379 listener aceptó la conexión
+[OK  ] redis     protocolo          3.7 ms  PING (RESP crudo): RESP: PING -> +PONG
+[OK  ] redis     autenticacion     33.7 ms  ACL WHOAMI: sin contraseña configurada; el servidor acepta la conexión como 'default' (laboratorio)
+[OK  ] redis     autorizacion       1.1 ms  DBSIZE: permitido: 7 claves en la base lógica
+[OK  ] redis     contexto           3.3 ms  CLIENT INFO + INFO keyspace: Redis 8.10.2; base lógica db=0: 7 claves, 4 con TTL
+[WARN] redis     lectura            1.2 ms  EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2
+        observación: Redis respondió normalmente: la clave no existe (nunca se cargó o ya venció su TTL). Ausente y expirada se ven igual (-2); ninguna de las dos es 'Redis caído'.
+[OK  ] redis     sonda              2.4 ms  clave ausente: EXISTS diag:h11:inexistente:66f40b1f = 0, PTTL = -2: ausencia válida (nil), no es error
+[SKIP] redis     sonda              0.0 ms  clave expirada: desactivada (REDIS_SONDA_EXPIRACION=0): escribe una clave diag: de 1,5 s
+[OK  ] redis     sonda           2014.5 ms  Redis no disponible: 127.0.0.1:65137 sin servidor -> TimeoutError en 2011 ms: excepción, distinta de nil (la API responde 503/504, nunca 404). En Windows el rechazo en 127.0.0.1 tarda ~2 s (reintentos de SYN): con TIMEOUT_CONEXION_S=2 la caída se informa como timeout (504).
+
+--- influxdb ---
+[OK  ] influxdb  configuracion      0.0 ms  variables: INFLUX_URL=http://127.0.0.1:8181; INFLUX_DATABASE=fixture2030; INFLUX_TOKEN (vacía); INFLUX_TOKEN_FILE=../fixture2030-influxDB/.influxdb3-token [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]
+[OK  ] influxdb  configuracion              origen del token: token leído de archivo fixture2030-influxDB/.influxdb3-token (valor oculto)
+[OK  ] influxdb  contenedor       147.9 ms  docker inspect: fixture2030-influxdb: running; puertos publicados: 8181/tcp -> 0.0.0.0:8181. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] influxdb  resolucion         0.1 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] influxdb  tcp               19.2 ms  connect(): 127.0.0.1:8181 listener aceptó la conexión
+[OK  ] influxdb  protocolo         17.4 ms  GET /health (sin token): sin token -> 401: el servicio HTTP responde y exige token también en /health (InfluxDB 3 Core con autorización activa)
+[OK  ] influxdb  autenticacion      3.4 ms  GET /health (con token): con token -> 200 OK (token de archivo fixture2030-influxDB/.influxdb3-token)
+[OK  ] influxdb  autorizacion       2.7 ms  listar databases: listado de databases permitido: _internal, fixture2030
+[OK  ] influxdb  contexto           5.3 ms  database + tabla: database 'fixture2030' con la tabla 'estadisticas_partido'
+[OK  ] influxdb  lectura           34.2 ms  COUNT acotado por tiempo: COUNT(*) = 1800 en partido P-001, [2030-06-10T20:00:00Z, 2030-06-10T20:15:00Z) (primero 2030-06-10T20:00:00, último 2030-06-10T20:14:59)
+[OK  ] influxdb  lectura           21.9 ms  agregación date_bin: date_bin(5 min) + AVG(posesion_pct): 3 bloques [50.0, 50.0, 50.0]
+[OK  ] influxdb  sonda             23.5 ms  token inválido: token inválido -> HTTP 401: servicio accesible, autorización rechazada (no es caída)
+[OK  ] influxdb  sonda              2.8 ms  database inexistente: database inexistente -> HTTP 404 {'error': 'query error: database not found: fixture2030_inexistente_h1: error de contexto
+[OK  ] influxdb  sonda             41.3 ms  ventana sin puntos: ventana 2031-01-01 sin datos -> HTTP 200, COUNT(*) = 0: ausencia de puntos válida (la API responde 200 con series vacías)
+
+--- iris ---
+[OK  ] iris      configuracion      0.0 ms  variables: IRIS_HOST=127.0.0.1; IRIS_PORT=1972; IRIS_PORTAL_URL=http://127.0.0.1:52773/csp/sys/UtilHome.csp; IRIS_NAMESPACE=USER; IRIS_USER=fixture_api; IRIS_PASSWORD (definida, oculta) [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]
+[OK  ] iris      contenedor       167.5 ms  docker inspect: fixture2030-iris: running (healthy); puertos publicados: 1972/tcp -> 0.0.0.0:1972, 52773/tcp -> 0.0.0.0:52773. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] iris      portal_http        6.7 ms  GET Management Portal: HTTP 200: el Management Portal responde. La API no usa este puerto: no prueba el Superserver
+[OK  ] iris      resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] iris      tcp               24.1 ms  connect(): 127.0.0.1:1972 listener aceptó la conexión
+[OK  ] iris      protocolo         63.6 ms  handshake Superserver: el Superserver completó el handshake
+[OK  ] iris      autenticacion     63.6 ms  login en USER: usuario 'fixture_api' aceptado en el namespace 'USER'
+[OK  ] iris      autorizacion       2.1 ms  %SYSTEM.Version.GetNumber: Native API puede ejecutar métodos de clase: IRIS 2026.2
+[OK  ] iris      contexto           3.7 ms  namespace + clase: namespace activo 'USER'; clase Fixture.API compilada
+[OK  ] iris      lectura            3.3 ms  ObtenerActa: Fixture.API.ObtenerActa('P-001') -> estado 'En Juego', sede 'Estadio Monumental', 1 eventos, árbitro con rango FIFA
+[OK  ] iris      sonda              1.6 ms  objeto inexistente: ObtenerActa('P-999') -> {'ok': 0, 'error': 'NO_ENCONTRADO'}: objeto inexistente es respuesta de negocio (la API responde 404), no falla de conexión
+[OK  ] iris      sonda              1.7 ms  clase inexistente: <CLASS DOES NOT EXIST>XDCall+11^%SYS.DBSRV.1: error de metadato, no de conexión
+[OK  ] iris      sonda              1.3 ms  namespace incorrecto: %SYS.Namespace.Exists('NOEXISTE_H11') = 0: con un namespace inexistente iris.connect devuelve 'Access Denied', igual que una credencial inválida; esta consulta los distingue sin provocar logins fallidos
+
+--- API del Hito 10 (http://127.0.0.1:8000) ---
+[OK  ] api       api                3.0 ms  liveness: HTTP 200 -> exito | estado=up [no consulta bases]
+[OK  ] api       api               17.8 ms  readiness: HTTP 200 -> exito | listo=True estado=up no_disponibles=[] [diagnóstico reutilizado (TTL)]
+[OK  ] api       api               20.1 ms  diagnóstico por dependencia: HTTP 200 -> exito | estado=up mongodb=up neo4j=up cassandra=up redis=up influxdb=up iris=up
+[OK  ] api       api                4.9 ms  CU01 equipo: HTTP 200 -> exito | nombre=Argentina
+[OK  ] api       api               22.9 ms  CU01 equipo inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+[OK  ] api       api                2.9 ms  CU01 código inválido: HTTP 400 -> error_validacion | VALIDACION [no llega a la base]
+[OK  ] api       api                8.6 ms  CU03 plantel: HTTP 200 -> exito | items: 5
+[OK  ] api       api               18.7 ms  CU05 ficha de partido: HTTP 200 -> exito | codigo_partido=P-001
+[OK  ] api       api               10.9 ms  CU06 eventos: HTTP 200 -> exito | eventos: 1
+[OK  ] api       api               23.4 ms  CU06 partido sin eventos: HTTP 200 -> respuesta_vacia_valida | eventos: 0
+[OK  ] api       api                9.7 ms  CU06 partido inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+[OK  ] api       api               16.0 ms  CU08 muro de comentarios: HTTP 200 -> exito | items: 5
+[OK  ] api       api               14.2 ms  CU08 ventana sin comentarios: HTTP 200 -> respuesta_vacia_valida | items: 0
+[OK  ] api       api               30.2 ms  CU10 sesión: HTTP 404 -> recurso_inexistente | SESION_NO_VIGENTE [las sesiones de muestra expiran a los 30 min: 404 SESION_NO_VIGENTE también es válido]
+[OK  ] api       api               53.7 ms  CU12 estadísticas: HTTP 200 -> exito | series: 2
+[OK  ] api       api               12.1 ms  CU12 ventana sin puntos: HTTP 200 -> respuesta_vacia_valida | series: 0
+[OK  ] api       api               23.5 ms  CU12 intervalo invertido: HTTP 400 -> error_validacion | VALIDACION
+[OK  ] api       api               19.0 ms  CU13 acta oficial: HTTP 200 -> exito | eventos: 1
+[OK  ] api       api               28.8 ms  CU13 acta inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+  log asociado: 19/19 requests encontradas en API_LOG_FILE=../fixture2030-hito-10-api-integrada/logs/api.log
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    OK         3.5
+           -> todas las capas ejecutadas terminaron OK
+neo4j      disponible      OK    OK    OK    OK    OK    OK    OK    OK    4/4    OK         5.9
+           -> todas las capas ejecutadas terminaron OK
+cassandra  disponible      OK    OK    OK    OK    OK    OK    OK    OK    4/4    OK        77.2
+           -> todas las capas ejecutadas terminaron OK
+redis      disponible      OK    OK    OK    OK    OK    OK    OK    WARN  2/2    OK         1.2
+           -> observación: EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2
+influxdb   disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    OK        34.2
+           -> todas las capas ejecutadas terminaron OK
+iris       disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    OK         3.3
+           -> todas las capas ejecutadas terminaron OK
+
+Total: 97 | OK: 95 | WARN: 1 | FAIL: 0 | SKIP: 1 | duración 8.5 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.

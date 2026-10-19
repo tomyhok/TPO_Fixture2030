@@ -17,6 +17,9 @@ con tres motores de persistencia:
   entidades complejas con relaciones directas y validaciones encapsuladas.
 - **API REST integrada** (Hito 10): API HTTP (FastAPI) que expone los seis
   modulos mediante adaptadores separados, con contrato OpenAPI y pruebas.
+- **Evaluacion de conectividad** (Hito 11): diagnostico reproducible, capa por
+  capa, de la conexion entre la API y los seis productos, con matriz de
+  conectividad, fallas controladas y liveness/readiness en la API.
 
 ## Requisitos
 
@@ -307,6 +310,21 @@ bash scripts/iniciar_api.sh          # Swagger UI: http://127.0.0.1:8000/docs
 > (recomendacion de InterSystems). Con `/durable`, IRIS exige un directorio
 > vacio y no volvia a iniciar sobre el bind mount `~/docker/data/iris` con datos.
 
+## Evaluacion de conectividad (Hito 11)
+
+Diagnostico por capas (configuracion, resolucion, TCP, protocolo,
+autenticacion, autorizacion, contexto, lectura y API) de los seis productos,
+desde el mismo origen que la API. Guia completa en
+[`fixture2030-hito-11-conectividad/README.md`](fixture2030-hito-11-conectividad/README.md).
+
+```bash
+cd fixture2030-hito-11-conectividad
+bash scripts/prueba_tcp.sh                 # puertos (sin drivers)
+bash scripts/prueba_clientes_nativos.sh    # clientes nativos y sondas
+bash scripts/prueba_api.sh                 # rutas de la API con request ID (API iniciada)
+bash scripts/evaluar_conectividad.sh       # todo + matriz de conectividad
+```
+
 ## Estructura del proyecto
 
 ```text
@@ -350,6 +368,11 @@ fixture2030-hito-10-api-integrada/
   scripts/                          Inicio, preparacion de datos, conectividad, pruebas y evidencia
   tests/                            Pruebas unitarias y de integracion
   docs/                             Casos de uso, arquitectura, contratos, conectividad y evidencia
+fixture2030-hito-11-conectividad/
+  scripts/                          Evaluador por capas (modos tcp/nativo/api/completo), fallas controladas y evidencia
+  config/                           Configuracion de ejemplo sin secretos
+  tests/                            Pruebas unitarias del diagnostico
+  docs/                             Mapa de dependencias, topologia, matriz, fallas, health/readiness y evidencia
 ```
 
 Los Compose dentro de los modulos se conservan como referencia y para ejecutar

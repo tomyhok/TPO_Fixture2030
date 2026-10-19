@@ -15,7 +15,7 @@ pruebas reproducibles y evidencia.
 | Sesiones | Redis | 7 | `GET` y `DELETE /sesiones/{id_sesion}` |
 | Estadísticas | InfluxDB 3 | 8 | `GET /partidos/{codigo_partido}/estadisticas` |
 | Actas oficiales | IRIS | 9 | `GET /partidos-oficiales/{codigo_partido}`, `PATCH .../estado`, `POST .../eventos` |
-| Salud | las seis | — | `GET /health` |
+| Salud | las seis | 10, 11 | `GET /health`; `/health/live`, `/health/ready`, `/health/dependencias` (Hito 11) |
 
 ## Documentación
 
@@ -70,7 +70,7 @@ bash scripts/iniciar_api.sh            # PowerShell: .\scripts\iniciar_api.ps1
 
 * **Swagger UI:** <http://127.0.0.1:8000/docs>
 * **OpenAPI:** <http://127.0.0.1:8000/openapi.json> (igual a `openapi/openapi.yaml`)
-* **Salud:** <http://127.0.0.1:8000/health>
+* **Salud:** <http://127.0.0.1:8000/health> · liveness <http://127.0.0.1:8000/health/live> · readiness <http://127.0.0.1:8000/health/ready> · diagnóstico por fuente <http://127.0.0.1:8000/health/dependencias> (Hito 11, ver [`../fixture2030-hito-11-conectividad/docs/health_readiness.md`](../fixture2030-hito-11-conectividad/docs/health_readiness.md))
 
 `preparar_datos.sh` reutiliza los scripts de los hitos anteriores (Neo4j,
 Cassandra, Redis, InfluxDB) y además:
@@ -105,7 +105,7 @@ y en `scripts/generar_evidencia.sh`, cuya salida queda en `docs/evidencia/`.
 ## Pruebas
 
 ```bash
-bash scripts/ejecutar_pruebas.sh unit   # 122 unitarias, sin Docker
+bash scripts/ejecutar_pruebas.sh unit   # 136 unitarias, sin Docker (122 del Hito 10 + 14 del Hito 11)
 bash scripts/ejecutar_pruebas.sh        # + conectividad + 35 de integración contra las bases
 ```
 

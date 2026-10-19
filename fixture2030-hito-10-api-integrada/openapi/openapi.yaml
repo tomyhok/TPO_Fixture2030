@@ -37,7 +37,7 @@ info:
     **Autenticación.** No implementada en este hito: la API se ejecuta en el laboratorio local.
 
     '
-  version: 1.0.0
+  version: 1.1.0
 servers:
 - url: http://localhost:8000
   description: Notebook (local)
@@ -1617,8 +1617,9 @@ paths:
       tags:
       - Salud
       summary: CU16 - Disponibilidad de las seis fuentes
-      description: Ejecuta una operación trivial en cada fuente, en paralelo y con el timeout de cada
-        adaptador. 200 si todas responden; 503 si al menos una falla, indicando cuál.
+      description: 'Ejecuta una operación trivial en cada fuente, en paralelo y con el timeout de cada
+        adaptador. 200 si todas responden; 503 si al menos una falla, indicando cuál. Consulta las seis
+        bases en cada llamada: para sondeos frecuentes usar /health/ready.'
       operationId: health_health_get
       responses:
         '200':
@@ -1633,6 +1634,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Salud'
+  /health/live:
+    get:
+      tags:
+      - Salud
+      summary: Liveness - el proceso de la API responde
+      description: No consulta ninguna fuente. Si el proceso está colgado o detenido, no hay respuesta.
+      operationId: vida_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vida'
+  /health/ready:
+    get:
+      tags:
+      - Salud
+      summary: Readiness - la API puede recibir tráfico
+      description: Usa el diagnóstico profundo, reutilizado durante HEALTH_CACHE_TTL_S (10 s por defecto).
+        200 si al menos una fuente está disponible (cada ruta de una fuente caída responde 503/504 con
+        la dependencia identificada); 503 si ninguna lo está. `no_disponibles` lista las fuentes afectadas.
+      operationId: preparacion_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preparacion'
+        '503':
+          description: Ninguna fuente disponible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preparacion'
+  /health/dependencias:
+    get:
+      tags:
+      - Salud
+      summary: Diagnóstico de conectividad por fuente
+      description: 'Estado de cada fuente: up, down (caída, rechazo, credencial, contexto o timeout),
+        degraded (responde más lento que HEALTH_UMBRAL_LENTO_MS), unknown (no se pudo evaluar) o not_configured
+        (faltan variables; no se consulta). Responde 200 porque el recurso pedido es el informe: el estado
+        de cada fuente va en el cuerpo. El chequeo se reutiliza durante HEALTH_CACHE_TTL_S salvo `refrescar=true`.'
+      operationId: dependencias_health_dependencias_get
+      parameters:
+      - name: refrescar
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Ignora el resultado reutilizado y vuelve a consultar.
+          default: false
+          title: Refrescar
+        description: Ignora el resultado reutilizado y vuelve a consultar.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagnostico'
 components:
   schemas:
     Acta:
@@ -1838,6 +1902,68 @@ components:
       - estado
       - latencia_ms
       title: Dependencia
+    Diagnostico:
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoComponente'
+          description: '`up`, `degraded` (alguna fuente afectada) o `down` (ninguna disponible).'
+        verificado_en:
+          type: string
+          format: date-time
+          title: Verificado En
+          description: Instante (UTC) del chequeo profundo que se informa.
+        desde_cache:
+          type: boolean
+          title: Desde Cache
+          description: true si se reutilizó un chequeo previo dentro del TTL.
+        edad_s:
+          type: number
+          title: Edad S
+          description: Antigüedad del chequeo informado.
+        ttl_cache_s:
+          type: number
+          title: Ttl Cache S
+        dependencias:
+          items:
+            $ref: '#/components/schemas/DiagnosticoDependencia'
+          type: array
+          title: Dependencias
+      additionalProperties: false
+      type: object
+      required:
+      - estado
+      - verificado_en
+      - desde_cache
+      - edad_s
+      - ttl_cache_s
+      - dependencias
+      title: Diagnostico
+    DiagnosticoDependencia:
+      properties:
+        nombre:
+          type: string
+          title: Nombre
+        estado:
+          $ref: '#/components/schemas/EstadoComponente'
+        motivo:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Motivo
+          description: 'Código del problema: DEPENDENCIA_NO_DISPONIBLE, DEPENDENCIA_TIMEOUT, LATENCIA_ALTA,
+            FALTA_CONFIGURACION:<variables> o ERROR_INESPERADO. Nunca incluye hosts ni credenciales.'
+        latencia_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Latencia Ms
+          description: Duración del chequeo; null si no se ejecutó.
+      additionalProperties: false
+      type: object
+      required:
+      - nombre
+      - estado
+      title: DiagnosticoDependencia
     EquipoDetalle:
       properties:
         codigo_iso:
@@ -1992,6 +2118,16 @@ components:
       - resolucion
       - series
       title: EstadisticasPartido
+    EstadoComponente:
+      type: string
+      enum:
+      - up
+      - down
+      - degraded
+      - unknown
+      - not_configured
+      title: EstadoComponente
+      description: Significado fijo de cada estado (Hito 11, sección 5.6).
     EstadoDependencia:
       type: string
       enum:
@@ -2363,6 +2499,41 @@ components:
       - MED
       - DEL
       title: Posicion
+    Preparacion:
+      properties:
+        listo:
+          type: boolean
+          title: Listo
+          description: true si la API puede atender tráfico (al menos una fuente disponible).
+        estado:
+          $ref: '#/components/schemas/EstadoComponente'
+        disponibles:
+          items:
+            type: string
+          type: array
+          title: Disponibles
+        no_disponibles:
+          items:
+            type: string
+          type: array
+          title: No Disponibles
+        verificado_en:
+          type: string
+          format: date-time
+          title: Verificado En
+        desde_cache:
+          type: boolean
+          title: Desde Cache
+      additionalProperties: false
+      type: object
+      required:
+      - listo
+      - estado
+      - disponibles
+      - no_disponibles
+      - verificado_en
+      - desde_cache
+      title: Preparacion
     Protagonista:
       properties:
         id_jugador:
@@ -2575,6 +2746,27 @@ components:
       - Tarjeta Roja
       - Cambio
       title: TipoEvento
+    Vida:
+      properties:
+        estado:
+          type: string
+          const: up
+          title: Estado
+          description: 'Siempre `up`: si el proceso no responde, no hay respuesta.'
+        version:
+          type: string
+          title: Version
+        activa_desde_s:
+          type: number
+          title: Activa Desde S
+          description: Segundos desde que arrancó el proceso.
+      additionalProperties: false
+      type: object
+      required:
+      - estado
+      - version
+      - activa_desde_s
+      title: Vida
 tags:
 - name: Equipos y jugadores (MongoDB)
   description: Colecciones `equipos` y `jugadores` (Hito 4).
@@ -2589,4 +2781,4 @@ tags:
 - name: Actas oficiales (IRIS)
   description: Entidad compleja con transiciones validadas (Hito 9).
 - name: Salud
-  description: Conectividad con las fuentes.
+  description: Liveness, readiness y diagnóstico de conectividad por fuente (Hitos 10 y 11).

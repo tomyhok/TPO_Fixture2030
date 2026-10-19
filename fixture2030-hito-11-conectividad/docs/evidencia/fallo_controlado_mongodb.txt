@@ -1,0 +1,226 @@
+# Fallo controlado: MongoDB detenido y recuperado (RF20, RF21)
+# Generado: 2026-10-17T00:33:19Z con scripts/generar_evidencia.sh (commit db0f5fc, origen: notebook)
+
+
+==================================================================
+## 1. Condición inicial
+## 2026-10-17T00:33:19Z
+==================================================================
+contenedor /fixture2030-mongodb: running (restart policy: always)
+volume fixture_mongodb_data -> /data/db
+volumen fixture_mongodb_data creado 2026-09-25T22:42:18Z
+datos: equipos=64 jugadores=1472
+$ curl -H 'X-Request-ID: h11-fallo-213319-01' http://127.0.0.1:8000/equipos/ARG
+{"codigo_iso":"ARG","nombre":"Argentina","confederacion":"CONMEBOL","grupo":"A","ranking_fifa":1,"director_tecnico":"Martinez","pais_anfitrion":true}
+-> HTTP 200 en 0.007623 s
+$ curl -H 'X-Request-ID: h11-fallo-213319-02' http://127.0.0.1:8000/health/dependencias?refrescar=true
+{"estado":"up","verificado_en":"2026-10-17T00:33:22.740038Z","desde_cache":false,"edad_s":0.0,"ttl_cache_s":10.0,"dependencias":[{"nombre":"mongodb","estado":"up","motivo":null,"latencia_ms":4.4},{"nombre":"neo4j","estado":"up","motivo":null,"latencia_ms":10.4},{"nombre":"cassandra","estado":"up","motivo":null,"latencia_ms":5.2},{"nombre":"redis","estado":"up","motivo":null,"latencia_ms":2.4},{"nombre":"influxdb","estado":"up","motivo":null,"latencia_ms":6.6},{"nombre":"iris","estado":"up","motivo":null,"latencia_ms":2.2}]}
+-> HTTP 200 en 0.015548 s
+
+==================================================================
+## 2. Cambio aplicado: docker stop fixture2030-mongodb (sin borrar contenedor ni volumen)
+## 2026-10-17T00:33:22Z
+==================================================================
+fixture2030-mongodb
+detenido en 1 s
+
+==================================================================
+## 3a. Diagnóstico por capas con MongoDB detenido
+## 2026-10-17T00:33:23Z
+==================================================================
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — fallo controlado: MongoDB detenido
+  inicio_utc     2026-10-17T00:33:23Z
+  commit         db0f5fc (hito10, con cambios sin commitear)
+  origen         notebook Windows 11 (Git Bash); 127.0.0.1 = puertos publicados por Docker
+  python         3.12.10
+  drivers        pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1
+  configuracion  fixture2030-hito-10-api-integrada/.env
+  modo           completo
+  productos      mongodb
+  capas          autenticacion, autorizacion, configuracion, contenedor, contexto, lectura, portal_http, protocolo, resolucion, sonda, tcp, api
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+  ADVERTENCIA    1 secreto(s) coinciden con un identificador público de la configuración (nombre de base, host...): no son secretos efectivos, conviene cambiarlos
+====================================================================================================
+
+--- mongodb ---
+[OK  ] mongodb   configuracion      0.0 ms  variables: MONGO_HOST=127.0.0.1; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: archivo fixture2030-hito-10-api-integrada/.env]
+[WARN] mongodb   contenedor       132.1 ms  docker inspect: fixture2030-mongodb: exited; puertos publicados: ninguno
+        observación: El contenedor no está en ejecución: explica las fallas de TCP de este producto.
+[OK  ] mongodb   resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[FAIL] mongodb   tcp             2057.7 ms  connect(): 127.0.0.1:27017 connection refused tras 2057 ms (Windows reintenta el SYN: el rechazo local tarda ~2 s)
+        hipótesis: El host responde pero nadie escucha en ese puerto: contenedor detenido, puerto no publicado o puerto equivocado. Un contenedor 'Up' no garantiza que este puerto esté publicado.
+        siguiente paso: docker ps -a / docker port <contenedor>; verificar MONGO_PORT contra el compose.
+[SKIP] mongodb   protocolo                  hello (sin credenciales): no evaluada: falló la capa 'tcp'
+[SKIP] mongodb   autenticacion              connectionStatus: no evaluada: falló la capa 'tcp'
+[SKIP] mongodb   autorizacion               listCollections fixture2030: no evaluada: falló la capa 'tcp'
+[SKIP] mongodb   contexto                   colecciones esperadas: no evaluada: falló la capa 'tcp'
+[SKIP] mongodb   lectura                    find_one + count_documents: no evaluada: falló la capa 'tcp'
+
+--- API del Hito 10 (http://127.0.0.1:8000) ---
+[OK  ] api       api               29.1 ms  liveness: HTTP 200 -> exito | estado=up [no consulta bases]
+[OK  ] api       api               15.5 ms  readiness: HTTP 200 -> exito | listo=True estado=up no_disponibles=[] [diagnóstico reutilizado (TTL)]
+[WARN] api       api             2080.6 ms  diagnóstico por dependencia: HTTP 200 -> exito | estado=degraded mongodb=down neo4j=up cassandra=up redis=up influxdb=up iris=up
+        observación: El diagnóstico de la API informa fuentes no disponibles: mongodb.
+[FAIL] api       api             2184.2 ms  CU01 equipo: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[FAIL] api       api             2515.3 ms  CU01 equipo inexistente: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[OK  ] api       api                2.1 ms  CU01 código inválido: HTTP 400 -> error_validacion | VALIDACION [no llega a la base]
+[FAIL] api       api             2496.9 ms  CU03 plantel: HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb)
+        hipótesis: API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=mongodb). La API identifica la fuente en lugar de responder 200 vacío.
+        siguiente paso: Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.
+[OK  ] api       api               15.6 ms  CU12 intervalo invertido: HTTP 400 -> error_validacion | VALIDACION
+  log asociado: 8/8 requests encontradas en API_LOG_FILE=../fixture2030-hito-10-api-integrada/logs/api.log
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    no disponible   OK    OK    FAIL  SKIP  SKIP  SKIP  SKIP  SKIP  -      FAIL         -
+           -> falla en tcp: 127.0.0.1:27017 connection refused tras 2057 ms (Windows reintenta el SYN: el rechazo local tarda ~2 s) -> docker ps -a / docker port <contenedor>; verificar MONGO_PORT contra el compose.
+
+Total: 17 | OK: 6 | WARN: 2 | FAIL: 4 | SKIP: 5 | duración 12.3 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.
+
+==================================================================
+## 3b. Respuestas de la API durante la falla (request ID y tiempo de espera)
+## 2026-10-17T00:33:36Z
+==================================================================
+# Ruta de MongoDB: se espera 503 DEPENDENCIA_NO_DISPONIBLE (o 504 si el rechazo tarda más que el timeout)
+$ curl -H 'X-Request-ID: h11-fallo-213319-03' http://127.0.0.1:8000/equipos/ARG
+{"error":{"codigo":"DEPENDENCIA_NO_DISPONIBLE","mensaje":"La fuente de datos 'mongodb' no está disponible.","request_id":"h11-fallo-213319-03","detalles":[{"dependencia":"mongodb"}]}}
+-> HTTP 503 en 2.063373 s
+
+# Ruta de otro módulo (Neo4j): debe seguir funcionando -> la falla queda aislada
+$ curl -H 'X-Request-ID: h11-fallo-213319-04' http://127.0.0.1:8000/partidos/P-001/eventos?limit=2
+{"codigo_partido":"P-001","eventos":[{"id_evento":"EV-001","tipo":"Gol","minuto":23,"jugador":{"id_jugador":"ARG-10","nombre":"Andrés Fuentes"}}]}
+-> HTTP 200 en 0.013691 s
+
+# Readiness: 200 con mongodb en no_disponibles (las demás fuentes atienden)
+$ curl -H 'X-Request-ID: h11-fallo-213319-05' http://127.0.0.1:8000/health/ready
+{"listo":true,"estado":"degraded","disponibles":["neo4j","cassandra","redis","influxdb","iris"],"no_disponibles":["mongodb"],"verificado_en":"2026-10-17T00:33:28.426151Z","desde_cache":true}
+-> HTTP 200 en 0.004080 s
+
+# Diagnóstico por dependencia (refrescado)
+$ curl -H 'X-Request-ID: h11-fallo-213319-06' http://127.0.0.1:8000/health/dependencias?refrescar=true
+{"estado":"degraded","verificado_en":"2026-10-17T00:33:40.648235Z","desde_cache":false,"edad_s":0.0,"ttl_cache_s":10.0,"dependencias":[{"nombre":"mongodb","estado":"down","motivo":"DEPENDENCIA_NO_DISPONIBLE","latencia_ms":2305.4},{"nombre":"neo4j","estado":"up","motivo":null,"latencia_ms":6.9},{"nombre":"cassandra","estado":"up","motivo":null,"latencia_ms":7.1},{"nombre":"redis","estado":"up","motivo":null,"latencia_ms":2.7},{"nombre":"influxdb","estado":"up","motivo":null,"latencia_ms":20.9},{"nombre":"iris","estado":"up","motivo":null,"latencia_ms":2.4}]}
+-> HTTP 200 en 2.310212 s
+
+# Chequeo del Hito 10: 503 indicando la fuente
+$ curl -H 'X-Request-ID: h11-fallo-213319-07' http://127.0.0.1:8000/health
+{"estado":"degradado","dependencias":[{"nombre":"mongodb","estado":"caida","latencia_ms":2449.4},{"nombre":"neo4j","estado":"ok","latencia_ms":8.1},{"nombre":"cassandra","estado":"ok","latencia_ms":7.8},{"nombre":"redis","estado":"ok","latencia_ms":1.9},{"nombre":"influxdb","estado":"ok","latencia_ms":6.6},{"nombre":"iris","estado":"ok","latencia_ms":1.5}]}
+-> HTTP 503 en 2.454445 s
+
+# Líneas del log de la API para estas requests (sin secretos: ruta, dependencia, resultado, duración)
+2026-10-17T00:33:22Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-01 dependencia=mongodb operacion=equipos.find_one resultado=ok duracion_ms=3.7
+2026-10-17T00:33:22Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-01 metodo=GET ruta=/equipos/ARG estado=200 duracion_ms=5.6
+2026-10-17T00:33:22Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-02 dependencia=mongodb operacion=ping resultado=ok duracion_ms=4.3
+2026-10-17T00:33:22Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-02 dependencia=redis operacion=ping resultado=ok duracion_ms=2.1
+2026-10-17T00:33:22Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-02 dependencia=iris operacion=ping resultado=ok duracion_ms=1.8
+2026-10-17T00:33:22Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-02 dependencia=cassandra operacion=ping resultado=ok duracion_ms=5.1
+2026-10-17T00:33:22Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-02 dependencia=influxdb operacion=ping resultado=ok duracion_ms=6.3
+2026-10-17T00:33:22Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-02 dependencia=neo4j operacion=ping resultado=ok duracion_ms=10.3
+2026-10-17T00:33:22Z INFO [fixture2030.servicio.salud] request_id=h11-fallo-213319-02 diagnostico estado=up mongodb=up neo4j=up cassandra=up redis=up influxdb=up iris=up
+2026-10-17T00:33:22Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-02 metodo=GET ruta=/health/dependencias estado=200 duracion_ms=13.8
+2026-10-17T00:33:38Z WARNING [fixture2030.adaptador] request_id=h11-fallo-213319-03 dependencia=mongodb operacion=equipos.find_one resultado=DEPENDENCIA_NO_DISPONIBLE:ServerSelectionTimeoutError duracion_ms=2057.9
+2026-10-17T00:33:38Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-03 metodo=GET ruta=/equipos/ARG estado=503 duracion_ms=2060.9
+2026-10-17T00:33:38Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-04 dependencia=neo4j operacion=partido.eventos resultado=ok duracion_ms=9.7
+2026-10-17T00:33:38Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-04 metodo=GET ruta=/partidos/P-001/eventos estado=200 duracion_ms=11.6
+2026-10-17T00:33:38Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-05 metodo=GET ruta=/health/ready estado=200 duracion_ms=1.7
+2026-10-17T00:33:38Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-06 dependencia=redis operacion=ping resultado=ok duracion_ms=2.5
+2026-10-17T00:33:38Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-06 dependencia=iris operacion=ping resultado=ok duracion_ms=2.2
+2026-10-17T00:33:38Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-06 dependencia=neo4j operacion=ping resultado=ok duracion_ms=6.7
+2026-10-17T00:33:38Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-06 dependencia=cassandra operacion=ping resultado=ok duracion_ms=7.0
+2026-10-17T00:33:38Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-06 dependencia=influxdb operacion=ping resultado=ok duracion_ms=20.7
+2026-10-17T00:33:40Z WARNING [fixture2030.adaptador] request_id=h11-fallo-213319-06 dependencia=mongodb operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:ServerSelectionTimeoutError duracion_ms=2305.1
+2026-10-17T00:33:40Z INFO [fixture2030.servicio.salud] request_id=h11-fallo-213319-06 diagnostico estado=degraded mongodb=down neo4j=up cassandra=up redis=up influxdb=up iris=up
+2026-10-17T00:33:40Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-06 metodo=GET ruta=/health/dependencias estado=200 duracion_ms=2308.5
+2026-10-17T00:33:40Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-07 dependencia=redis operacion=ping resultado=ok duracion_ms=1.7
+2026-10-17T00:33:40Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-07 dependencia=iris operacion=ping resultado=ok duracion_ms=1.3
+2026-10-17T00:33:40Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-07 dependencia=neo4j operacion=ping resultado=ok duracion_ms=7.8
+2026-10-17T00:33:40Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-07 dependencia=influxdb operacion=ping resultado=ok duracion_ms=5.9
+2026-10-17T00:33:40Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-07 dependencia=cassandra operacion=ping resultado=ok duracion_ms=7.5
+2026-10-17T00:33:43Z WARNING [fixture2030.adaptador] request_id=h11-fallo-213319-07 dependencia=mongodb operacion=ping resultado=DEPENDENCIA_NO_DISPONIBLE:ServerSelectionTimeoutError duracion_ms=2449.1
+2026-10-17T00:33:43Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-07 metodo=GET ruta=/health estado=503 duracion_ms=2452.6
+
+==================================================================
+## 4. Recuperación: docker start fixture2030-mongodb
+## 2026-10-17T00:33:43Z
+==================================================================
+fixture2030-mongodb
+protocolo MongoDB disponible: sí tras 2375 ms
+
+==================================================================
+## 5. Resultado después de recuperar (RF20: misma prueba, nuevo estado)
+## 2026-10-17T00:33:46Z
+==================================================================
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — fallo controlado: MongoDB recuperado
+  inicio_utc     2026-10-17T00:33:47Z
+  commit         db0f5fc (hito10, con cambios sin commitear)
+  origen         notebook Windows 11 (Git Bash); 127.0.0.1 = puertos publicados por Docker
+  python         3.12.10
+  drivers        pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1
+  configuracion  fixture2030-hito-10-api-integrada/.env
+  modo           completo
+  productos      mongodb
+  capas          autenticacion, autorizacion, configuracion, contenedor, contexto, lectura, portal_http, protocolo, resolucion, sonda, tcp, api
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+  ADVERTENCIA    1 secreto(s) coinciden con un identificador público de la configuración (nombre de base, host...): no son secretos efectivos, conviene cambiarlos
+====================================================================================================
+
+--- mongodb ---
+[OK  ] mongodb   configuracion      0.0 ms  variables: MONGO_HOST=127.0.0.1; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: archivo fixture2030-hito-10-api-integrada/.env]
+[OK  ] mongodb   contenedor       146.8 ms  docker inspect: fixture2030-mongodb: running; puertos publicados: 27017/tcp -> 0.0.0.0:27017. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] mongodb   resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] mongodb   tcp                1.2 ms  connect(): 127.0.0.1:27017 listener aceptó la conexión
+[OK  ] mongodb   protocolo          8.5 ms  hello (sin credenciales): primario=True, wire=21, MongoDB 7.0.43
+[OK  ] mongodb   autenticacion     37.5 ms  connectionStatus: autenticado como admin@admin (roles: root)
+[OK  ] mongodb   autorizacion       2.1 ms  listCollections fixture2030: permitido en 'fixture2030' (2 colecciones)
+[OK  ] mongodb   contexto           0.0 ms  colecciones esperadas: database 'fixture2030' con las colecciones del módulo: equipos, jugadores
+[OK  ] mongodb   lectura            6.8 ms  find_one + count_documents: equipos.find_one(_id='ARG') -> Argentina (grupo A); jugadores.count_documents(codigo_equipo='ARG', limit=100) = 23
+
+--- API del Hito 10 (http://127.0.0.1:8000) ---
+[OK  ] api       api               26.5 ms  liveness: HTTP 200 -> exito | estado=up [no consulta bases]
+[OK  ] api       api               16.1 ms  readiness: HTTP 200 -> exito | listo=True estado=degraded no_disponibles=['mongodb'] [diagnóstico reutilizado (TTL)]
+[OK  ] api       api              475.0 ms  diagnóstico por dependencia: HTTP 200 -> exito | estado=up mongodb=up neo4j=up cassandra=up redis=up influxdb=up iris=up
+[OK  ] api       api               25.3 ms  CU01 equipo: HTTP 200 -> exito | nombre=Argentina
+[OK  ] api       api                4.2 ms  CU01 equipo inexistente: HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO
+[OK  ] api       api               24.0 ms  CU01 código inválido: HTTP 400 -> error_validacion | VALIDACION [no llega a la base]
+[OK  ] api       api               26.1 ms  CU03 plantel: HTTP 200 -> exito | items: 5
+[OK  ] api       api                3.2 ms  CU12 intervalo invertido: HTTP 400 -> error_validacion | VALIDACION
+  log asociado: 8/8 requests encontradas en API_LOG_FILE=../fixture2030-hito-10-api-integrada/logs/api.log
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    disponible      OK    OK    OK    OK    OK    OK    OK    OK    -      OK         6.8
+           -> todas las capas ejecutadas terminaron OK
+
+Total: 17 | OK: 17 | WARN: 0 | FAIL: 0 | SKIP: 0 | duración 1.5 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.
+$ curl -H 'X-Request-ID: h11-fallo-213319-08' http://127.0.0.1:8000/equipos/ARG
+{"codigo_iso":"ARG","nombre":"Argentina","confederacion":"CONMEBOL","grupo":"A","ranking_fifa":1,"director_tecnico":"Martinez","pais_anfitrion":true}
+-> HTTP 200 en 0.005750 s
+$ curl -H 'X-Request-ID: h11-fallo-213319-09' http://127.0.0.1:8000/health/dependencias?refrescar=true
+{"estado":"up","verificado_en":"2026-10-17T00:33:48.757159Z","desde_cache":false,"edad_s":0.0,"ttl_cache_s":10.0,"dependencias":[{"nombre":"mongodb","estado":"up","motivo":null,"latencia_ms":2.7},{"nombre":"neo4j","estado":"up","motivo":null,"latencia_ms":6.7},{"nombre":"cassandra","estado":"up","motivo":null,"latencia_ms":5.2},{"nombre":"redis","estado":"up","motivo":null,"latencia_ms":2.8},{"nombre":"influxdb","estado":"up","motivo":null,"latencia_ms":5.7},{"nombre":"iris","estado":"up","motivo":null,"latencia_ms":2.9}]}
+-> HTTP 200 en 0.013588 s
+
+2026-10-17T00:33:48Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-09 dependencia=iris operacion=ping resultado=ok duracion_ms=2.7
+2026-10-17T00:33:48Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-09 dependencia=cassandra operacion=ping resultado=ok duracion_ms=5.1
+2026-10-17T00:33:48Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-09 dependencia=neo4j operacion=ping resultado=ok duracion_ms=6.5
+2026-10-17T00:33:48Z INFO [fixture2030.adaptador] request_id=h11-fallo-213319-09 dependencia=influxdb operacion=ping resultado=ok duracion_ms=5.6
+2026-10-17T00:33:48Z INFO [fixture2030.servicio.salud] request_id=h11-fallo-213319-09 diagnostico estado=up mongodb=up neo4j=up cassandra=up redis=up influxdb=up iris=up
+2026-10-17T00:33:48Z INFO [fixture2030.acceso] request_id=h11-fallo-213319-09 metodo=GET ruta=/health/dependencias estado=200 duracion_ms=11.9
+
+==================================================================
+## 6. Datos y volumen conservados
+## 2026-10-17T00:33:49Z
+==================================================================
+antes:   equipos=64 jugadores=1472 | volumen fixture_mongodb_data creado 2026-09-25T22:42:18Z
+después: equipos=64 jugadores=1472 | volumen fixture_mongodb_data creado 2026-09-25T22:42:18Z
+OK: mismos documentos y mismo volumen (no se borró ni recreó nada)

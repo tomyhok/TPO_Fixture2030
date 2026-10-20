@@ -13,3 +13,8 @@ neo4j_plugins/
 fixture2030-influxDB/.influxdb3-token
 fixture2030-influxDB/data_estadisticas.lp
 *.lp
+
+# Configuración local: las credenciales se completan fuera de Git.
+.env
+.env.*
+!.env.example

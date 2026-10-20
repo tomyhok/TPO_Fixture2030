@@ -1,0 +1,4 @@
+....s.........................................................           [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\integration\test_api_integracion.py:8: Configuración pendiente de influxdb; no se cuenta como lectura exitosa.
+61 passed, 1 skipped in 15.63s

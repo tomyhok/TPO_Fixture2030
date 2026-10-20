@@ -1,0 +1,83 @@
+
+Node: c0ae9b9524ca, Instance: IRIS
+
+USER>
+
+Load started on 10/19/2026 23:55:37
+Loading file /tmp/Fixture.Clases.cls as xml
+Imported class: Fixture.Persona
+Imported class: Fixture.Arbitro
+Imported class: Fixture.Tecnico
+Imported class: Fixture.Partido
+Imported class: Fixture.Evento
+Compiling 5 classes
+Compiling class Fixture.Persona
+Compiling class Fixture.Partido
+Compiling class Fixture.Tecnico
+Compiling class Fixture.Arbitro
+Compiling class Fixture.Evento
+Compiling table Fixture.Persona
+Compiling table Fixture.Arbitro
+Compiling table Fixture.Tecnico
+Compiling table Fixture.Evento
+Compiling table Fixture.Partido
+Compiling routine Fixture.Persona.1
+Compiling routine Fixture.Partido.1
+Compiling routine Fixture.Arbitro.1
+Compiling routine Fixture.Tecnico.1
+Compiling routine Fixture.Evento.1
+Load finished successfully.
+
+USER>
+
+Load started on 10/19/2026 23:55:37
+Loading file /tmp/DemoOperaciones.mac as udl
+DemoOperaciones.MAC Loaded
+Compiling routine : DemoOperaciones.mac
+Load finished successfully.
+
+USER>
+==== Inicio de Demostracion Operativa ====
+
+1. Herencia: Arbitro y Tecnico extienden Persona (RF4)
+Arbitro guardado: Tello (clase Fixture.Arbitro, ID 1)
+Tecnico guardado: Bielsa (clase Fixture.Tecnico, ID 2)
+
+2. Carga atomica de objetos y relaciones fuertes (RF6)
+Partido y Eventos guardados con un solo %Save(). ID del Partido: 2
+IDs de los eventos (padre||hijo): 2||3, 2||4
+
+3. Navegacion por referencias sin SQL (RF7)
+Partido en Estadio Centenario - Estado: En Juego
+Arbitro: Facundo Tello (FIFA)
+ - Evento al minuto 12: Gol (Gol de Uruguay) -> pertenece al partido en Estadio Centenario
+ - Evento al minuto 45: Tarjeta Amarilla (Falta fuerte) -> pertenece al partido en Estadio Centenario
+
+4. Demostracion de Proyeccion Multimodelo SQL (RF8)
+ID	Codigo	Sede	Estado
+2	P-009	Estadio Centenario	En Juego
+
+1 Rows(s) Affected
+ID	Minuto	Tipo	Partido
+2||3	12	Gol	2
+2||4	45	Tarjeta Amarilla	2
+
+2 Rows(s) Affected
+ID	Nombre	Apellido
+1	Facundo	Tello
+2	Marcelo	Bielsa
+
+2 Rows(s) Affected
+
+5. Fallo controlado por propiedad obligatoria omitida (RF5)
+Guardado rechazado como se esperaba: 
+
+ERROR #5659: Property 'Fixture.Partido::Sede(19@Fixture.Partido,ID=)' required
+
+6. Validacion Encapsulada (RF9)
+REGLA_OK: AgregarEvento rechazo el partido Finalizado
+Eventos antes=2 despues=2
+
+==== Fin de la Demostracion ====
+
+USER>

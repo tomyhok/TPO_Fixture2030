@@ -11,7 +11,7 @@ services:
       --appendonly yes
       --save 60 1
       --maxmemory 256mb
-      --maxmemory-policy volatile-lru
+      --maxmemory-policy noeviction
       --loglevel notice
     ports:
       # Puerto estandar de Redis para redis-cli y aplicaciones.

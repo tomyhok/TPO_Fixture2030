@@ -6,8 +6,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Definir MONGO_PASSWORD en .env}
       MONGO_INITDB_DATABASE: fixture2030
     volumes:
       - mongodb_data:/data/db
@@ -28,7 +28,7 @@ services:
       - neo4j_import:/var/lib/neo4j/import
       - neo4j_plugins:/plugins
     environment:
-      NEO4J_AUTH: neo4j/fixture2030
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?Definir NEO4J_PASSWORD en .env}
       NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
       NEO4J_apoc_import_file_enabled: "true"
 
@@ -46,7 +46,7 @@ services:
       MAX_HEAP_SIZE: 2G
       HEAP_NEWSIZE: 512M
     volumes:
-      - ~/docker/data/cassandra:/var/lib/cassandra
+      - cassandra_data:/var/lib/cassandra
       - ./fixture2030-cassandra/scripts:/scripts:ro
       - ./fixture2030-cassandra/tools:/tools:ro
       - ./fixture2030-cassandra/data:/data
@@ -66,7 +66,7 @@ services:
       --appendonly yes
       --save 60 1
       --maxmemory 256mb
-      --maxmemory-policy volatile-lru
+      --maxmemory-policy noeviction
       --loglevel notice
     ports:
       - "6379:6379"
@@ -100,12 +100,14 @@ services:
       - --data-dir=/var/lib/influxdb3/data
       - --http-bind=0.0.0.0:8181
     ports:
-      - "8181:8181"
+      - "127.0.0.1:8181:8181"
     volumes:
       - ~/docker/data/influxdb:/var/lib/influxdb3/data
       - ./fixture2030-influxDB/scripts:/scripts:ro
 
 volumes:
+  cassandra_data:
+    name: fixture2030_cassandra_data
   mongodb_data:
     name: fixture_mongodb_data
   neo4j_data:

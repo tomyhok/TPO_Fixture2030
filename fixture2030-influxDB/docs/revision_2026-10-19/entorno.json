@@ -1,0 +1,14 @@
+{
+  "fecha_utc": "2026-10-19T23:56:52.220977+00:00",
+  "imagen_configurada": "influxdb:3-core",
+  "image_id": "sha256:624d69bca6bf6fb174aca5a974e1d96e5c5486994e6ae35bc9b4fe02b9520076",
+  "digests": [
+    "influxdb@sha256:624d69bca6bf6fb174aca5a974e1d96e5c5486994e6ae35bc9b4fe02b9520076"
+  ],
+  "version": "influxdb3 InfluxDB 3 Core, 3.12.0, revision 3ba97c65f1ee4e1f127a8266517d4d2083b7ea39",
+  "compose_sha256": {
+    "docker-compose.yml": "279e367375f9eef4a61d1523977bdf4d7faaa3bbe4f202830edaa385b7978d3a",
+    "fixture2030-influxDB\\docker-compose.yml": "b8705b105675316ea9bdc83783cecdc04155b40516d5abecb4dc0f3843cbcfba"
+  },
+  "limite": "Evidencia del binario e imagen existentes. No se atribuye la carga histórica a una ejecución nueva. Falta token de acceso para repetir consultas."
+}

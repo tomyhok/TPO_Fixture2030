@@ -41,6 +41,7 @@ from conectividad.registro import (  # noqa: E402
     FAIL,
     Redactor,
     Registro,
+    Resultado,
     ahora,
     matriz,
 )
@@ -157,6 +158,10 @@ def main() -> int:
     capas = set(MODOS[args.modo])
     if args.capas:
         capas = {c.strip() for c in args.capas.split(",") if c.strip()}
+        desconocidas = capas - set(CAPAS) - {"contenedor", "portal_http", "sonda", "api"}
+        if desconocidas:
+            print(f"Capas desconocidas: {', '.join(sorted(desconocidas))}", file=sys.stderr)
+            return 2
     con_api = args.modo in ("api", "completo") and (not args.capas or "api" in capas)
 
     inicio = time.perf_counter()
@@ -190,7 +195,12 @@ def main() -> int:
             try:
                 PRODUCTOS[nombre].evaluar(cfg, registro, capas, sondas=not args.sin_sondas)
             except Exception as exc:  # noqa: BLE001 - un producto nunca corta la evaluación de los demás
-                registro.escribir(f"[FAIL] {nombre}: error del diagnóstico ({type(exc).__name__}: {exc})")
+                registro.agregar(Resultado(
+                    nombre, "diagnostico", "evaluación del producto", FAIL,
+                    f"{type(exc).__name__}: {exc}", "(evaluador)", ahora(),
+                    hipotesis="Configuración inválida o error del evaluador; no demuestra una caída del producto.",
+                    siguiente_paso="Revisar los tipos de las variables y el error indicado; corregir y repetir.",
+                ))
 
     trazas: list[dict[str, Any]] = []
     logs: dict[str, list[str]] = {}

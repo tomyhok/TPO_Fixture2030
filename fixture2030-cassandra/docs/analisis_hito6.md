@@ -1,3 +1,7 @@
+> Revisión: la medición histórica se hizo con el montaje anterior. El Compose actual usa
+> `fixture2030_cassandra_data`; ver `revision_2026-10-19/README.md`. No se reutilizan tiempos
+> históricos como mediciones del nuevo volumen.
+
 # Hito 6 — Análisis Técnico del Módulo de Comentarios Masivos (Apache Cassandra)
 
 Grupo 4 — Ingeniería de Datos II — Fixture 2030

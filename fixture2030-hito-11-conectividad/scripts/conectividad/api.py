@@ -1,8 +1,7 @@
 """Pruebas de la API del Hito 10: cadena cliente HTTP -> API -> adaptador -> producto (RF15, sección 5.5).
 
-Solo se usan rutas GET: ninguna prueba escribe datos de dominio (RNF6). La
-única escritura indirecta es la caché cache-aside de Redis que la propia API
-mantiene al leer un partido (`cache:partido:<codigo>`, TTL 300 s).
+Solo se usan rutas GET: ninguna prueba escribe datos de dominio (RNF6).
+La API corregida consulta cada fuente sin caché Redis sobre Neo4j.
 
 Cada request lleva un X-Request-ID propio (`h11-<corrida>-<n>`) para encontrar
 después las líneas del log de la API que le corresponden (RF19).
@@ -50,8 +49,6 @@ CASOS = [
     Caso("CU01 equipo", "/equipos/ARG", ["mongodb"], {EXITO}),
     Caso("CU01 equipo inexistente", "/equipos/XYZ", ["mongodb"], {INEXISTENTE}),
     Caso("CU01 código inválido", "/equipos/arg", [], {VALIDACION}, nota="no llega a la base"),
-    Caso("CU03 plantel", "/equipos/ARG/jugadores", ["mongodb"], {EXITO}, {"size": 5}),
-    Caso("CU05 ficha de partido", "/partidos/P-001", ["neo4j", "redis"], {EXITO}),
     Caso("CU06 eventos", "/partidos/P-001/eventos", ["neo4j"], {EXITO}, {"limit": 5}),
     Caso("CU06 partido sin eventos", "/partidos/P-002/eventos", ["neo4j"], {VACIO}),
     Caso("CU06 partido inexistente", "/partidos/P-999/eventos", ["neo4j"], {INEXISTENTE}),
@@ -67,7 +64,7 @@ CASOS = [
          {"desde": "2031-01-01T00:00:00Z", "hasta": "2031-01-01T01:00:00Z"}),
     Caso("CU12 intervalo invertido", "/partidos/P-001/estadisticas", [], {VALIDACION},
          {"desde": "2030-06-10T22:00:00Z", "hasta": "2030-06-10T20:00:00Z"}),
-    Caso("CU13 acta oficial", "/partidos-oficiales/P-001", ["iris"], {EXITO}),
+    Caso("CU13 acta oficial", "/partidos-oficiales/P-009", ["iris"], {EXITO}),
     Caso("CU13 acta inexistente", "/partidos-oficiales/P-999", ["iris"], {INEXISTENTE}),
 ]
 
@@ -147,6 +144,7 @@ def evaluar(cfg: Config, registro: Registro, productos: list[str]) -> list[dict[
             estado, hip, sig = OK, "", ""
         elif clase == NO_ALCANZABLE:
             estado = FAIL
+            datos["dependencias"] = list(productos)
             hip = "La API no está escuchando en API_URL (proceso detenido, otro puerto u otro host)."
             sig = "Iniciar la API (scripts/iniciar_api.sh del Hito 10) o corregir API_URL. Las rutas restantes no se ejecutan."
         elif clase in (NO_DISPONIBLE, TIMEOUT):
@@ -162,14 +160,17 @@ def evaluar(cfg: Config, registro: Registro, productos: list[str]) -> list[dict[
             estado = WARN
             hip = f"Se esperaba {sorted(caso.esperado)} y se obtuvo {clase}."
             sig = "Revisar datos de prueba o el contrato de la ruta."
-        afectadas = [d["nombre"] for d in (cuerpo or {}).get("dependencias", []) if d.get("estado") != "up"] \
-            if isinstance(cuerpo, dict) else []
+        afectadas = sorted(set(
+            [d["nombre"] for d in cuerpo.get("dependencias", []) if d.get("estado") != "up"]
+            + cuerpo.get("no_disponibles", [])
+        )) if isinstance(cuerpo, dict) else []
         if estado == OK and afectadas:
             # La ruta de diagnóstico respondió bien, pero informa fuentes afectadas.
             estado = WARN
             hip = f"El diagnóstico de la API informa fuentes no disponibles: {', '.join(afectadas)}."
             sig = "Ver la fila de esas fuentes en la matriz y sus pruebas nativas."
             datos["dependencias"] = afectadas
+            datos["degrada"] = True
         if eco and eco != request_id:
             estado, hip = WARN, f"La API no devolvió el X-Request-ID enviado ({eco})."
         registro.agregar(Resultado("api", "api", caso.nombre, estado, detalle, destino, ahora(),

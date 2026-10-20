@@ -167,17 +167,34 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
 
         if sondas and c.activa("sonda") and c.bloqueada_por is None:
             col = cliente[database]
-            c.ejecutar("sonda", "documento inexistente", lambda: ok(
-                "equipos.find_one(_id='ZZZ') -> "
-                f"{col.equipos.find_one({'_id': 'ZZZ'}, {'_id': 1})!r}: ausencia válida, no es error"))
-            c.ejecutar("sonda", "colección inexistente", lambda: ok(
-                f"{database}.coleccion_inexistente_h11.find_one() -> "
-                f"{col['coleccion_inexistente_h11'].find_one()!r}: MongoDB no da error; la API lo detecta "
-                "en /health/dependencias verificando las colecciones"))
+            def documento_inexistente() -> Paso:
+                doc = col.equipos.find_one({"_id": "ZZZ"}, {"_id": 1})
+                if doc is not None:
+                    return fail("ZZZ existe", "No sirve como sonda de documento inexistente.",
+                                "Elegir un identificador inexistente.")
+                return ok("equipos.find_one(_id='ZZZ') -> None: ausencia válida")
+
+            def coleccion_inexistente() -> Paso:
+                nombre = "coleccion_inexistente_h11"
+                if nombre in col.list_collection_names():
+                    return fail(f"{nombre} existe", "No sirve como sonda de colección inexistente.",
+                                "Elegir otra colección de prueba.")
+                if col[nombre].find_one() is not None:
+                    return fail("la colección devolvió un documento", "El estado cambió durante la prueba.", "Repetir.")
+                return ok(f"{database}.{nombre}.find_one() -> None: colección inexistente, sin error del servidor")
+
             otra = f"{database}_inexistente_h11"
-            c.ejecutar("sonda", "database inexistente", lambda: ok(
-                f"{otra}.listCollections -> {cliente[otra].list_collection_names()!r}: "
-                "lista vacía sin error (por eso la capa de contexto verifica colecciones)"))
+            def database_inexistente() -> Paso:
+                if otra in cliente.list_database_names():
+                    return fail(f"{otra} existe", "No sirve como sonda de database inexistente.",
+                                "Elegir una database inexistente.")
+                if cliente[otra].list_collection_names():
+                    return fail("la database devolvió colecciones", "El estado cambió durante la prueba.", "Repetir.")
+                return ok(f"{otra}.listCollections -> [] sin error: por eso el contexto verifica colecciones")
+
+            c.ejecutar("sonda", "documento inexistente", documento_inexistente)
+            c.ejecutar("sonda", "colección inexistente", coleccion_inexistente)
+            c.ejecutar("sonda", "database inexistente", database_inexistente)
     finally:
         anonimo.close()
         if cliente is not anonimo:

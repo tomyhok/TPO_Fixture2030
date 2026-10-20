@@ -1,0 +1,551 @@
+{
+  "fecha_utc": "2026-10-19T23:56:52.220977+00:00",
+  "version": [
+    "2026.07.1"
+  ],
+  "estructura": [
+    {
+      "consulta": "CREATE CONSTRAINT equipo_codigo_iso IF NOT EXISTS\nFOR (e:Equipo)\nREQUIRE e.codigo_iso IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT jugador_id IF NOT EXISTS\nFOR (j:Jugador)\nREQUIRE j.id_jugador IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT sede_codigo IF NOT EXISTS\nFOR (s:Sede)\nREQUIRE s.codigo_sede IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT partido_codigo IF NOT EXISTS\nFOR (p:Partido)\nREQUIRE p.codigo_partido IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT evento_id IF NOT EXISTS\nFOR (ev:Evento)\nREQUIRE ev.id_evento IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT equipo_codigo_iso IF NOT EXISTS\nFOR (e:Equipo)\nREQUIRE e.codigo_iso IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT jugador_id IF NOT EXISTS\nFOR (j:Jugador)\nREQUIRE j.id_jugador IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT sede_codigo IF NOT EXISTS\nFOR (s:Sede)\nREQUIRE s.codigo_sede IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT partido_codigo IF NOT EXISTS\nFOR (p:Partido)\nREQUIRE p.codigo_partido IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CREATE CONSTRAINT evento_id IF NOT EXISTS\nFOR (ev:Evento)\nREQUIRE ev.id_evento IS UNIQUE",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    }
+  ],
+  "carga_1": [
+    {
+      "consulta": "CALL apoc.load.json(\"file:///equipos.json\") YIELD value\nMERGE (e:Equipo {codigo_iso: value._id})\nSET e.nombre = value.nombre,\n    e.confederacion = value.confederacion",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 128,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CALL apoc.load.json(\"file:///jugadores.json\") YIELD value\nMERGE (j:Jugador {id_jugador: value._id})\nSET j.nombre = value.nombre,\n    j.posicion = value.posicion\nWITH j, value\nMATCH (e:Equipo {codigo_iso: value.codigo_equipo})\nMERGE (j)-[:PERTENECE_A]->(e)",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 2944,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MERGE (s1:Sede {codigo_sede: 'MON'}) SET s1.nombre = 'Estadio Monumental', s1.ciudad = 'Buenos Aires'\nMERGE (s2:Sede {codigo_sede: 'CEN'}) SET s2.nombre = 'Estadio Centenario', s2.ciudad = 'Montevideo'\nMERGE (s3:Sede {codigo_sede: 'BER'}) SET s3.nombre = 'Estadio Santiago Bernabéu', s3.ciudad = 'Madrid'",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 6,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MERGE (p1:Partido {codigo_partido: 'P-001'}) SET p1.fecha = date('2030-06-10'), p1.fase = 'Grupos'\nMERGE (p2:Partido {codigo_partido: 'P-002'}) SET p2.fecha = date('2030-06-12'), p2.fase = 'Grupos'\n\nWITH p1, p2\nMATCH (arg:Equipo {codigo_iso: 'ARG'}), (esp:Equipo {codigo_iso: 'ESP'}), (uru:Equipo {codigo_iso: 'URU'})\nMATCH (mon:Sede {codigo_sede: 'MON'}), (cen:Sede {codigo_sede: 'CEN'})\nMERGE (arg)-[:DISPUTA {condicion: 'local'}]->(p1)\nMERGE (esp)-[:DISPUTA {condicion: 'visitante'}]->(p1)\nMERGE (p1)-[:SE_JUEGA_EN]->(mon)\n\nMERGE (uru)-[:DISPUTA {condicion: 'local'}]->(p2)\nMERGE (arg)-[:DISPUTA {condicion: 'visitante'}]->(p2)\nMERGE (p2)-[:SE_JUEGA_EN]->(cen)",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 4,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MATCH (p1:Partido {codigo_partido: 'P-001'}), (messi:Jugador {id_jugador: 'ARG-10'})\nMERGE (ev1:Evento {id_evento: 'EV-001'}) \nSET ev1.minuto = 23, ev1.tipo = 'Gol'\nMERGE (ev1)-[:CORRESPONDE_A]->(p1)\nMERGE (messi)-[:PROTAGONIZA]->(ev1)",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 2,
+        "constraints_added": 0
+      }
+    }
+  ],
+  "conteos_1": {
+    "nodos": 1542,
+    "relaciones": 1480,
+    "etiquetas": [
+      {
+        "etiquetas": [
+          "Equipo"
+        ],
+        "cantidad": 64
+      },
+      {
+        "etiquetas": [
+          "Evento"
+        ],
+        "cantidad": 1
+      },
+      {
+        "etiquetas": [
+          "Jugador"
+        ],
+        "cantidad": 1472
+      },
+      {
+        "etiquetas": [
+          "Partido"
+        ],
+        "cantidad": 2
+      },
+      {
+        "etiquetas": [
+          "Sede"
+        ],
+        "cantidad": 3
+      }
+    ]
+  },
+  "carga_2": [
+    {
+      "consulta": "CALL apoc.load.json(\"file:///equipos.json\") YIELD value\nMERGE (e:Equipo {codigo_iso: value._id})\nSET e.nombre = value.nombre,\n    e.confederacion = value.confederacion",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 128,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "CALL apoc.load.json(\"file:///jugadores.json\") YIELD value\nMERGE (j:Jugador {id_jugador: value._id})\nSET j.nombre = value.nombre,\n    j.posicion = value.posicion\nWITH j, value\nMATCH (e:Equipo {codigo_iso: value.codigo_equipo})\nMERGE (j)-[:PERTENECE_A]->(e)",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 2944,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MERGE (s1:Sede {codigo_sede: 'MON'}) SET s1.nombre = 'Estadio Monumental', s1.ciudad = 'Buenos Aires'\nMERGE (s2:Sede {codigo_sede: 'CEN'}) SET s2.nombre = 'Estadio Centenario', s2.ciudad = 'Montevideo'\nMERGE (s3:Sede {codigo_sede: 'BER'}) SET s3.nombre = 'Estadio Santiago Bernabéu', s3.ciudad = 'Madrid'",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 6,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MERGE (p1:Partido {codigo_partido: 'P-001'}) SET p1.fecha = date('2030-06-10'), p1.fase = 'Grupos'\nMERGE (p2:Partido {codigo_partido: 'P-002'}) SET p2.fecha = date('2030-06-12'), p2.fase = 'Grupos'\n\nWITH p1, p2\nMATCH (arg:Equipo {codigo_iso: 'ARG'}), (esp:Equipo {codigo_iso: 'ESP'}), (uru:Equipo {codigo_iso: 'URU'})\nMATCH (mon:Sede {codigo_sede: 'MON'}), (cen:Sede {codigo_sede: 'CEN'})\nMERGE (arg)-[:DISPUTA {condicion: 'local'}]->(p1)\nMERGE (esp)-[:DISPUTA {condicion: 'visitante'}]->(p1)\nMERGE (p1)-[:SE_JUEGA_EN]->(mon)\n\nMERGE (uru)-[:DISPUTA {condicion: 'local'}]->(p2)\nMERGE (arg)-[:DISPUTA {condicion: 'visitante'}]->(p2)\nMERGE (p2)-[:SE_JUEGA_EN]->(cen)",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 4,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MATCH (p1:Partido {codigo_partido: 'P-001'}), (messi:Jugador {id_jugador: 'ARG-10'})\nMERGE (ev1:Evento {id_evento: 'EV-001'}) \nSET ev1.minuto = 23, ev1.tipo = 'Gol'\nMERGE (ev1)-[:CORRESPONDE_A]->(p1)\nMERGE (messi)-[:PROTAGONIZA]->(ev1)",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 2,
+        "constraints_added": 0
+      }
+    }
+  ],
+  "conteos_2": {
+    "nodos": 1542,
+    "relaciones": 1480,
+    "etiquetas": [
+      {
+        "etiquetas": [
+          "Equipo"
+        ],
+        "cantidad": 64
+      },
+      {
+        "etiquetas": [
+          "Evento"
+        ],
+        "cantidad": 1
+      },
+      {
+        "etiquetas": [
+          "Jugador"
+        ],
+        "cantidad": 1472
+      },
+      {
+        "etiquetas": [
+          "Partido"
+        ],
+        "cantidad": 2
+      },
+      {
+        "etiquetas": [
+          "Sede"
+        ],
+        "cantidad": 3
+      }
+    ]
+  },
+  "crud": [
+    {
+      "consulta": "MATCH (p:Partido {codigo_partido: 'P-001'})\nMATCH (j:Jugador {id_jugador: 'ESP-5'}) \nMERGE (ev2:Evento {id_evento: 'EV-H5-DEMO'})\nSET ev2.tipo = 'Tarjeta Amarilla', ev2.minuto = 45\nMERGE (j)-[:PROTAGONIZA]->(ev2)\nMERGE (ev2)-[:CORRESPONDE_A]->(p)",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 1,
+        "nodes_deleted": 0,
+        "relationships_created": 2,
+        "relationships_deleted": 0,
+        "properties_set": 3,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MATCH (j:Jugador)-[:PROTAGONIZA]->(ev:Evento {id_evento: 'EV-H5-DEMO'})-[:CORRESPONDE_A]->(p:Partido)\nRETURN j.nombre AS Infractor, ev.tipo AS Sancion, ev.minuto AS Minuto, p.codigo_partido AS Partido",
+      "filas": [
+        {
+          "Infractor": "Adrián Bravo",
+          "Sancion": "Tarjeta Amarilla",
+          "Minuto": 45,
+          "Partido": "P-001"
+        }
+      ],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MATCH (ev:Evento {id_evento: 'EV-H5-DEMO'})\nSET ev.minuto = 47\nRETURN ev",
+      "filas": [
+        {
+          "ev": {
+            "tipo": "Tarjeta Amarilla",
+            "minuto": 47,
+            "id_evento": "EV-H5-DEMO"
+          }
+        }
+      ],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 1,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MATCH (ev:Evento {id_evento: 'EV-H5-DEMO'})\nDETACH DELETE ev",
+      "filas": [],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 1,
+        "relationships_created": 0,
+        "relationships_deleted": 2,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    }
+  ],
+  "evento_demo_despues": 0,
+  "recorridos": [
+    {
+      "consulta": "MATCH (equipo:Equipo {codigo_iso: 'ARG'})-[r1:DISPUTA]->(p:Partido)<-[r2:DISPUTA]-(rival:Equipo)\nRETURN p.fecha AS Fecha, \n       p.fase AS Fase, \n       rival.nombre AS Rival, \n       r2.condicion AS Condicion_Rival\nORDER BY p.fecha",
+      "filas": [
+        {
+          "Fecha": "2030-06-10",
+          "Fase": "Grupos",
+          "Rival": "Espana",
+          "Condicion_Rival": "visitante"
+        },
+        {
+          "Fecha": "2030-06-12",
+          "Fase": "Grupos",
+          "Rival": "Uruguay",
+          "Condicion_Rival": "local"
+        }
+      ],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MATCH (j:Jugador)-[:PERTENECE_A]->(e:Equipo)-[:DISPUTA]->(p:Partido)-[:SE_JUEGA_EN]->(sede:Sede {codigo_sede: 'MON'})\nRETURN j.nombre AS Jugador, \n       j.posicion AS Posicion, \n       e.nombre AS Seleccion, \n       p.fecha AS Fecha_Partido\nORDER BY p.fecha, e.nombre, j.nombre\nLIMIT 15",
+      "filas": [
+        {
+          "Jugador": "Adrián Solano",
+          "Posicion": "MED",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Alan Bustos",
+          "Posicion": "DEL",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Andrés Fuentes",
+          "Posicion": "DEF",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Bruno Molina",
+          "Posicion": "DEF",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Damián Maldonado",
+          "Posicion": "DEL",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Diego Cabrera",
+          "Posicion": "ARQ",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Emilio Cordero",
+          "Posicion": "MED",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Ezequiel Nuñez",
+          "Posicion": "DEL",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Facundo Ibarra",
+          "Posicion": "DEL",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Gonzalo Bravo",
+          "Posicion": "MED",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Hugo Duarte",
+          "Posicion": "MED",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Iván Reyes",
+          "Posicion": "DEF",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Julián Miranda",
+          "Posicion": "DEF",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Lucas Herrera",
+          "Posicion": "ARQ",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        },
+        {
+          "Jugador": "Marco Salazar",
+          "Posicion": "DEF",
+          "Seleccion": "Argentina",
+          "Fecha_Partido": "2030-06-10"
+        }
+      ],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    },
+    {
+      "consulta": "MATCH (e:Equipo)-[:DISPUTA]->(p:Partido)-[:SE_JUEGA_EN]->(s:Sede)\nRETURN s.nombre AS Estadio, \n       s.ciudad AS Ciudad, \n       count(DISTINCT e) AS Selecciones_Distintas, \n       count(DISTINCT p) AS Cantidad_Partidos\nORDER BY Selecciones_Distintas DESC, Cantidad_Partidos DESC",
+      "filas": [
+        {
+          "Estadio": "Estadio Monumental",
+          "Ciudad": "Buenos Aires",
+          "Selecciones_Distintas": 2,
+          "Cantidad_Partidos": 1
+        },
+        {
+          "Estadio": "Estadio Centenario",
+          "Ciudad": "Montevideo",
+          "Selecciones_Distintas": 2,
+          "Cantidad_Partidos": 1
+        }
+      ],
+      "contadores": {
+        "nodes_created": 0,
+        "nodes_deleted": 0,
+        "relationships_created": 0,
+        "relationships_deleted": 0,
+        "properties_set": 0,
+        "constraints_added": 0
+      }
+    }
+  ],
+  "sha256_scripts": {
+    "carga.cypher": "e4b3396582a53304ee3d7dedd42b376707f36e201132b8ab656af0b8a9819684",
+    "consultas_grafo.cypher": "29f3d110cb9ce4ec848bf475c1b564b9cb9d333d6359fb2996d1c69f77b7a423",
+    "crud.cypher": "ab882911d0795edb9975b1f4b88fa4bed7c01aeed558ec44d01f2594c9415734",
+    "estructura.cypher": "6a360e250f7bf611155a53a20be6249c61a1b290730462a269c78bc11728ebdd"
+  }
+}

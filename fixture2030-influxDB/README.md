@@ -24,7 +24,7 @@ Este módulo resuelve el Hito 8 (estadísticas en vivo del Fixture 2030). Usa **
 
 ## Problema Temporal
 
-Durante cada partido llegan estadísticas que cambian todo el tiempo: la posesión de cada equipo, los pases completados, los tiros y la cantidad de usuarios conectados siguiendo a cada equipo. La fuente envía un punto por segundo por equipo. Para los 104 partidos del torneo eso da unas 1,5M filas (104 × 2 equipos × ~7.200 s). El objetivo de diseño de 10M+ puntos deja margen para subir la frecuencia de captura, sumar fuentes o conservar más de un torneo (ver [cardinalidad y escalabilidad](docs/cardinalidad_y_escalabilidad.md)).
+Durante cada partido llegan estadísticas que cambian todo el tiempo: la posesión de cada equipo, los pases completados, los tiros y la cantidad de usuarios conectados siguiendo a cada equipo. La fuente envía un punto por segundo por equipo. Para los 127 partidos del escenario eso da unas 1,83M filas (127 × 2 equipos × ~7.200 s). El objetivo de diseño de 10M+ puntos deja margen para subir la frecuencia de captura, sumar fuentes o conservar más de un torneo (ver [cardinalidad y escalabilidad](docs/cardinalidad_y_escalabilidad.md)).
 
 Las decisiones que se toman en tiempo real con estos datos son:
 *   mostrar la evolución del partido en la pantalla de estadísticas en vivo;
@@ -74,6 +74,13 @@ Todos los comandos se ejecutan desde la carpeta `fixture2030-influxDB/`. Los scr
    rm -f .influxdb3-token data_estadisticas.lp
    ```
    Después de esto hay que volver a empezar desde el paso 1.
+
+## Entorno corregido
+
+Ambos Compose usan `influxdb:3-core`. La imagen local verificada es 3.12.0;
+[registro de imagen, digest y límites](docs/revision_2026-10-19/README.md). Falta el token
+del servidor existente para repetir consultas: no se presenta la carga histórica como una
+medición nueva del Compose corregido. `python scripts/verificar_entorno.py` registra el entorno.
 
 ## Pruebas y Evidencia
 

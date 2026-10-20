@@ -85,7 +85,7 @@ for p in "${productos[@]}"; do
       ;;
     iris)
       echo; echo "\$ iris session IRIS -U USER (terminal del contenedor, autenticación del sistema operativo)"
-      ejecutar iris sh -c "printf '%s\n' 'Write \"version=\",\$SYSTEM.Version.GetNumber(),\" namespace=\",\$NAMESPACE,!' 'Write ##class(Fixture.API).ObtenerActa(\"P-001\"),!' 'Halt' | MSYS_NO_PATHCONV=1 docker exec -i ${PREFIJO}iris iris session IRIS -U USER | grep -E 'version=|\"ok\"'"
+      ejecutar iris sh -c "printf '%s\n' 'Write \"version=\",\$SYSTEM.Version.GetNumber(),\" namespace=\",\$NAMESPACE,!' 'Do ##class(%SQL.Statement).%ExecDirect(,\"SELECT Codigo, Estado, Sede FROM Fixture.Partido WHERE Codigo = ?\",\"P-009\").%Display()' 'Halt' | MSYS_NO_PATHCONV=1 docker exec -i ${PREFIJO}iris iris session IRIS -U USER"
       echo "       Nota: la terminal entra por el sistema operativo del contenedor, no por el Superserver (1972)"
       echo "       ni con el usuario de la API: no reemplaza la prueba de la Native API."
       ;;

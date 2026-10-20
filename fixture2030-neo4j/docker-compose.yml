@@ -15,7 +15,7 @@ services:
       - neo4j_plugins:/plugins
     environment:
       # Configuración de autenticación para el ambiente local de la materia
-      NEO4J_AUTH: neo4j/fixture2030
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?Usar --env-file ../.env}
       # Plugins para prácticas de procedimientos y algoritmos de grafos
       NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
       NEO4J_apoc_import_file_enabled: "true"

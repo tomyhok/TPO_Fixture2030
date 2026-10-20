@@ -14,7 +14,7 @@ Este documento consolida las decisiones de diseño del modelo de datos y la evid
 | **Validación documental** | 1. Esquema flexible sin validación.<br>2. Validación exclusiva en capa de aplicación.<br>3. `$jsonSchema` estricto a nivel de base de datos (`validationLevel: "strict"`, `validationAction: "error"`). | **`$jsonSchema` estricto en MongoDB** | Garantiza la integridad estructural y de tipos directamente en el motor, evitando que scripts erróneos o accesos concurrentes inserten dorsales fuera de rango (1-99), códigos ISO malformados o confederaciones inexistentes. | Detección inmediata de inconsistencias en tiempo de inserción/modificación (RNF3); no depende del lenguaje del cliente que se conecte. |
 | **Estrategia de identificadores** | 1. Claves autogeneradas `ObjectId` de BSON.<br>2. Claves naturales de negocio compuestas y legibles. | **Claves Naturales Semánticas** (`_id` / `codigo_iso` FIFA para equipos, y `EQUIPO-DORSAL` para jugadores). | El código FIFA/ISO de 3 letras (ej. `"ARG"`) ya es único, inmutable y universalmente reconocido en el dominio deportivo. Para los jugadores, la tupla equipo + dorsal identifica unívocamente a cada atleta en el fixture (ej. `"ARG-10"`). | Elimina la necesidad de índices secundarios redundantes para búsquedas primarias; facilita lecturas directas y simplifica URLs y logs de auditoría. |
 | **Índices principales** | 1. Sin índices, salvo `_id`.<br>2. Índices individuales en todos los campos.<br>3. Índices específicos alineados con las consultas requeridas. | **Índices selectivos y compuestos** (`idx_codigo_equipo`, `idx_equipo_posicion`, `idx_dorsal_unico`, más los índices de consulta de equipos). | Cada índice responde a un patrón concreto: filtrado por confederación, ordenamiento por ranking, filtrado de jugadores por equipo y posición e integridad del dorsal. | Optimización de consulta pasando de escaneo de colección (`COLLSCAN`) a escaneo selectivo por índice (`IXSCAN`), reduciendo los documentos examinados al mínimo necesario. |
-| **Carga y actualización** | 1. Inserción simple documento a documento (`insertOne`).<br>2. Inserción masiva no idempotente (`insertMany`).<br>3. Operación por lotes idempotente con `bulkWrite` + `replaceOne` + `upsert: true`. | **`bulkWrite` con `replaceOne` y `upsert: true`** | Permite reejecutar el script de carga (`02-carga.js`) tantas veces como sea necesario sin duplicar información ni fallar por colisión de claves únicas. Minimiza los viajes de ida y vuelta de red (*roundtrips*). | Carga reproducible y segura (RF8, RNF1); cero duplicados y tiempos de carga masiva de los 64 equipos y 1472 jugadores en menos de 1 segundo. |
+| **Carga y actualización** | Inserción simple, inserción masiva o actualización idempotente. | **`bulkWrite` con `replaceOne` y `upsert: true`** | Permite reejecutar la carga sin duplicar equipos ni jugadores. | Verificar conteos e idempotencia; no se garantiza un tiempo de ejecución. |
 
 ### 2. Definición de Colecciones y Esquemas
 
@@ -58,7 +58,7 @@ Para representar la relación 1:N entre selecciones y jugadores, se analizó pro
 
 1. **Documentos embebidos**:
   - Permiten recuperar un equipo y sus jugadores en un único documento.
-  - Duplican los datos de la selección en cada ficha y mezclan dos entidades con ciclos de actualización diferentes.
+  - Agrupan el plantel dentro del equipo: las actualizaciones de jugadores y del equipo comparten el mismo documento.
 
 2. **Referencias documentales (estrategia elegida)**:
   - La relación **Equipo - Jugador** se representa mediante `jugadores.codigo_equipo` apuntando a `equipos.codigo_iso`.
@@ -93,7 +93,7 @@ Salidas verificadas de la ejecución del módulo en MongoDB 7.0.
 Al levantar el contenedor por primera vez, MongoDB ejecuta los scripts de `init-scripts/` en orden.
 
 ```bash
-$ docker compose up -d
+$ docker compose --env-file ../.env up -d
 $ docker compose logs mongodb
 === Creando colecciones con esquemas de validación estricta ===
 Colección 'equipos' creada exitosamente con validación $jsonSchema.
@@ -134,7 +134,7 @@ Salida de `03-indices.js` con los índices requeridos y de soporte:
 Al reejecutar la carga sobre la base ya poblada, `bulkWrite` realiza *upserts* sin generar duplicados:
 
 ```bash
-$ docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+$ docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
     fixture2030 --file /docker-entrypoint-initdb.d/02-carga.js
 === Iniciando carga reproducible de datos ===
 equipos: 0 insertados, 0 actualizados.
@@ -151,7 +151,7 @@ Reinicio del contenedor y comprobación de volumen `mongodb_data`:
 
 ```bash
 $ docker compose restart
-$ docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+$ docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
     fixture2030 --eval 'print("Equipos:", db.equipos.countDocuments(), "Jugadores:", db.jugadores.countDocuments())'
 Equipos: 64 Jugadores: 1472
 ```
@@ -327,3 +327,5 @@ Consulta analizada: Filtrar defensores de un equipo:
 --------------------------------------------------------------------------------
 ```
 
+
+Nota de configuración: las credenciales de los comandos anteriores se completan localmente desde el `.env` raíz; `mongosh` pide la contraseña por consola.

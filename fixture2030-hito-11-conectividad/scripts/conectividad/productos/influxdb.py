@@ -152,17 +152,32 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
         def token_invalido() -> Paso:
             r = http("GET", f"{url}/api/v3/configure/database?format=json", operacion_s,
                      headers={"Authorization": "Bearer token-invalido-de-diagnostico"})
-            return ok(f"token inválido -> HTTP {r.status}: servicio accesible, autorización rechazada (no es caída)")
+            if r.status != 401:
+                return fail(f"token inválido -> HTTP {r.status}; se esperaba 401",
+                            "No se comprobó el rechazo de la identidad; un 200 no demuestra autenticación activa.",
+                            "Verificar la configuración de autorización y el endpoint de prueba.")
+            return ok("token inválido -> HTTP 401: autenticación rechazada, servicio accesible")
 
         def database_inexistente() -> Paso:
             status, cuerpo = consulta("SELECT 1", db="fixture2030_inexistente_h11")
+            if status != 404 or "database" not in str(cuerpo).lower() or "not found" not in str(cuerpo).lower():
+                return fail(f"database inexistente -> HTTP {status}: {str(cuerpo)[:120]}",
+                            "No se comprobó un error de database inexistente.",
+                            "Revisar el contexto, el token y el mensaje de la respuesta.")
             return ok(f"database inexistente -> HTTP {status} {str(cuerpo)[:70]}: error de contexto")
 
         def sin_puntos() -> Paso:
             r = http("POST", f"{url}/api/v3/query_sql", operacion_s, headers=autorizacion_hdr, cuerpo_json={
                 "db": database, "q": SQL_CONTEO.format(tabla=tabla), "format": "json",
                 "params": {"partido": partido, "desde": "2031-01-01T00:00:00Z", "hasta": "2031-01-01T01:00:00Z"}})
-            fila = (r.json() or [{}])[0]
+            if r.status != 200:
+                return fail(f"ventana sin puntos -> HTTP {r.status}", "La consulta no terminó correctamente.",
+                            "Verificar contexto y token; una consulta rechazada no demuestra ausencia de puntos.")
+            filas = r.json()
+            if not isinstance(filas, list) or not filas or filas[0].get("puntos") != 0:
+                return fail("la ventana no devolvió COUNT(*) = 0", "No se verificó la ausencia de puntos.",
+                            "Seleccionar una ventana sin datos y repetir.")
+            fila = filas[0]
             return ok(f"ventana 2031-01-01 sin datos -> HTTP {r.status}, COUNT(*) = {fila.get('puntos')}: "
                       "ausencia de puntos válida (la API responde 200 con series vacías)")
 

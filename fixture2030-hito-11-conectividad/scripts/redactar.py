@@ -33,7 +33,7 @@ def verificar(carpeta: Path) -> int:
             continue
         if any(valor in p for p in publicos):
             print(f"  {nombre:<45} NO VERIFICABLE por valor: coincide con un identificador público "
-                  "(ver limitaciones: secreto versionado en docker-compose.yml)")
+                  "(ver limitaciones: credencial igual a un identificador público)")
             continue
         apariciones = sum(a.read_text(encoding="utf-8", errors="replace").count(valor) for a in archivos)
         problemas += apariciones

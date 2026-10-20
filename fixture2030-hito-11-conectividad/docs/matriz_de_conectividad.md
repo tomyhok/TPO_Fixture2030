@@ -1,5 +1,12 @@
 # Matriz de conectividad (RF16, RNF9, RNF17, RNF18)
 
+> Revisión del 19/10/2026: los archivos de evidencia del 17/10 son históricos.
+> La implementación actual usa drivers oficiales, valida las respuestas negativas
+> y corrige el resumen y el modo estricto. No se deben atribuir los resultados
+> anteriores al código corregido. Ver [walkthrough de las correcciones](walkthrough_correcciones.md)
+> y [evidencia nueva](evidencia/revision_2026-10-19/README.md).
+
+
 Grupo 4 — Ingeniería de Datos II — Fixture 2030
 
 La matriz la genera `scripts/evaluar_conectividad.sh` al final de cada corrida
@@ -24,7 +31,7 @@ y en los `.json`.
 | Estado | Regla |
 |---|---|
 | disponible | Todas las capas ejecutadas, hasta la lectura, terminaron en OK (o en WARN sin degradación) |
-| degradado | La cadena nativa funciona, pero una prueba secundaria falla (portal HTTP o **ruta de la API**) o la lectura supera `UMBRAL_LENTO_MS` |
+| degradado | La lectura nativa funciona, pero una sonda o prueba secundaria falla, la API informa una fuente afectada o la lectura supera `UMBRAL_LENTO_MS` |
 | no disponible | Falló una capa de la cadena (resolución → lectura) |
 | desconocido | Se ejecutaron capas sin falla, pero no se llegó a la lectura (por ejemplo `--modo tcp`): no alcanza para declararlo disponible |
 | no probado | Todas las capas de la cadena quedaron en SKIP o no se ejecutaron (por ejemplo `--modo api`, que solo prueba la columna API) |
@@ -82,3 +89,5 @@ lectura mínima y no dicen nada sobre carga (Hito 12).
 | Redis | disponible | `REDIS_PORT=6380` → **no disponible** en TCP (refused tras 2042 ms) | **disponible** | inmediato |
 | InfluxDB | disponible | `INFLUX_DATABASE=…_inexistente` → **no disponible** en Ctx; `TIMEOUT_OPERACION_S=0.001` → **no disponible** en lectura (timeout) | **disponible** | inmediato |
 | IRIS | disponible | `IRIS_NAMESPACE=NOEXISTE` → AuthN OK (verificada en `USER`) y **Ctx FAIL** (`Exists = 0`) | **disponible** | inmediato |
+
+Un error interno del evaluador se registra como FAIL, conserva hipótesis y siguiente paso y deja el producto en **desconocido**. `--estricto` devuelve 1. Las pruebas de API se asocian a sus dependencias antes de calcular el estado, sin afectar a las fuentes sanas.

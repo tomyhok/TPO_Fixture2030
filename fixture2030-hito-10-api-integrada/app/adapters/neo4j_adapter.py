@@ -19,28 +19,6 @@ from app.core.errores import ErrorAPI
 
 DEPENDENCIA = "neo4j"
 
-CYPHER_EXISTE_PARTIDO = """
-MATCH (p:Partido {codigo_partido: $codigo})
-RETURN count(p) > 0 AS existe
-"""
-
-# Ficha del partido: partido + equipos que lo disputan + sede (profundidad 1).
-CYPHER_FICHA_PARTIDO = """
-MATCH (p:Partido {codigo_partido: $codigo})
-OPTIONAL MATCH (e:Equipo)-[d:DISPUTA]->(p)
-WITH p, collect(CASE WHEN e IS NULL THEN NULL
-                ELSE {codigo_iso: e.codigo_iso, nombre: e.nombre, condicion: d.condicion} END) AS equipos
-OPTIONAL MATCH (p)-[:SE_JUEGA_EN]->(s:Sede)
-RETURN p.codigo_partido AS codigo_partido,
-       toString(p.fecha) AS fecha,
-       p.fase AS fase,
-       equipos,
-       head(collect(CASE WHEN s IS NULL THEN NULL
-                    ELSE {codigo_sede: s.codigo_sede, nombre: s.nombre, ciudad: s.ciudad} END)) AS sede
-"""
-
-# Eventos del partido con su protagonista (profundidad 2). El LIMIT se aplica
-# sobre las filas de eventos, antes de buscar al jugador.
 CYPHER_EVENTOS_PARTIDO = """
 MATCH (p:Partido {codigo_partido: $codigo})
 OPTIONAL MATCH (ev:Evento)-[:CORRESPONDE_A]->(p)
@@ -59,25 +37,6 @@ RETURN p.codigo_partido AS codigo_partido,
                     ELSE {id_jugador: j.id_jugador, nombre: j.nombre} END
        } END) AS eventos
 """
-
-# Rivales de una selección: Equipo -DISPUTA-> Partido <-DISPUTA- Equipo.
-CYPHER_RIVALES = """
-MATCH (e:Equipo {codigo_iso: $codigo})
-OPTIONAL MATCH (e)-[d:DISPUTA]->(p:Partido)<-[:DISPUTA]-(rival:Equipo)
-WHERE rival <> e
-WITH e, p, d, rival
-ORDER BY p.fecha, p.codigo_partido
-LIMIT $limit
-RETURN e.codigo_iso AS codigo_iso,
-       collect(CASE WHEN rival IS NULL THEN NULL ELSE {
-           codigo_iso: rival.codigo_iso,
-           nombre: rival.nombre,
-           codigo_partido: p.codigo_partido,
-           fecha: toString(p.fecha),
-           condicion: d.condicion
-       } END) AS rivales
-"""
-
 
 def _traducir(exc: Exception) -> ErrorAPI | None:
     codigo = getattr(exc, "code", "") or ""
@@ -123,35 +82,9 @@ class Neo4jAdapter:
                 registro = sesion.run(Query(cypher, timeout=self._timeout), parametros).single()
                 return registro.data() if registro else None
 
-    def existe_partido(self, codigo: str) -> bool:
-        fila = self._una_fila("partido.existe", CYPHER_EXISTE_PARTIDO, {"codigo": codigo})
-        return bool(fila and fila["existe"])
-
-    def ficha_partido(self, codigo: str) -> dict[str, Any] | None:
-        fila = self._una_fila("partido.ficha", CYPHER_FICHA_PARTIDO, {"codigo": codigo})
-        if fila is None:
-            return None
-        equipos = fila.pop("equipos")
-        fila["local"] = next(
-            ({"codigo_iso": e["codigo_iso"], "nombre": e["nombre"]} for e in equipos if e["condicion"] == "local"),
-            None,
-        )
-        fila["visitante"] = next(
-            (
-                {"codigo_iso": e["codigo_iso"], "nombre": e["nombre"]}
-                for e in equipos
-                if e["condicion"] == "visitante"
-            ),
-            None,
-        )
-        return fila
-
     def eventos_partido(self, codigo: str, limit: int) -> dict[str, Any] | None:
         """None = el partido no existe; lista vacía = partido sin eventos."""
         return self._una_fila("partido.eventos", CYPHER_EVENTOS_PARTIDO, {"codigo": codigo, "limit": limit})
-
-    def rivales(self, codigo_iso: str, limit: int) -> dict[str, Any] | None:
-        return self._una_fila("equipo.rivales", CYPHER_RIVALES, {"codigo": codigo_iso, "limit": limit})
 
     def ping(self) -> None:
         self._una_fila("ping", "RETURN 1 AS ok", {})

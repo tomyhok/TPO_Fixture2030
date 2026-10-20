@@ -5,8 +5,6 @@ Respeta el modelo del hito de comentarios:
     partición completa (id_partido, ventana, shard). Una ventana de 1 minuto
     tiene 4 shards, así que se leen 4 particiones en paralelo y se combinan;
     nunca se usa ALLOW FILTERING ni un escaneo del partido;
-  * escritura con la duplicación controlada del Hito 6: un BATCH logged
-    inserta en `comentarios_por_partido` y `comentarios_por_usuario`.
 Las sentencias son preparadas (parametrizadas) y se crean una sola vez.
 """
 
@@ -18,8 +16,7 @@ from typing import Any
 from cassandra import OperationTimedOut, ReadTimeout, Unavailable, WriteTimeout
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, NoHostAvailable, Session
 from cassandra.policies import DCAwareRoundRobinPolicy
-from cassandra.query import BatchStatement, BatchType, dict_factory
-from cassandra.util import uuid_from_time
+from cassandra.query import dict_factory
 
 from app.adapters.base import no_disponible, operacion, timeout
 from app.config.settings import Settings
@@ -40,17 +37,6 @@ CQL_MURO_CURSOR = (
     f"SELECT {COLUMNAS_MURO} FROM comentarios_por_partido "
     "WHERE id_partido = ? AND ventana = ? AND shard = ? AND id_comentario < ? LIMIT ?"
 )
-CQL_INSERT_PARTIDO = (
-    "INSERT INTO comentarios_por_partido (id_partido, ventana, shard, id_comentario, id_usuario, "
-    "usuario_alias, equipo_apoyado, texto, idioma, estado_moderacion, minuto_partido, creado_en) "
-    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-)
-CQL_INSERT_USUARIO = (
-    "INSERT INTO comentarios_por_usuario (id_usuario, periodo, id_comentario, id_partido, texto, "
-    "estado_moderacion, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?)"
-)
-
-
 def _traducir(exc: Exception) -> ErrorAPI | None:
     if isinstance(exc, (OperationTimedOut, ReadTimeout, WriteTimeout)):
         return timeout(DEPENDENCIA)
@@ -121,8 +107,6 @@ class CassandraAdapter:
             self._preparadas = {
                 "muro": sesion.prepare(CQL_MURO),
                 "muro_cursor": sesion.prepare(CQL_MURO_CURSOR),
-                "insert_partido": sesion.prepare(CQL_INSERT_PARTIDO),
-                "insert_usuario": sesion.prepare(CQL_INSERT_USUARIO),
             }
             self._cluster, self._sesion = cluster, sesion
             return sesion
@@ -149,42 +133,6 @@ class CassandraAdapter:
         hay_mas = len(filas) > limit
         return [_fila(f, codigo_partido, ventana) for f in filas[:limit]], hay_mas
 
-    def publicar(self, comentario: dict[str, Any]) -> None:
-        """Escribe el comentario en la tabla del muro y en el historial del usuario."""
-        with operacion(DEPENDENCIA, "comentarios.batch_insert", _traducir):
-            sesion = self._obtener_sesion()
-            lote = BatchStatement(batch_type=BatchType.LOGGED)
-            lote.add(
-                self._preparadas["insert_partido"],
-                (
-                    comentario["codigo_partido"],
-                    comentario["ventana"],
-                    comentario["shard"],
-                    comentario["id_comentario"],
-                    comentario["id_usuario"],
-                    comentario["usuario_alias"],
-                    comentario["equipo_apoyado"],
-                    comentario["texto"],
-                    comentario["idioma"],
-                    comentario["estado_moderacion"],
-                    comentario["minuto_partido"],
-                    comentario["creado_en"],
-                ),
-            )
-            lote.add(
-                self._preparadas["insert_usuario"],
-                (
-                    comentario["id_usuario"],
-                    comentario["periodo"],
-                    comentario["id_comentario"],
-                    comentario["codigo_partido"],
-                    comentario["texto"],
-                    comentario["estado_moderacion"],
-                    comentario["creado_en"],
-                ),
-            )
-            sesion.execute(lote)
-
     def ping(self) -> None:
         with operacion(DEPENDENCIA, "ping", _traducir):
             self._obtener_sesion().execute("SELECT release_version FROM system.local")
@@ -192,8 +140,3 @@ class CassandraAdapter:
     def cerrar(self) -> None:
         if self._cluster is not None:
             self._cluster.shutdown()
-
-
-def nuevo_timeuuid(instante: datetime) -> uuid.UUID:
-    """timeuuid (UUID v1) con el instante de creación embebido, como en el Hito 6."""
-    return uuid_from_time(instante)

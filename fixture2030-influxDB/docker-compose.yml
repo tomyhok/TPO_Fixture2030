@@ -1,7 +1,7 @@
 services:
   influxdb:
-    # `latest` apunta a InfluxDB 2.x. `3-core` mantiene la línea actual de InfluxDB 3 Core.
-    image: influxdb:latest
+    # Familia Core explícita; registrar versión y digest para identificar cada ejecución.
+    image: influxdb:3-core
     pull_policy: always
     container_name: fixture2030-influxdb
     restart: unless-stopped
@@ -15,5 +15,5 @@ services:
     ports:
       - "127.0.0.1:8181:8181"
     volumes:
-      - ${HOME}/docker/data/influxdb:/var/lib/influxdb3/data
+      - ~/docker/data/influxdb:/var/lib/influxdb3/data
       - ./scripts:/scripts:ro

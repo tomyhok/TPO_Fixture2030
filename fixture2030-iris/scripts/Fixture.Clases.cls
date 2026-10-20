@@ -21,7 +21,6 @@
 <Property name="Rango">
 <Type>%String</Type>
 <Required>1</Required>
-<Parameter name="VALUELIST" value=",FIFA,Nacional"/>
 </Property>
 </Class>
 
@@ -46,7 +45,6 @@
 <Property name="Estado">
 <Type>%String</Type>
 <Required>1</Required>
-<Parameter name="VALUELIST" value=",Programado,En Juego,Finalizado"/>
 </Property>
 <Property name="Arbitro">
 <Type>Fixture.Arbitro</Type>
@@ -61,16 +59,31 @@
 <Property name="Codigo">
 <Description>
 Codigo de negocio del partido (ej. P-001), homologado con Neo4j, Cassandra, Redis
-e InfluxDB. Agregado en el Hito 10 para que la API no exponga el %ID interno.
-No es obligatorio para no romper los partidos creados por la demo del Hito 9.</Description>
+e InfluxDB. Identificador de negocio legible. Es opcional para conservar los objetos del laboratorio anterior.</Description>
 <Type>%String</Type>
-<Parameter name="MAXLEN" value="10"/>
 </Property>
 
 <Index name="CodigoIndex">
 <Properties>Codigo</Properties>
 <Unique>1</Unique>
 </Index>
+
+<Method name="AgregarEvento">
+<FormalSpec>minuto:%Integer,tipo:%String,descripcion:%String=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    // Única regla de dominio: un partido finalizado no admite eventos nuevos.
+    If ..Estado = "Finalizado" {
+        Quit $SYSTEM.Status.Error(5001, "No se pueden agregar eventos a un partido finalizado")
+    }
+    Set evento = ##class(Fixture.Evento).%New()
+    Set evento.Minuto = minuto
+    Set evento.Tipo = tipo
+    Set evento.Descripcion = descripcion
+    Do ..Eventos.Insert(evento)
+    Quit ..%Save()
+]]></Implementation>
+</Method>
 </Class>
 
 <Class name="Fixture.Evento">
@@ -78,13 +91,10 @@ No es obligatorio para no romper los partidos creados por la demo del Hito 9.</D
 <Property name="Minuto">
 <Type>%Integer</Type>
 <Required>1</Required>
-<Parameter name="MINVAL" value="1"/>
-<Parameter name="MAXVAL" value="130"/>
 </Property>
 <Property name="Tipo">
 <Type>%String</Type>
 <Required>1</Required>
-<Parameter name="VALUELIST" value=",Gol,Tarjeta Amarilla,Tarjeta Roja,Cambio"/>
 </Property>
 <Property name="Descripcion">
 <Type>%String</Type>
@@ -100,21 +110,5 @@ No es obligatorio para no romper los partidos creados por la demo del Hito 9.</D
 <Properties>Partido</Properties>
 </Index>
 
-<Method name="%OnBeforeSave">
-<FormalSpec>insert:%Boolean</FormalSpec>
-<Private>1</Private>
-<ReturnType>%Status</ReturnType>
-<ServerOnly>1</ServerOnly>
-<Implementation><![CDATA[
-    // Regla de estado: un partido Finalizado no admite eventos nuevos.
-    // (El rango del minuto lo controlan MINVAL/MAXVAL de la propiedad.)
-    If (insert && $ISOBJECT(..Partido)) {
-        If (..Partido.Estado = "Finalizado") {
-            Quit $$$ERROR($$$GeneralError, "No se pueden agregar eventos a un partido finalizado")
-        }
-    }
-    Quit $$$OK
-]]></Implementation>
-</Method>
 </Class>
 </Export>

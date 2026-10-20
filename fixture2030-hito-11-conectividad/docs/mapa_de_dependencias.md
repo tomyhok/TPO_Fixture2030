@@ -1,5 +1,12 @@
 # Mapa de dependencias (RF1, sección 5.1)
 
+> Revisión del 19/10/2026: los archivos de evidencia del 17/10 son históricos.
+> La implementación actual usa drivers oficiales, valida las respuestas negativas
+> y corrige el resumen y el modo estricto. No se deben atribuir los resultados
+> anteriores al código corregido. Ver [walkthrough de las correcciones](walkthrough_correcciones.md)
+> y [evidencia nueva](evidencia/revision_2026-10-19/README.md).
+
+
 Grupo 4 — Ingeniería de Datos II — Fixture 2030
 
 Dependencias de la API integrada del Hito 10, vistas **desde el proceso que
@@ -20,11 +27,11 @@ su valor no se publica.
 | **Host desde la red Docker** | `mongodb` | `neo4j` | `cassandra` | `redis` | `influxdb` | `iris` |
 | **Puerto / protocolo de la API** | 27017 / MongoDB Wire Protocol | 7687 / Bolt 5.8 | 9042 / CQL nativo (v5) | 6379 / RESP | 8181 / HTTP (API v3) | 1972 / Superserver (Native API) |
 | **Otros puertos (no usados por la API)** | — | 7474 / HTTP (Browser) | — | — | — | 52773 / HTTP (Management Portal) |
-| **Contexto** | database `fixture2030` (`MONGO_DATABASE`); colecciones `equipos`, `jugadores` | database `neo4j` (`NEO4J_DATABASE`) | keyspace `fixture2030` (`CASSANDRA_KEYSPACE`), DC `datacenter1`; tablas `comentarios_por_partido`, `comentarios_por_usuario` | base lógica `db=0` (`REDIS_DB`); claves `sesion:*`, `cache:partido:*`, `idem:*` | database `fixture2030` (`INFLUX_DATABASE`); tabla `estadisticas_partido` | namespace `USER` (`IRIS_NAMESPACE`); clases `Fixture.*` y fachada `Fixture.API` |
+| **Contexto** | database `fixture2030` (`MONGO_DATABASE`); colecciones `equipos`, `jugadores` | database `neo4j` (`NEO4J_DATABASE`) | keyspace `fixture2030` (`CASSANDRA_KEYSPACE`), DC `datacenter1`; tablas `comentarios_por_partido`, `comentarios_por_usuario` | base lógica `db=0` (`REDIS_DB`); claves `sesion:*` (lectura API); las cachés del Hito 7 se prueban en ese módulo | database `fixture2030` (`INFLUX_DATABASE`); tabla `estadisticas_partido` | namespace `USER` (`IRIS_NAMESPACE`); clases `Fixture.*`  |
 | **Autenticación** | usuario `MONGO_USER` + `MONGO_PASSWORD`, SCRAM, `authSource=admin` | `NEO4J_USER` + `NEO4J_PASSWORD` (basic auth sobre Bolt) | ninguna en el laboratorio (`AllowAllAuthenticator`) | ninguna en el laboratorio (usuario ACL `default`) | token Bearer: `INFLUX_TOKEN` o el archivo `fixture2030-influxDB/.influxdb3-token` (excluido del repo) | `IRIS_USER=fixture_api` + `IRIS_PASSWORD`, rol mínimo `FixtureAPI` (`%DB_USER`, `%Native_ClassExecution:U`) |
 | **Autorización** | rol `root` (usuario de laboratorio) | Community: sin RBAC (`roles=null`) | `AllowAllAuthorizer` | sin ACL restrictivas | token de administración | `FixtureAPI`: solo la base `USER` y ejecución de métodos de clase |
 | **Cliente / driver** | pymongo 4.19.0 | neo4j 6.4.1 | cassandra-driver 3.30.1 (+ pyasyncore) | redis-py 8.1.0 | HTTP (httpx en la API, urllib en el diagnóstico) | intersystems-irispython 5.4.1 |
-| **Operación mínima (diagnóstico)** | `hello`; `connectionStatus`; `listCollections`; `equipos.find_one({_id:'ARG'})` + `count_documents(limit=100)` | handshake Bolt; `verify_authentication`; `SHOW CURRENT USER`; `db.info()`; `MATCH (p:Partido {codigo_partido:$codigo}) … LIMIT 1` | frames OPTIONS y STARTUP; `SELECT … FROM system.local`; metadata; `SELECT … WHERE id_partido=? AND ventana=? AND shard=? LIMIT 5` | `PING` (RESP); `ACL WHOAMI`; `DBSIZE`; `CLIENT INFO`; `EXISTS/TYPE/PTTL sesion:S-0001` | `GET /health`; `GET /api/v3/configure/database`; `information_schema.tables`; `COUNT(*)` y `date_bin(5 min)` en 15 minutos | `iris.connect`; `%SYSTEM.Version.GetNumber`; `%SYSTEM.SYS.NameSpace`; `%Dictionary.CompiledClass.%ExistsId`; `Fixture.API.ObtenerActa('P-001')` |
+| **Operación mínima (diagnóstico)** | `hello`; `connectionStatus`; `listCollections`; `equipos.find_one({_id:'ARG'})` + `count_documents(limit=100)` | `get_server_info`; `verify_authentication`; `SHOW CURRENT USER`; `db.info()`; `MATCH (p:Partido {codigo_partido:$codigo}) … LIMIT 1` | `cluster.connect()` e identidad de la sesión; `SELECT … FROM system.local`; metadata; `SELECT … WHERE id_partido=? AND ventana=? AND shard=? LIMIT 5` | `PING` (RESP); `ACL WHOAMI`; `DBSIZE`; `CLIENT INFO`; `EXISTS/TYPE/PTTL sesion:S-0001` | `GET /health`; `GET /api/v3/configure/database`; `information_schema.tables`; `COUNT(*)` y `date_bin(5 min)` en 15 minutos | `iris.connect`; `%SYSTEM.Version.GetNumber`; `%SYSTEM.SYS.NameSpace`; `%Dictionary.CompiledClass.%ExistsId`; `SELECT … FROM Fixture.Partido WHERE Codigo = ?` (P-009, DB-API) |
 | **Ping de salud de la API** | `list_collection_names` de las colecciones esperadas (verifica el contexto) | `RETURN 1` en la database | `SELECT release_version FROM system.local` | `PING` | `SELECT 1` en la database | `%SYSTEM.Version.GetNumber` |
 | **Endpoints de la API** | `/equipos`, `/equipos/{iso}`, `/equipos/{iso}/jugadores`, `/jugadores/{id}` | `/partidos/{codigo}`, `/partidos/{codigo}/eventos`, `/equipos/{iso}/rivales` | `GET`/`POST /partidos/{codigo}/comentarios` | `GET`/`DELETE /sesiones/{id}`; caché de `/partidos/{codigo}`; idempotencia de los `POST` | `/partidos/{codigo}/estadisticas` | `/partidos-oficiales/{codigo}`, `…/estado`, `…/eventos` |
 | **Estado esperado** | disponible | disponible | disponible | disponible | disponible | disponible |

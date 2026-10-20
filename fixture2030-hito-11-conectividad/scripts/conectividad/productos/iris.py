@@ -1,4 +1,4 @@
-"""InterSystems IRIS (Hito 9): actas oficiales. Cliente: Native API de Python, como el adaptador (RF14).
+"""InterSystems IRIS (Hito 9): actas oficiales. Clientes: Native API para metadatos y DB-API/SQL para leer como la API (RF14).
 
 Distingue el portal HTTP (52773), que la API NO usa, del Superserver (1972).
 
@@ -9,7 +9,7 @@ Distingue el portal HTTP (52773), que la API NO usa, del Superserver (1972).
 | autenticacion | iris.connect con usuario/namespace              | Permisos para ejecutar clases              |
 | autorizacion  | %SYSTEM.Version.GetNumber (Native API)          | Si el namespace es el del módulo           |
 | contexto      | %SYSTEM.SYS.NameSpace + clase compilada         | Si existe el acta de prueba                |
-| lectura       | Fixture.API.ObtenerActa (entidad del Hito 9)    | Rendimiento de escrituras                  |
+| lectura       | SELECT del acta por DB-API (Hito 9)    | Rendimiento de escrituras                  |
 
 Particularidades medidas en el laboratorio:
   * IRIS responde "Access Denied" tanto a una credencial inválida como a un
@@ -22,7 +22,6 @@ Particularidades medidas en el laboratorio:
     prueba contraseñas incorrectas contra IRIS.
 """
 
-import json
 import time
 
 from conectividad.config import Config
@@ -40,12 +39,12 @@ def _clasificar(exc: BaseException, capa: str) -> Paso:
             f"identidad sin permiso ({resumen_excepcion(exc, 80)})",
             "El usuario se autenticó pero su rol no permite ejecutar la operación (falta %Native_ClassExecution "
             "o el recurso de la base).",
-            "Revisar el rol FixtureAPI (scripts/preparar_datos.sh del Hito 10).",
+            "Revisar el rol de lectura FixtureAPIRead (scripts/preparar_datos.sh del Hito 10).",
         )
     if "<CLASS DOES NOT EXIST>" in texto:
         return fail(
             f"clase inexistente en el namespace ({resumen_excepcion(exc, 80)})",
-            "El namespace es otro o no se compilaron las clases del Hito 9 / la fachada.",
+            "El namespace es otro o no se compilaron las clases del Hito 9.",
             "Ejecutar scripts/preparar_datos.sh del Hito 10.",
         )
     if isinstance(exc, LimiteExcedido):
@@ -109,6 +108,7 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
         )
 
     conexion = None
+    conexion_sql = None
     try:
         # iris.connect resuelve protocolo, autenticación y namespace en una sola llamada:
         # el resultado se reparte por capa según el tipo de error.
@@ -143,41 +143,60 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
             compilada = llamar("%Dictionary.CompiledClass", "%ExistsId", clase)
             if str(compilada) != "1":
                 return fail(f"namespace '{activo}' sin la clase {clase} compilada",
-                            "Namespace equivocado o falta compilar la fachada del Hito 10.",
+                            "Namespace equivocado o falta compilar las clases del Hito 9.",
                             "Ejecutar scripts/preparar_datos.sh del Hito 10.")
             return ok(f"namespace activo '{activo}'; clase {clase} compilada")
 
+        def seleccionar(codigo: str):
+            nonlocal conexion_sql
+            import iris.dbapi
+            if conexion_sql is None:
+                conexion_sql = con_limite(lambda: iris.dbapi.connect(
+                    host, puerto, namespace, usuario, cfg.get("IRIS_PASSWORD"),
+                    timeout=int(conexion_s * 1000)), limite)
+            def consulta():
+                cursor = conexion_sql.cursor()
+                try:
+                    cursor.execute("SELECT Codigo, Estado, Sede FROM Fixture.Partido WHERE Codigo = ?", [codigo])
+                    return cursor.fetchall()
+                finally:
+                    cursor.close()
+            return con_limite(consulta, operacion_s)
+
         def lectura() -> Paso:
-            respuesta = json.loads(str(llamar(clase, "ObtenerActa", acta)))
-            if not respuesta.get("ok"):
-                return warn(f"{clase}.ObtenerActa('{acta}') -> {respuesta.get('error')}",
+            filas = seleccionar(acta)
+            if not filas:
+                return warn(f"SELECT del acta '{acta}' sin filas",
                             "La lectura funcionó pero el acta de prueba no existe (ausencia válida).",
-                            "Revisar IRIS_ACTA_PRUEBA o Fixture.API.CargarMuestra().")
-            datos = respuesta["acta"]
-            return ok(f"{clase}.ObtenerActa('{acta}') -> estado '{datos.get('estado')}', sede "
-                      f"'{datos.get('sede')}', {len(datos.get('eventos', []))} eventos, árbitro con rango "
-                      f"{(datos.get('arbitro') or {}).get('rango')}")
+                            "Revisar IRIS_ACTA_PRUEBA; la demostración del Hito 9 crea P-009.")
+            return ok(f"SELECT parametrizado: acta '{filas[0][0]}', estado '{filas[0][1]}', sede '{filas[0][2]}'")
 
         c.ejecutar("autorizacion", "%SYSTEM.Version.GetNumber",
                    lambda: ok(f"Native API puede ejecutar métodos de clase: IRIS {llamar('%SYSTEM.Version', 'GetNumber')}"))
         c.ejecutar("contexto", "namespace + clase", contexto)
-        c.ejecutar("lectura", "ObtenerActa", lectura)
+        c.ejecutar("lectura", "SELECT del acta (DB-API)", lectura)
 
         if sondas and c.activa("sonda") and c.bloqueada_por is None:
             def objeto_inexistente() -> Paso:
-                respuesta = json.loads(str(llamar(clase, "ObtenerActa", "P-999")))
-                return ok(f"ObtenerActa('P-999') -> {respuesta}: objeto inexistente es respuesta de negocio "
-                          "(la API responde 404), no falla de conexión")
+                if seleccionar("P-999"):
+                    return fail("SELECT de 'P-999' devolvió filas",
+                                "No se verificó una ausencia válida.", "Revisar el código de prueba.")
+                return ok("SELECT de 'P-999' sin filas: ausencia de negocio (HTTP 404), no falla de conexión")
 
             def clase_inexistente() -> Paso:
                 try:
                     llamar("Fixture.ClaseInexistenteH11", "X")
                 except RuntimeError as exc:
+                    if "<CLASS DOES NOT EXIST>" not in str(exc):
+                        return _clasificar(exc, "sonda")
                     return ok(f"{str(exc).split('*')[0].strip()[:60]}: error de metadato, no de conexión")
                 return fail("se esperaba <CLASS DOES NOT EXIST>", "Comportamiento inesperado.", "-")
 
             def namespace_incorrecto() -> Paso:
                 existe = llamar("%SYS.Namespace", "Exists", "NOEXISTE_H11")
+                if str(existe) != "0":
+                    return fail("NOEXISTE_H11 existe", "No sirve como sonda de namespace inexistente.",
+                                "Elegir un namespace que no exista.")
                 return ok(f"%SYS.Namespace.Exists('NOEXISTE_H11') = {existe}: con un namespace inexistente "
                           "iris.connect devuelve 'Access Denied', igual que una credencial inválida; esta "
                           "consulta los distingue sin provocar logins fallidos")
@@ -186,6 +205,11 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
             c.ejecutar("sonda", "clase inexistente", clase_inexistente)
             c.ejecutar("sonda", "namespace incorrecto", namespace_incorrecto)
     finally:
+        if conexion_sql is not None:
+            try:
+                conexion_sql.close()
+            except Exception:
+                pass
         if conexion is not None:
             try:
                 conexion.close()
@@ -214,8 +238,10 @@ def _diferencial(c: Cadena, conectar, alternativo: str, namespace: str, usuario:
         return
     import iris
 
-    existe = iris.createIRIS(otra).classMethodValue("%SYS.Namespace", "Exists", namespace)
-    otra.close()
+    try:
+        existe = con_limite(lambda: iris.createIRIS(otra).classMethodValue("%SYS.Namespace", "Exists", namespace), 5)
+    finally:
+        otra.close()
     c.registrar("autenticacion", f"login en {alternativo}",
                 ok(f"credencial válida para '{usuario}' (verificada en el namespace '{alternativo}')"), ms)
     c.registrar("contexto", f"namespace {namespace}", fail(

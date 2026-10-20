@@ -1,5 +1,12 @@
 # Capas de evaluación, pruebas nativas y pruebas de la API
 
+> Revisión del 19/10/2026: los archivos de evidencia del 17/10 son históricos.
+> La implementación actual usa drivers oficiales, valida las respuestas negativas
+> y corrige el resumen y el modo estricto. No se deben atribuir los resultados
+> anteriores al código corregido. Ver [walkthrough de las correcciones](walkthrough_correcciones.md)
+> y [evidencia nueva](evidencia/revision_2026-10-19/README.md).
+
+
 Grupo 4 — Ingeniería de Datos II — Fixture 2030
 
 Cubre las secciones 5.2 a 5.5 del enunciado y los requisitos RF4 a RF15,
@@ -15,6 +22,7 @@ Configuración → Resolución → TCP → Protocolo → Autenticación → Auto
 ```
 
 * Cada producto recorre las capas **en este orden**. Si una capa falla, las siguientes se registran como **SKIP "no evaluada: falló la capa X"** y no se ejecutan. El diagnóstico apunta a la primera capa rota y no acumula errores derivados (`Cadena` en `scripts/conectividad/registro.py`).
+* Las sondas que necesitan datos requieren contexto válido: si falta el keyspace o la tabla no se ejecutan ni se presentan como OK.
 * Las pruebas **secundarias** (estado del contenedor, portal HTTP, sondas negativas) nunca bloquean la cadena: informan.
 * Cada producto se evalúa por separado. Que falle uno no impide evaluar a los demás (RNF13).
 * Todas las esperas tienen límite (RNF5): `TCP_TIMEOUT_S=3`, `TIMEOUT_CONEXION_S=2`, `TIMEOUT_OPERACION_S=5` y `API_TIMEOUT_S=15`. El cliente de IRIS se ejecuta en un hilo con límite de conexión + operación.
@@ -75,7 +83,7 @@ la autorización y la autenticación separadas.
 | Exigido | Prueba | Resultado observado |
 |---|---|---|
 | Acceso HTTP al Browser | `GET http://127.0.0.1:7474` (JSON de discovery) | 200: Neo4j 2026.07.1 community. **La API no usa este puerto** |
-| Acceso Bolt de la API | Handshake Bolt crudo: magic `0x6060B017` + versiones propuestas | Bolt **5.8** negociado (1,8 ms) |
+| Acceso Bolt de la API | `driver.get_server_info()` | Ver corrida corregida del 19/10; el driver negocia Bolt e identidad |
 | Autenticación | `driver.verify_authentication()` | Usuario `neo4j` autenticado |
 | Autorización | `SHOW CURRENT USER` (database `system`) | `roles=null`: Community no tiene RBAC |
 | Database seleccionada | `CALL db.info()` + `db.labels()` en `neo4j` | Etiquetas Equipo, Jugador, Sede, Partido, Evento |
@@ -86,8 +94,8 @@ la autorización y la autenticación separadas.
 
 | Exigido | Prueba | Resultado observado |
 |---|---|---|
-| Puerto CQL | `connect()` + frame `OPTIONS` (sin driver) | `SUPPORTED`: CQL 3.4.7, protocolos v3, v4, v5 y v6-beta |
-| Sesión mediante driver | Frame `STARTUP` + `cluster.connect()` + `system.local` | `READY` (sin autenticación en el laboratorio); Cassandra 5.0.9, DC `datacenter1` |
+| Puerto CQL | `connect()` TCP + `cluster.connect()` del driver | Protocolo negociado por el driver; sin parser binario propio |
+| Sesión mediante driver | `cluster.connect()` + `SELECT system.local` con timeout | En el laboratorio no se envían credenciales; se informan sesión e identidad por separado |
 | Keyspace seleccionado | Metadata del driver | `fixture2030`, SimpleStrategy RF=1 |
 | Tabla y patrón de partición | Metadata de `comentarios_por_partido` | Partición `(id_partido, ventana, shard)`, clustering `(id_comentario)` |
 | Lectura limitada | `SELECT … WHERE id_partido=? AND ventana=? AND shard=? LIMIT 5` en los 4 shards | 5 filas [2, 3, 0, 0] (74,9 ms) |
@@ -105,7 +113,7 @@ conecta sin keyspace y después consulta la metadata (escenario A4a).
 | Exigido | Prueba | Resultado observado |
 |---|---|---|
 | Conexión al servidor | `connect()` | 6379 aceptó |
-| Respuesta de protocolo básico | `PING` en RESP crudo | `+PONG` |
+| Respuesta de protocolo básico | `PING` mediante redis-py | `PONG`; no se serializa RESP manualmente |
 | Autenticación si está configurada | `ACL WHOAMI` | Sin contraseña: usuario `default` (laboratorio) |
 | Lectura de una clave de demostración | `EXISTS` / `TYPE` / `PTTL` de `sesion:S-0001` | `EXISTS 0`, `PTTL -2`: **ausente** (WARN con explicación) |
 | TTL o expiración | Sonda opcional: `SET diag:h11:expira:<id> PX 1500 NX`, `PTTL`, espera de 1,7 s | `PTTL 1499 ms` → `EXISTS 0`, `PTTL -2` |
@@ -130,7 +138,7 @@ conecta sin keyspace y después consulta la metadata (escenario A4a).
 | Superserver | `connect()` a 1972 + `iris.connect` (Native API) | Handshake completado |
 | Usuario y namespace | `iris.connect(..., "USER", "fixture_api", …)`; `%SYSTEM.SYS.NameSpace` | Login aceptado; namespace activo `USER` |
 | Cliente utilizado | Native API de Python 5.4.1 (el mismo de la API) y, aparte, la terminal `iris session` | Ver §5 |
-| Lectura de entidad o metadato | `%Dictionary.CompiledClass.%ExistsId('Fixture.API')` + `Fixture.API.ObtenerActa('P-001')` | Clase compilada; acta "En Juego" con 1 evento |
+| Lectura de entidad o metadato | `%Dictionary.CompiledClass.%ExistsId('Fixture.Partido')` + `SELECT … FROM Fixture.Partido WHERE Codigo = ?` (P-009, DB-API) | Clase compilada; acta "En Juego" con 1 evento |
 | Portal accesible vs. Superserver inaccesible vs. namespace incorrecto vs. objeto inexistente | Capas separadas + sondas | Portal y Superserver se prueban por separado / `NOEXISTE` → `%SYS.Namespace.Exists = 0` / `ObtenerActa('P-999')` → `NO_ENCONTRADO` (404 en la API) |
 
 Hallazgos de IRIS:
@@ -166,7 +174,11 @@ diagnóstico usa los **drivers de Python de la API**, que es lo que exige RNF4
 `scripts/prueba_api.sh` (módulo `conectividad/api.py`). Solo usa rutas GET.
 Cada request lleva su `X-Request-ID` (`h11-<corrida>-<n>`): la API lo devuelve
 en la respuesta y lo escribe en cada línea de log de la ruta y del adaptador.
-Corrida `h11-9f1779`, 2026-10-17 00:33 UTC, API en `127.0.0.1:8000`:
+**Antecedente histórico, anterior a la reducción del Hito 10.** Corrida `h11-9f1779`,
+2026-10-17 00:33 UTC, API en `127.0.0.1:8000`. La tabla conserva lo observado entonces;
+incluye plantel y ficha, eliminados de la API actual. La evaluación vigente usa 17 solicitudes,
+con acta P-009 por SQL/DB-API. Ver la nueva evidencia de la API en
+`../../fixture2030-hito-10-api-integrada/docs/evidencia/revision_2026-10-19/`.
 
 | Prueba | Método y path | Dependencia | HTTP | ms (cliente) | Clase | Resultado resumido | Líneas de log |
 |---|---|---|---|---|---|---|---|
@@ -214,3 +226,19 @@ Log asociado a `h11-9f1779-04` ([`evidencia/logs_api_h11.txt`](evidencia/logs_ap
 | Respuesta vacía válida | 200 con `items`, `eventos` o `series` vacíos | P-002, ventana 203001010000, año 2031 |
 | Error de validación | 400 `VALIDACION`; no se consulta ninguna base (sin línea de adaptador en el log) | `arg`, intervalo invertido |
 | Operación exitosa | 2xx con datos | El resto |
+
+## Selección de capas y negociación mediante drivers
+
+`--capas lectura` inicializa los recursos necesarios sin presentar capas omitidas
+como si se hubieran ejecutado. Cassandra abre una sesión y verifica el contexto
+antes de leer. La selección de capas no omite los prerrequisitos de la operación.
+
+Al usar drivers, la negociación de protocolo y el intercambio de identidad pueden
+ocurrir en la misma llamada. El resultado lo declara explícitamente; las filas
+separadas de protocolo y autenticación no pretenden medir dos handshakes distintos.
+Se conserva la prueba TCP independiente y se clasifican los errores del driver.
+
+Las sondas verifican el resultado y la causa: un 200 con token inválido no es OK,
+un error de permisos no prueba una database inexistente y un keyspace ausente no
+demuestra que se rechazó una partición incompleta. Un `NoHostAvailable` por sí solo
+no demuestra un timeout: también puede envolver un rechazo o un error de identidad.

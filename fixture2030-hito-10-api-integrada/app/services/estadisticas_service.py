@@ -1,4 +1,4 @@
-"""Caso de uso CU12 (estadísticas por ventana temporal en InfluxDB)."""
+"""Lectura representativa del motor, con validación de entrada."""
 
 import math
 from datetime import datetime, timedelta

@@ -1,8 +1,8 @@
-"""Rutas del módulo de sesiones (CU10, CU11)."""
+"""Lectura de una sesión y su TTL; sin invalidaciones HTTP."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends
 
 from app.core.errores import SesionNoVigente
 from app.core.http import respuestas
@@ -32,15 +32,3 @@ Svc = Annotated[Servicios, Depends(servicios)]
 )
 def obtener_sesion(id_sesion: IdSesion, svc: Svc) -> Sesion:
     return svc.sesiones.obtener(id_sesion)
-
-
-@router.delete(
-    "/sesiones/{id_sesion}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="CU11 - Cerrar (invalidar) una sesión",
-    description="`DEL sesion:<id>`. Idempotente: devuelve 204 aunque la sesión ya no exista.",
-    responses=respuestas(503, 504),
-)
-def cerrar_sesion(id_sesion: IdSesion, svc: Svc) -> Response:
-    svc.sesiones.cerrar(id_sesion)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

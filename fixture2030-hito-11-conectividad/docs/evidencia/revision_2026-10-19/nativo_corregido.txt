@@ -1,0 +1,88 @@
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — drivers oficiales; entorno local sin preparar Cassandra
+  inicio_utc     2026-10-19T23:35:21Z
+  commit         c55b302 (hito-11, con cambios sin commitear)
+  origen         notebook Windows 11 (PowerShell/cmd); 127.0.0.1 = puertos publicados por Docker
+  python         3.12.15
+  drivers        pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1
+  configuracion  .env
+  modo           nativo
+  productos      mongodb, neo4j, cassandra, redis
+  capas          autenticacion, autorizacion, configuracion, contenedor, contexto, lectura, portal_http, protocolo, resolucion, sonda, tcp
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+  ADVERTENCIA    1 secreto(s) coinciden con un identificador público de la configuración (nombre de base, host...): no son secretos efectivos, conviene cambiarlos
+====================================================================================================
+
+--- mongodb ---
+[OK  ] mongodb   configuracion      0.0 ms  variables: MONGO_HOST=127.0.0.1; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: archivo .env, defecto]
+[OK  ] mongodb   contenedor       430.6 ms  docker inspect: fixture2030-mongodb: running; puertos publicados: 27017/tcp -> 0.0.0.0:27017. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] mongodb   resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] mongodb   tcp                1.2 ms  connect(): 127.0.0.1:27017 listener aceptó la conexión
+[OK  ] mongodb   protocolo          7.7 ms  hello (sin credenciales): primario=True, wire=21, MongoDB 7.0.40
+[OK  ] mongodb   autenticacion     46.7 ms  connectionStatus: autenticado como admin@admin (roles: root)
+[OK  ] mongodb   autorizacion       1.5 ms  listCollections fixture2030: permitido en 'fixture2030' (2 colecciones)
+[OK  ] mongodb   contexto           0.0 ms  colecciones esperadas: database 'fixture2030' con las colecciones del módulo: equipos, jugadores
+[OK  ] mongodb   lectura            5.9 ms  find_one + count_documents: equipos.find_one(_id='ARG') -> Argentina (grupo A); jugadores.count_documents(codigo_equipo='ARG', limit=100) = 23
+[OK  ] mongodb   sonda              1.1 ms  documento inexistente: equipos.find_one(_id='ZZZ') -> None: ausencia válida
+[OK  ] mongodb   sonda              2.0 ms  colección inexistente: fixture2030.coleccion_inexistente_h11.find_one() -> None: colección inexistente, sin error del servidor
+[OK  ] mongodb   sonda              3.1 ms  database inexistente: fixture2030_inexistente_h11.listCollections -> [] sin error: por eso el contexto verifica colecciones
+
+--- neo4j ---
+[OK  ] neo4j     configuracion      0.0 ms  variables: NEO4J_URI=bolt://127.0.0.1:7687; NEO4J_HTTP_URL=http://127.0.0.1:7474; NEO4J_USER=neo4j; NEO4J_PASSWORD (definida, oculta); NEO4J_DATABASE=neo4j [origen: archivo .env, defecto]
+[OK  ] neo4j     contenedor       440.8 ms  docker inspect: fixture2030-neo4j: running; puertos publicados: 7474/tcp -> 0.0.0.0:7474, 7687/tcp -> 0.0.0.0:7687. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] neo4j     portal_http       76.9 ms  GET Browser/discovery: HTTP 200: Neo4j 2026.07.1 community; anuncia bolt_direct=bolt://127.0.0.1:7687. La API no usa este puerto: no prueba Bolt
+[OK  ] neo4j     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] neo4j     tcp                0.6 ms  connect(): 127.0.0.1:7687 listener aceptó la conexión
+[OK  ] neo4j     protocolo         14.3 ms  get_server_info (driver): driver Bolt: Neo4j/2026.07.1, protocolo (6, 1); la conexión incluye identidad
+[OK  ] neo4j     autenticacion      8.7 ms  verify_authentication: usuario 'neo4j' autenticado por Bolt
+[OK  ] neo4j     autorizacion      15.5 ms  SHOW CURRENT USER: identidad 'neo4j' reconocida; roles=null (Community: sin RBAC, toda identidad autenticada puede leer)
+[OK  ] neo4j     contexto          12.5 ms  db.info() en 'neo4j': database 'neo4j' seleccionada; etiquetas: Equipo, Jugador, Sede, Partido, Evento
+[OK  ] neo4j     lectura            7.9 ms  MATCH parametrizado: Partido P-001 (2030-06-10): equipos ARG, ESP [Cypher parametrizado, LIMIT 1, timeout de operación]
+[OK  ] neo4j     sonda              5.1 ms  partido inexistente: partido P-999 -> sin filas: partido inexistente (la API responde 404)
+[OK  ] neo4j     sonda              5.6 ms  resultado vacío: partido P-002 existe con 0 eventos: resultado vacío válido (la API responde 200 con lista vacía)
+[OK  ] neo4j     sonda              7.2 ms  database inexistente: database 'noexiste_h11' -> Neo.ClientError.Database.DatabaseNotFound: error de contexto, no de conexión (la API lo traduce a 503)
+[OK  ] neo4j     sonda           1007.8 ms  error de conexión: bolt://127.0.0.1:49357 sin listener -> ServiceUnavailable: error de conexión, distinto de 'sin filas'
+
+--- cassandra ---
+[OK  ] cassandra configuracion      0.0 ms  variables: CASSANDRA_HOSTS=127.0.0.1; CASSANDRA_PORT=9042; CASSANDRA_KEYSPACE=fixture2030; CASSANDRA_DC=datacenter1; CASSANDRA_TABLA=comentarios_por_partido [origen: defecto]
+[OK  ] cassandra contenedor       474.2 ms  docker inspect: fixture2030-cassandra: running (healthy); puertos publicados: 9042/tcp -> 0.0.0.0:9042. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] cassandra resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] cassandra tcp                0.7 ms  connect(): 127.0.0.1:9042 listener aceptó la conexión
+[OK  ] cassandra protocolo       1307.5 ms  sesión CQL (driver): sesión CQL negociada por cassandra-driver; incluye el intercambio de identidad
+[OK  ] cassandra autenticacion      0.0 ms  identidad de la sesión: sesión aceptada sin credenciales, igual que la API del laboratorio; no prueba permisos sobre las tablas
+[OK  ] cassandra autorizacion      15.9 ms  SELECT system.local: SELECT system.local permitido: Cassandra 5.0.9, cluster 'Fixture2030_Cassandra', DC 'datacenter1'
+[FAIL] cassandra contexto           0.0 ms  metadata keyspace/tabla: keyspace 'fixture2030' inexistente (keyspaces: system, system_auth, system_distributed, system_schema, system_traces, system_views, system_virtual_schema)
+        hipótesis: La red y el protocolo funcionan: el contexto configurado no existe. La API lo vería como NoHostAvailable al conectar con ese keyspace.
+        siguiente paso: Corregir CASSANDRA_KEYSPACE o ejecutar 01-keyspace.cql y 02-tablas.cql.
+[SKIP] cassandra lectura                    SELECT por partición: no evaluada: falló la capa 'contexto'
+
+--- redis ---
+[OK  ] redis     configuracion      0.0 ms  variables: REDIS_HOST=127.0.0.1; REDIS_PORT=6379; REDIS_PASSWORD (vacía); REDIS_DB=0; REDIS_CLAVE_PRUEBA=sesion:S-0001 [origen: defecto]
+[OK  ] redis     contenedor       437.8 ms  docker inspect: fixture2030-redis: running; puertos publicados: 6379/tcp -> 0.0.0.0:6379. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] redis     resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] redis     tcp                0.7 ms  connect(): 127.0.0.1:6379 listener aceptó la conexión
+[OK  ] redis     protocolo          5.9 ms  PING (redis-py): PING mediante redis-py -> PONG (sin credenciales)
+[OK  ] redis     autenticacion     17.4 ms  ACL WHOAMI: sin contraseña configurada; el servidor acepta la conexión como 'default' (laboratorio)
+[OK  ] redis     autorizacion       0.8 ms  DBSIZE: permitido: 0 claves en la base lógica
+[OK  ] redis     contexto           2.5 ms  CLIENT INFO + INFO keyspace: Redis 8.10.2; base lógica db=0: 0 claves, 0 con TTL
+[WARN] redis     lectura            0.9 ms  EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2
+        observación: Redis respondió normalmente: la clave no existe (nunca se cargó o ya venció su TTL). Ausente y expirada se ven igual (-2); ninguna de las dos es 'Redis caído'.
+[OK  ] redis     sonda              1.4 ms  clave ausente: EXISTS diag:h11:inexistente:b3d46403 = 0, PTTL = -2: ausencia válida (nil), no es error
+[SKIP] redis     sonda              0.0 ms  clave expirada: desactivada (REDIS_SONDA_EXPIRACION=0): escribe una clave diag: de 1,5 s
+[OK  ] redis     sonda           2007.2 ms  Redis no disponible: 127.0.0.1:49544 sin servidor -> TimeoutError en 2003 ms: excepción, distinta de nil (la API responde 503/504, nunca 404). En Windows el rechazo en 127.0.0.1 tarda ~2 s (reintentos de SYN): con TIMEOUT_CONEXION_S=2 la caída se informa como timeout (504).
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+mongodb    disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    -          5.9
+           -> todas las capas ejecutadas terminaron OK
+neo4j      disponible      OK    OK    OK    OK    OK    OK    OK    OK    4/4    -          7.9
+           -> todas las capas ejecutadas terminaron OK
+cassandra  no disponible   OK    OK    OK    OK    OK    OK    FAIL  SKIP  -      -            -
+           -> falla en contexto: keyspace 'fixture2030' inexistente (keyspaces: system, system_auth, system_distributed, system_schema, system_traces, system_views, system_virtual_schema) -> Corregir CASSANDRA_KEYSPACE o ejecutar 01-keyspace.cql y 02-tablas.cql.
+redis      disponible      OK    OK    OK    OK    OK    OK    OK    WARN  2/2    -          0.9
+           -> observación: EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2
+
+Total: 47 | OK: 43 | WARN: 1 | FAIL: 1 | SKIP: 2 | duración 7.8 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.

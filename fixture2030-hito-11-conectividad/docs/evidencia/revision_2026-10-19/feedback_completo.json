@@ -1,0 +1,1838 @@
+{
+  "meta": {
+    "etiqueta": "Correcciones docentes H4-H10; cinco motores configurados, falta token InfluxDB",
+    "inicio_utc": "2026-10-20T00:10:25Z",
+    "commit": "c55b302 (hito-11, con cambios sin commitear)",
+    "origen": "notebook Windows 11 (PowerShell/cmd); 127.0.0.1 = puertos publicados por Docker",
+    "python": "3.12.15",
+    "drivers": "pymongo 4.19.0, neo4j 6.4.1, cassandra-driver 3.30.1, redis 8.1.0, intersystems-irispython 5.4.1",
+    "configuracion": "fixture2030-hito-10-api-integrada/.env",
+    "modo": "completo",
+    "productos": "mongodb, neo4j, cassandra, redis, influxdb, iris",
+    "capas": "autenticacion, autorizacion, configuracion, contenedor, contexto, lectura, portal_http, protocolo, resolucion, sonda, tcp, api",
+    "timeouts_s": "tcp=3 conexion=2 operacion=5 api=15",
+    "fin_utc": "2026-10-20T00:10:35Z",
+    "duracion_s": 9.6,
+    "conteo": {
+      "OK": 76,
+      "WARN": 4,
+      "FAIL": 2,
+      "SKIP": 9
+    }
+  },
+  "matriz": [
+    {
+      "producto": "mongodb",
+      "estado": "disponible",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "OK",
+        "autenticacion": "OK",
+        "autorizacion": "OK",
+        "contexto": "OK",
+        "lectura": "OK"
+      },
+      "sondas": "3/3",
+      "api": "OK",
+      "latencia_lectura_ms": 7.8,
+      "diagnostico": "todas las capas ejecutadas terminaron OK"
+    },
+    {
+      "producto": "neo4j",
+      "estado": "disponible",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "OK",
+        "autenticacion": "OK",
+        "autorizacion": "OK",
+        "contexto": "OK",
+        "lectura": "OK"
+      },
+      "sondas": "4/4",
+      "api": "OK",
+      "latencia_lectura_ms": 6.5,
+      "diagnostico": "todas las capas ejecutadas terminaron OK"
+    },
+    {
+      "producto": "cassandra",
+      "estado": "disponible",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "OK",
+        "autenticacion": "OK",
+        "autorizacion": "OK",
+        "contexto": "OK",
+        "lectura": "OK"
+      },
+      "sondas": "3/3",
+      "api": "OK",
+      "latencia_lectura_ms": 74.6,
+      "diagnostico": "todas las capas ejecutadas terminaron OK"
+    },
+    {
+      "producto": "redis",
+      "estado": "disponible",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "OK",
+        "autenticacion": "OK",
+        "autorizacion": "OK",
+        "contexto": "OK",
+        "lectura": "WARN"
+      },
+      "sondas": "2/2",
+      "api": "OK",
+      "latencia_lectura_ms": 1.0,
+      "diagnostico": "observación: EXISTS/TYPE/PTTL: 'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2"
+    },
+    {
+      "producto": "influxdb",
+      "estado": "no configurado",
+      "capas": {
+        "configuracion": "WARN",
+        "resolucion": "SKIP",
+        "tcp": "SKIP",
+        "protocolo": "SKIP",
+        "autenticacion": "SKIP",
+        "autorizacion": "SKIP",
+        "contexto": "SKIP",
+        "lectura": "SKIP"
+      },
+      "sondas": "-",
+      "api": "FAIL",
+      "latencia_lectura_ms": null,
+      "diagnostico": "no hay token: sin token (no existe fixture2030-influxDB/.influxdb3-token) -> producto no configurado"
+    },
+    {
+      "producto": "iris",
+      "estado": "disponible",
+      "capas": {
+        "configuracion": "OK",
+        "resolucion": "OK",
+        "tcp": "OK",
+        "protocolo": "OK",
+        "autenticacion": "OK",
+        "autorizacion": "OK",
+        "contexto": "OK",
+        "lectura": "OK"
+      },
+      "sondas": "3/3",
+      "api": "OK",
+      "latencia_lectura_ms": 80.6,
+      "diagnostico": "todas las capas ejecutadas terminaron OK"
+    }
+  ],
+  "resultados": [
+    {
+      "producto": "mongodb",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "MONGO_HOST=127.0.0.1; MONGO_PORT=27017; MONGO_USER=admin; MONGO_PASSWORD (definida, oculta); MONGO_AUTH_DB=admin; MONGO_DATABASE=fixture2030 [origen: archivo fixture2030-hito-10-api-integrada/.env]",
+      "destino": "(configuración)",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-mongodb: running; puertos publicados: 27017/tcp -> 0.0.0.0:27017. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-mongodb",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 442.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-19T23:16:03.998849415Z"
+      }
+    },
+    {
+      "producto": "mongodb",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:27017",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:27017 listener aceptó la conexión",
+      "destino": "127.0.0.1:27017",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 1.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "protocolo",
+      "prueba": "hello (sin credenciales)",
+      "estado": "OK",
+      "detalle": "primario=True, wire=21, MongoDB 7.0.40",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 8.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "autenticacion",
+      "prueba": "connectionStatus",
+      "estado": "OK",
+      "detalle": "autenticado como admin@admin (roles: root)",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 27.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "autorizacion",
+      "prueba": "listCollections fixture2030",
+      "estado": "OK",
+      "detalle": "permitido en 'fixture2030' (2 colecciones)",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 1.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "contexto",
+      "prueba": "colecciones esperadas",
+      "estado": "OK",
+      "detalle": "database 'fixture2030' con las colecciones del módulo: equipos, jugadores",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "lectura",
+      "prueba": "find_one + count_documents",
+      "estado": "OK",
+      "detalle": "equipos.find_one(_id='ARG') -> Argentina (grupo A); jugadores.count_documents(codigo_equipo='ARG', limit=100) = 23",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 7.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "sonda",
+      "prueba": "documento inexistente",
+      "estado": "OK",
+      "detalle": "equipos.find_one(_id='ZZZ') -> None: ausencia válida",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 2.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "sonda",
+      "prueba": "colección inexistente",
+      "estado": "OK",
+      "detalle": "fixture2030.coleccion_inexistente_h11.find_one() -> None: colección inexistente, sin error del servidor",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 3.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "mongodb",
+      "capa": "sonda",
+      "prueba": "database inexistente",
+      "estado": "OK",
+      "detalle": "fixture2030_inexistente_h11.listCollections -> [] sin error: por eso el contexto verifica colecciones",
+      "destino": "127.0.0.1:27017 database=fixture2030",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 2.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "NEO4J_URI=bolt://127.0.0.1:7687; NEO4J_HTTP_URL=http://127.0.0.1:7474; NEO4J_USER=neo4j; NEO4J_PASSWORD (definida, oculta); NEO4J_DATABASE=neo4j [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-20T00:10:26Z",
+      "duracion_ms": 0.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-neo4j: running; puertos publicados: 7474/tcp -> 0.0.0.0:7474, 7687/tcp -> 0.0.0.0:7687. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 491.6,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-19T22:51:01.089777957Z"
+      }
+    },
+    {
+      "producto": "neo4j",
+      "capa": "portal_http",
+      "prueba": "GET Browser/discovery",
+      "estado": "OK",
+      "detalle": "HTTP 200: Neo4j 2026.07.1 community; anuncia bolt_direct=bolt://127.0.0.1:7687. La API no usa este puerto: no prueba Bolt",
+      "destino": "http://127.0.0.1:7474",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 48.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:7687",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:7687 listener aceptó la conexión",
+      "destino": "127.0.0.1:7687",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 0.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "protocolo",
+      "prueba": "get_server_info (driver)",
+      "estado": "OK",
+      "detalle": "driver Bolt: Neo4j/2026.07.1, protocolo (6, 1); la conexión incluye identidad",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 29.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "autenticacion",
+      "prueba": "verify_authentication",
+      "estado": "OK",
+      "detalle": "usuario 'neo4j' autenticado por Bolt",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 2.6,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "autorizacion",
+      "prueba": "SHOW CURRENT USER",
+      "estado": "OK",
+      "detalle": "identidad 'neo4j' reconocida; roles=null (Community: sin RBAC, toda identidad autenticada puede leer)",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 5.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "contexto",
+      "prueba": "db.info() en 'neo4j'",
+      "estado": "OK",
+      "detalle": "database 'neo4j' seleccionada; etiquetas: Equipo, Jugador, Sede, Partido, Evento",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 10.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "lectura",
+      "prueba": "MATCH parametrizado",
+      "estado": "OK",
+      "detalle": "Partido P-001 (2030-06-10): equipos ARG, ESP [Cypher parametrizado, LIMIT 1, timeout de operación]",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 6.5,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "sonda",
+      "prueba": "partido inexistente",
+      "estado": "OK",
+      "detalle": "partido P-999 -> sin filas: partido inexistente (la API responde 404)",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 4.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "sonda",
+      "prueba": "resultado vacío",
+      "estado": "OK",
+      "detalle": "partido P-002 existe con 0 eventos: resultado vacío válido (la API responde 200 con lista vacía)",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 4.1,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "sonda",
+      "prueba": "database inexistente",
+      "estado": "OK",
+      "detalle": "database 'noexiste_h11' -> Neo.ClientError.Database.DatabaseNotFound: error de contexto, no de conexión (la API lo traduce a 503)",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:27Z",
+      "duracion_ms": 4.5,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "neo4j",
+      "capa": "sonda",
+      "prueba": "error de conexión",
+      "estado": "OK",
+      "detalle": "bolt://127.0.0.1:50460 sin listener -> ServiceUnavailable: error de conexión, distinto de 'sin filas'",
+      "destino": "bolt://127.0.0.1:7687 database=neo4j",
+      "instante": "2026-10-20T00:10:28Z",
+      "duracion_ms": 1014.5,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "CASSANDRA_HOSTS=127.0.0.1; CASSANDRA_PORT=9042; CASSANDRA_KEYSPACE=fixture2030; CASSANDRA_DC=datacenter1; CASSANDRA_TABLA=comentarios_por_partido [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-20T00:10:28Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-cassandra: running (healthy); puertos publicados: 9042/tcp -> 0.0.0.0:9042. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-cassandra",
+      "instante": "2026-10-20T00:10:29Z",
+      "duracion_ms": 464.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-19T23:48:50.908891262Z"
+      }
+    },
+    {
+      "producto": "cassandra",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:9042",
+      "instante": "2026-10-20T00:10:29Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:9042 listener aceptó la conexión",
+      "destino": "127.0.0.1:9042",
+      "instante": "2026-10-20T00:10:29Z",
+      "duracion_ms": 0.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "protocolo",
+      "prueba": "sesión CQL (driver)",
+      "estado": "OK",
+      "detalle": "sesión CQL negociada por cassandra-driver; incluye el intercambio de identidad",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:30Z",
+      "duracion_ms": 1351.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "autenticacion",
+      "prueba": "identidad de la sesión",
+      "estado": "OK",
+      "detalle": "sesión aceptada sin credenciales, igual que la API del laboratorio; no prueba permisos sobre las tablas",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:30Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "autorizacion",
+      "prueba": "SELECT system.local",
+      "estado": "OK",
+      "detalle": "SELECT system.local permitido: Cassandra 5.0.9, cluster 'Fixture2030_Cassandra', DC 'datacenter1'",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:30Z",
+      "duracion_ms": 15.9,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "contexto",
+      "prueba": "metadata keyspace/tabla",
+      "estado": "OK",
+      "detalle": "keyspace 'fixture2030' ({'class': 'SimpleStrategy', 'replication_factor': '1'}); comentarios_por_partido: partición (id_partido, ventana, shard), clustering (id_comentario); DC configurado 'datacenter1'",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:30Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "lectura",
+      "prueba": "SELECT por partición",
+      "estado": "OK",
+      "detalle": "partición completa (P-001, 203006152015, shard 0..3), LIMIT 5 c/u: 5 filas [2, 3, 0, 0]",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 74.6,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "sonda",
+      "prueba": "tabla inexistente",
+      "estado": "OK",
+      "detalle": "InvalidRequest: Error from server: code=2200 [Invalid query] message=\"table tabla_inexistente_h11 does not exist\" -> tabla inexistente; el servidor respondió",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 16.1,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "sonda",
+      "prueba": "keyspace inexistente",
+      "estado": "OK",
+      "detalle": "InvalidRequest: Error from server: code=2200 [Invalid query] message=\"keyspace keyspace_inexistente_h11 does not exist\" -> keyspace inexistente; el servidor respondió",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 14.5,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "cassandra",
+      "capa": "sonda",
+      "prueba": "partición incompleta",
+      "estado": "OK",
+      "detalle": "InvalidRequest: Error from server: code=2200 [Invalid query] message=\"Cannot execute this query as it might involve data filtering and t -> la consulta no respeta el patrón de partición y exigiría ALLOW FILTERING",
+      "destino": "127.0.0.1:9042 keyspace=fixture2030",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 15.9,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "REDIS_HOST=127.0.0.1; REDIS_PORT=6379; REDIS_PASSWORD (vacía); REDIS_DB=0; REDIS_CLAVE_PRUEBA=sesion:S-0001 [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-redis: running; puertos publicados: 6379/tcp -> 0.0.0.0:6379. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-redis",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 430.9,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-19T22:51:01.129717215Z"
+      }
+    },
+    {
+      "producto": "redis",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:6379",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:6379 listener aceptó la conexión",
+      "destino": "127.0.0.1:6379",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 12.6,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "protocolo",
+      "prueba": "PING (redis-py)",
+      "estado": "OK",
+      "detalle": "PING mediante redis-py -> PONG (sin credenciales)",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 27.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "autenticacion",
+      "prueba": "ACL WHOAMI",
+      "estado": "OK",
+      "detalle": "sin contraseña configurada; el servidor acepta la conexión como 'default' (laboratorio)",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 6.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "autorizacion",
+      "prueba": "DBSIZE",
+      "estado": "OK",
+      "detalle": "permitido: 0 claves en la base lógica",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 1.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "contexto",
+      "prueba": "CLIENT INFO + INFO keyspace",
+      "estado": "OK",
+      "detalle": "Redis 8.10.2; base lógica db=0: 0 claves, 0 con TTL",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 3.1,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "lectura",
+      "prueba": "EXISTS/TYPE/PTTL",
+      "estado": "WARN",
+      "detalle": "'sesion:S-0001' ausente o expirada: EXISTS 0, PTTL -2",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 1.0,
+      "hipotesis": "Redis respondió normalmente: la clave no existe (nunca se cargó o ya venció su TTL). Ausente y expirada se ven igual (-2); ninguna de las dos es 'Redis caído'.",
+      "siguiente_paso": "Recargar fixture2030-redis/scripts/carga_muestra.redis si se necesita la sesión de prueba.",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "sonda",
+      "prueba": "clave ausente",
+      "estado": "OK",
+      "detalle": "EXISTS diag:h11:inexistente:32ecef8c = 0, PTTL = -2: ausencia válida (nil), no es error",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 1.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "sonda",
+      "prueba": "clave expirada",
+      "estado": "SKIP",
+      "detalle": "desactivada (REDIS_SONDA_EXPIRACION=0): escribe una clave diag: de 1,5 s",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:31Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "redis",
+      "capa": "sonda",
+      "prueba": "Redis no disponible",
+      "estado": "OK",
+      "detalle": "127.0.0.1:50471 sin servidor -> TimeoutError en 2004 ms: excepción, distinta de nil (la API responde 503/504, nunca 404). En Windows el rechazo en 127.0.0.1 tarda ~2 s (reintentos de SYN): con TIMEOUT_CONEXION_S=2 la caída se informa como timeout (504).",
+      "destino": "127.0.0.1:6379 db=0",
+      "instante": "2026-10-20T00:10:33Z",
+      "duracion_ms": 2008.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "INFLUX_URL=http://127.0.0.1:8181; INFLUX_DATABASE=fixture2030; INFLUX_TOKEN (vacía); INFLUX_TOKEN_FILE=../fixture2030-influxDB/.influxdb3-token [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-20T00:10:33Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "configuracion",
+      "prueba": "origen del token",
+      "estado": "WARN",
+      "detalle": "no hay token: sin token (no existe fixture2030-influxDB/.influxdb3-token) -> producto no configurado",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-20T00:10:33Z",
+      "duracion_ms": null,
+      "hipotesis": "Sin token no se puede pasar de la capa de protocolo.",
+      "siguiente_paso": "Definir INFLUX_TOKEN o generar el archivo con fixture2030-influxDB/scripts/inicializacion.sh.",
+      "datos": {
+        "no_configurado": true
+      }
+    },
+    {
+      "producto": "influxdb",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-influxdb: running; puertos publicados: 8181/tcp -> 127.0.0.1:8181. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-influxdb",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 432.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-20T00:07:49.474857202Z"
+      }
+    },
+    {
+      "producto": "influxdb",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "127.0.0.1:8181",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "127.0.0.1:8181",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "protocolo",
+      "prueba": "GET /health (sin token)",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "autenticacion",
+      "prueba": "GET /health (con token)",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "autorizacion",
+      "prueba": "listar databases",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "contexto",
+      "prueba": "database + tabla",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "lectura",
+      "prueba": "COUNT acotado por tiempo",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "influxdb",
+      "capa": "lectura",
+      "prueba": "agregación date_bin",
+      "estado": "SKIP",
+      "detalle": "no evaluada: no ejecutada: falta el token de InfluxDB",
+      "destino": "http://127.0.0.1:8181 database=fixture2030",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": null,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "configuracion",
+      "prueba": "variables",
+      "estado": "OK",
+      "detalle": "IRIS_HOST=127.0.0.1; IRIS_PORT=1972; IRIS_PORTAL_URL=http://127.0.0.1:52773/csp/sys/UtilHome.csp; IRIS_NAMESPACE=USER; IRIS_USER=fixture_api_read; IRIS_PASSWORD (definida, oculta) [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]",
+      "destino": "(configuración)",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "contenedor",
+      "prueba": "docker inspect",
+      "estado": "OK",
+      "detalle": "fixture2030-iris: running (healthy); puertos publicados: 1972/tcp -> 0.0.0.0:1972, 52773/tcp -> 0.0.0.0:52773. Activo no implica disponible: lo deciden las capas siguientes",
+      "destino": "fixture2030-iris",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 428.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "inicio": "2026-10-19T22:51:01.144727812Z"
+      }
+    },
+    {
+      "producto": "iris",
+      "capa": "portal_http",
+      "prueba": "GET Management Portal",
+      "estado": "OK",
+      "detalle": "HTTP 200: el Management Portal responde. La API no usa este puerto: no prueba el Superserver",
+      "destino": "http://127.0.0.1:52773/csp/sys/UtilHome.csp",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 65.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "resolucion",
+      "prueba": "getaddrinfo",
+      "estado": "OK",
+      "detalle": "'127.0.0.1' es una dirección IP literal: no requiere DNS",
+      "destino": "127.0.0.1:1972",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 0.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "tcp",
+      "prueba": "connect()",
+      "estado": "OK",
+      "detalle": "127.0.0.1:1972 listener aceptó la conexión",
+      "destino": "127.0.0.1:1972",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 15.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "protocolo",
+      "prueba": "handshake Superserver",
+      "estado": "OK",
+      "detalle": "el Superserver completó el handshake",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 44.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "autenticacion",
+      "prueba": "login en USER",
+      "estado": "OK",
+      "detalle": "usuario 'fixture_api_read' aceptado en el namespace 'USER'",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 44.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "autorizacion",
+      "prueba": "%SYSTEM.Version.GetNumber",
+      "estado": "OK",
+      "detalle": "Native API puede ejecutar métodos de clase: IRIS 2026.2",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 1.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "contexto",
+      "prueba": "namespace + clase",
+      "estado": "OK",
+      "detalle": "namespace activo 'USER'; clase Fixture.Partido compilada",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 3.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "lectura",
+      "prueba": "SELECT del acta (DB-API)",
+      "estado": "OK",
+      "detalle": "SELECT parametrizado: acta 'P-009', estado 'Finalizado', sede 'Estadio Centenario'",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 80.6,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "sonda",
+      "prueba": "objeto inexistente",
+      "estado": "OK",
+      "detalle": "SELECT de 'P-999' sin filas: ausencia de negocio (HTTP 404), no falla de conexión",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 1.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "sonda",
+      "prueba": "clase inexistente",
+      "estado": "OK",
+      "detalle": "<CLASS DOES NOT EXIST>XDCall+11^%SYS.DBSRV.1: error de metadato, no de conexión",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 1.6,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "iris",
+      "capa": "sonda",
+      "prueba": "namespace incorrecto",
+      "estado": "OK",
+      "detalle": "%SYS.Namespace.Exists('NOEXISTE_H11') = 0: con un namespace inexistente iris.connect devuelve 'Access Denied', igual que una credencial inválida; esta consulta los distingue sin provocar logins fallidos",
+      "destino": "127.0.0.1:1972 namespace=USER",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 0.9,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {}
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "liveness",
+      "estado": "OK",
+      "detalle": "HTTP 200 -> exito | estado=up [no consulta bases]",
+      "destino": "GET http://127.0.0.1:50435/health/live",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 2.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-01",
+        "dependencias": [],
+        "metodo": "GET",
+        "path": "/health/live",
+        "esperado": [
+          "exito"
+        ],
+        "status": 200,
+        "clase": "exito",
+        "x_request_id": "h11-025d2e-01",
+        "resumen": "estado=up"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "readiness",
+      "estado": "WARN",
+      "detalle": "HTTP 200 -> exito | listo=True estado=degraded no_disponibles=['influxdb'] [diagnóstico reutilizado (TTL)]",
+      "destino": "GET http://127.0.0.1:50435/health/ready",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 3.0,
+      "hipotesis": "El diagnóstico de la API informa fuentes no disponibles: influxdb.",
+      "siguiente_paso": "Ver la fila de esas fuentes en la matriz y sus pruebas nativas.",
+      "datos": {
+        "request_id": "h11-025d2e-02",
+        "dependencias": [
+          "influxdb"
+        ],
+        "metodo": "GET",
+        "path": "/health/ready",
+        "esperado": [
+          "exito"
+        ],
+        "status": 200,
+        "clase": "exito",
+        "x_request_id": "h11-025d2e-02",
+        "resumen": "listo=True estado=degraded no_disponibles=['influxdb']",
+        "degrada": true
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "diagnóstico por dependencia",
+      "estado": "WARN",
+      "detalle": "HTTP 200 -> exito | estado=degraded mongodb=up neo4j=up cassandra=up redis=up influxdb=not_configured iris=up",
+      "destino": "GET http://127.0.0.1:50435/health/dependencias?refrescar=true",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 21.8,
+      "hipotesis": "El diagnóstico de la API informa fuentes no disponibles: influxdb.",
+      "siguiente_paso": "Ver la fila de esas fuentes en la matriz y sus pruebas nativas.",
+      "datos": {
+        "request_id": "h11-025d2e-03",
+        "dependencias": [
+          "influxdb"
+        ],
+        "metodo": "GET",
+        "path": "/health/dependencias?refrescar=true",
+        "esperado": [
+          "exito"
+        ],
+        "status": 200,
+        "clase": "exito",
+        "x_request_id": "h11-025d2e-03",
+        "resumen": "estado=degraded mongodb=up neo4j=up cassandra=up redis=up influxdb=not_configured iris=up",
+        "degrada": true
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU01 equipo",
+      "estado": "OK",
+      "detalle": "HTTP 200 -> exito | nombre=Argentina",
+      "destino": "GET http://127.0.0.1:50435/equipos/ARG",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 24.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-04",
+        "dependencias": [
+          "mongodb"
+        ],
+        "metodo": "GET",
+        "path": "/equipos/ARG",
+        "esperado": [
+          "exito"
+        ],
+        "status": 200,
+        "clase": "exito",
+        "x_request_id": "h11-025d2e-04",
+        "resumen": "nombre=Argentina"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU01 equipo inexistente",
+      "estado": "OK",
+      "detalle": "HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO",
+      "destino": "GET http://127.0.0.1:50435/equipos/XYZ",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 15.0,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-05",
+        "dependencias": [
+          "mongodb"
+        ],
+        "metodo": "GET",
+        "path": "/equipos/XYZ",
+        "esperado": [
+          "recurso_inexistente"
+        ],
+        "status": 404,
+        "clase": "recurso_inexistente",
+        "x_request_id": "h11-025d2e-05",
+        "resumen": "RECURSO_NO_ENCONTRADO"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU01 código inválido",
+      "estado": "OK",
+      "detalle": "HTTP 400 -> error_validacion | VALIDACION [no llega a la base]",
+      "destino": "GET http://127.0.0.1:50435/equipos/arg",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 1.9,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-06",
+        "dependencias": [],
+        "metodo": "GET",
+        "path": "/equipos/arg",
+        "esperado": [
+          "error_validacion"
+        ],
+        "status": 400,
+        "clase": "error_validacion",
+        "x_request_id": "h11-025d2e-06",
+        "resumen": "VALIDACION"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU06 eventos",
+      "estado": "OK",
+      "detalle": "HTTP 200 -> exito | eventos: 1",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-001/eventos?limit=5",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 7.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-07",
+        "dependencias": [
+          "neo4j"
+        ],
+        "metodo": "GET",
+        "path": "/partidos/P-001/eventos?limit=5",
+        "esperado": [
+          "exito"
+        ],
+        "status": 200,
+        "clase": "exito",
+        "x_request_id": "h11-025d2e-07",
+        "resumen": "eventos: 1"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU06 partido sin eventos",
+      "estado": "OK",
+      "detalle": "HTTP 200 -> respuesta_vacia_valida | eventos: 0",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-002/eventos",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 24.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-08",
+        "dependencias": [
+          "neo4j"
+        ],
+        "metodo": "GET",
+        "path": "/partidos/P-002/eventos",
+        "esperado": [
+          "respuesta_vacia_valida"
+        ],
+        "status": 200,
+        "clase": "respuesta_vacia_valida",
+        "x_request_id": "h11-025d2e-08",
+        "resumen": "eventos: 0"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU06 partido inexistente",
+      "estado": "OK",
+      "detalle": "HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-999/eventos",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 32.7,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-09",
+        "dependencias": [
+          "neo4j"
+        ],
+        "metodo": "GET",
+        "path": "/partidos/P-999/eventos",
+        "esperado": [
+          "recurso_inexistente"
+        ],
+        "status": 404,
+        "clase": "recurso_inexistente",
+        "x_request_id": "h11-025d2e-09",
+        "resumen": "RECURSO_NO_ENCONTRADO"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU08 muro de comentarios",
+      "estado": "OK",
+      "detalle": "HTTP 200 -> exito | items: 5",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-001/comentarios?ventana=203006152015&limit=5",
+      "instante": "2026-10-20T00:10:34Z",
+      "duracion_ms": 10.3,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-10",
+        "dependencias": [
+          "cassandra"
+        ],
+        "metodo": "GET",
+        "path": "/partidos/P-001/comentarios?ventana=203006152015&limit=5",
+        "esperado": [
+          "exito"
+        ],
+        "status": 200,
+        "clase": "exito",
+        "x_request_id": "h11-025d2e-10",
+        "resumen": "items: 5"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU08 ventana sin comentarios",
+      "estado": "OK",
+      "detalle": "HTTP 200 -> respuesta_vacia_valida | items: 0",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-001/comentarios?ventana=203001010000",
+      "instante": "2026-10-20T00:10:35Z",
+      "duracion_ms": 15.9,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-11",
+        "dependencias": [
+          "cassandra"
+        ],
+        "metodo": "GET",
+        "path": "/partidos/P-001/comentarios?ventana=203001010000",
+        "esperado": [
+          "respuesta_vacia_valida"
+        ],
+        "status": 200,
+        "clase": "respuesta_vacia_valida",
+        "x_request_id": "h11-025d2e-11",
+        "resumen": "items: 0"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU10 sesión",
+      "estado": "OK",
+      "detalle": "HTTP 404 -> recurso_inexistente | SESION_NO_VIGENTE [las sesiones de muestra expiran a los 30 min: 404 SESION_NO_VIGENTE también es válido]",
+      "destino": "GET http://127.0.0.1:50435/sesiones/S-0001",
+      "instante": "2026-10-20T00:10:35Z",
+      "duracion_ms": 4.2,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-12",
+        "dependencias": [
+          "redis"
+        ],
+        "metodo": "GET",
+        "path": "/sesiones/S-0001",
+        "esperado": [
+          "exito",
+          "recurso_inexistente"
+        ],
+        "status": 404,
+        "clase": "recurso_inexistente",
+        "x_request_id": "h11-025d2e-12",
+        "resumen": "SESION_NO_VIGENTE"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU12 estadísticas",
+      "estado": "FAIL",
+      "detalle": "HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-001/estadisticas?desde=2030-06-10T20%3A00%3A00Z&hasta=2030-06-10T20%3A15%3A00Z&resolucion=5m",
+      "instante": "2026-10-20T00:10:35Z",
+      "duracion_ms": 3.0,
+      "hipotesis": "API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb). La API identifica la fuente en lugar de responder 200 vacío.",
+      "siguiente_paso": "Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.",
+      "datos": {
+        "request_id": "h11-025d2e-13",
+        "dependencias": [
+          "influxdb"
+        ],
+        "metodo": "GET",
+        "path": "/partidos/P-001/estadisticas?desde=2030-06-10T20%3A00%3A00Z&hasta=2030-06-10T20%3A15%3A00Z&resolucion=5m",
+        "esperado": [
+          "exito"
+        ],
+        "status": 503,
+        "clase": "dependencia_no_disponible",
+        "x_request_id": "h11-025d2e-13",
+        "resumen": "DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU12 ventana sin puntos",
+      "estado": "FAIL",
+      "detalle": "HTTP 503 -> dependencia_no_disponible | DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-001/estadisticas?desde=2031-01-01T00%3A00%3A00Z&hasta=2031-01-01T01%3A00%3A00Z",
+      "instante": "2026-10-20T00:10:35Z",
+      "duracion_ms": 2.4,
+      "hipotesis": "API alcanzable, dependencia fallida: DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb). La API identifica la fuente en lugar de responder 200 vacío.",
+      "siguiente_paso": "Contrastar con las pruebas nativas del mismo producto: si el cliente nativo funciona, revisar la configuración de la API.",
+      "datos": {
+        "request_id": "h11-025d2e-14",
+        "dependencias": [
+          "influxdb"
+        ],
+        "metodo": "GET",
+        "path": "/partidos/P-001/estadisticas?desde=2031-01-01T00%3A00%3A00Z&hasta=2031-01-01T01%3A00%3A00Z",
+        "esperado": [
+          "respuesta_vacia_valida"
+        ],
+        "status": 503,
+        "clase": "dependencia_no_disponible",
+        "x_request_id": "h11-025d2e-14",
+        "resumen": "DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU12 intervalo invertido",
+      "estado": "OK",
+      "detalle": "HTTP 400 -> error_validacion | VALIDACION",
+      "destino": "GET http://127.0.0.1:50435/partidos/P-001/estadisticas?desde=2030-06-10T22%3A00%3A00Z&hasta=2030-06-10T20%3A00%3A00Z",
+      "instante": "2026-10-20T00:10:35Z",
+      "duracion_ms": 2.8,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-15",
+        "dependencias": [],
+        "metodo": "GET",
+        "path": "/partidos/P-001/estadisticas?desde=2030-06-10T22%3A00%3A00Z&hasta=2030-06-10T20%3A00%3A00Z",
+        "esperado": [
+          "error_validacion"
+        ],
+        "status": 400,
+        "clase": "error_validacion",
+        "x_request_id": "h11-025d2e-15",
+        "resumen": "VALIDACION"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU13 acta oficial",
+      "estado": "OK",
+      "detalle": "HTTP 200 -> exito | eventos: 2",
+      "destino": "GET http://127.0.0.1:50435/partidos-oficiales/P-009",
+      "instante": "2026-10-20T00:10:35Z",
+      "duracion_ms": 4.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-16",
+        "dependencias": [
+          "iris"
+        ],
+        "metodo": "GET",
+        "path": "/partidos-oficiales/P-009",
+        "esperado": [
+          "exito"
+        ],
+        "status": 200,
+        "clase": "exito",
+        "x_request_id": "h11-025d2e-16",
+        "resumen": "eventos: 2"
+      }
+    },
+    {
+      "producto": "api",
+      "capa": "api",
+      "prueba": "CU13 acta inexistente",
+      "estado": "OK",
+      "detalle": "HTTP 404 -> recurso_inexistente | RECURSO_NO_ENCONTRADO",
+      "destino": "GET http://127.0.0.1:50435/partidos-oficiales/P-999",
+      "instante": "2026-10-20T00:10:35Z",
+      "duracion_ms": 3.4,
+      "hipotesis": "",
+      "siguiente_paso": "",
+      "datos": {
+        "request_id": "h11-025d2e-17",
+        "dependencias": [
+          "iris"
+        ],
+        "metodo": "GET",
+        "path": "/partidos-oficiales/P-999",
+        "esperado": [
+          "recurso_inexistente"
+        ],
+        "status": 404,
+        "clase": "recurso_inexistente",
+        "x_request_id": "h11-025d2e-17",
+        "resumen": "RECURSO_NO_ENCONTRADO"
+      }
+    }
+  ],
+  "api": [
+    {
+      "request_id": "h11-025d2e-01",
+      "dependencias": [],
+      "metodo": "GET",
+      "path": "/health/live",
+      "esperado": [
+        "exito"
+      ],
+      "status": 200,
+      "clase": "exito",
+      "x_request_id": "h11-025d2e-01",
+      "resumen": "estado=up",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-02",
+      "dependencias": [
+        "influxdb"
+      ],
+      "metodo": "GET",
+      "path": "/health/ready",
+      "esperado": [
+        "exito"
+      ],
+      "status": 200,
+      "clase": "exito",
+      "x_request_id": "h11-025d2e-02",
+      "resumen": "listo=True estado=degraded no_disponibles=['influxdb']",
+      "degrada": true,
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-03",
+      "dependencias": [
+        "influxdb"
+      ],
+      "metodo": "GET",
+      "path": "/health/dependencias?refrescar=true",
+      "esperado": [
+        "exito"
+      ],
+      "status": 200,
+      "clase": "exito",
+      "x_request_id": "h11-025d2e-03",
+      "resumen": "estado=degraded mongodb=up neo4j=up cassandra=up redis=up influxdb=not_configured iris=up",
+      "degrada": true,
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-04",
+      "dependencias": [
+        "mongodb"
+      ],
+      "metodo": "GET",
+      "path": "/equipos/ARG",
+      "esperado": [
+        "exito"
+      ],
+      "status": 200,
+      "clase": "exito",
+      "x_request_id": "h11-025d2e-04",
+      "resumen": "nombre=Argentina",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-05",
+      "dependencias": [
+        "mongodb"
+      ],
+      "metodo": "GET",
+      "path": "/equipos/XYZ",
+      "esperado": [
+        "recurso_inexistente"
+      ],
+      "status": 404,
+      "clase": "recurso_inexistente",
+      "x_request_id": "h11-025d2e-05",
+      "resumen": "RECURSO_NO_ENCONTRADO",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-06",
+      "dependencias": [],
+      "metodo": "GET",
+      "path": "/equipos/arg",
+      "esperado": [
+        "error_validacion"
+      ],
+      "status": 400,
+      "clase": "error_validacion",
+      "x_request_id": "h11-025d2e-06",
+      "resumen": "VALIDACION",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-07",
+      "dependencias": [
+        "neo4j"
+      ],
+      "metodo": "GET",
+      "path": "/partidos/P-001/eventos?limit=5",
+      "esperado": [
+        "exito"
+      ],
+      "status": 200,
+      "clase": "exito",
+      "x_request_id": "h11-025d2e-07",
+      "resumen": "eventos: 1",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-08",
+      "dependencias": [
+        "neo4j"
+      ],
+      "metodo": "GET",
+      "path": "/partidos/P-002/eventos",
+      "esperado": [
+        "respuesta_vacia_valida"
+      ],
+      "status": 200,
+      "clase": "respuesta_vacia_valida",
+      "x_request_id": "h11-025d2e-08",
+      "resumen": "eventos: 0",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-09",
+      "dependencias": [
+        "neo4j"
+      ],
+      "metodo": "GET",
+      "path": "/partidos/P-999/eventos",
+      "esperado": [
+        "recurso_inexistente"
+      ],
+      "status": 404,
+      "clase": "recurso_inexistente",
+      "x_request_id": "h11-025d2e-09",
+      "resumen": "RECURSO_NO_ENCONTRADO",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-10",
+      "dependencias": [
+        "cassandra"
+      ],
+      "metodo": "GET",
+      "path": "/partidos/P-001/comentarios?ventana=203006152015&limit=5",
+      "esperado": [
+        "exito"
+      ],
+      "status": 200,
+      "clase": "exito",
+      "x_request_id": "h11-025d2e-10",
+      "resumen": "items: 5",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-11",
+      "dependencias": [
+        "cassandra"
+      ],
+      "metodo": "GET",
+      "path": "/partidos/P-001/comentarios?ventana=203001010000",
+      "esperado": [
+        "respuesta_vacia_valida"
+      ],
+      "status": 200,
+      "clase": "respuesta_vacia_valida",
+      "x_request_id": "h11-025d2e-11",
+      "resumen": "items: 0",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-12",
+      "dependencias": [
+        "redis"
+      ],
+      "metodo": "GET",
+      "path": "/sesiones/S-0001",
+      "esperado": [
+        "exito",
+        "recurso_inexistente"
+      ],
+      "status": 404,
+      "clase": "recurso_inexistente",
+      "x_request_id": "h11-025d2e-12",
+      "resumen": "SESION_NO_VIGENTE",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-13",
+      "dependencias": [
+        "influxdb"
+      ],
+      "metodo": "GET",
+      "path": "/partidos/P-001/estadisticas?desde=2030-06-10T20%3A00%3A00Z&hasta=2030-06-10T20%3A15%3A00Z&resolucion=5m",
+      "esperado": [
+        "exito"
+      ],
+      "status": 503,
+      "clase": "dependencia_no_disponible",
+      "x_request_id": "h11-025d2e-13",
+      "resumen": "DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-14",
+      "dependencias": [
+        "influxdb"
+      ],
+      "metodo": "GET",
+      "path": "/partidos/P-001/estadisticas?desde=2031-01-01T00%3A00%3A00Z&hasta=2031-01-01T01%3A00%3A00Z",
+      "esperado": [
+        "respuesta_vacia_valida"
+      ],
+      "status": 503,
+      "clase": "dependencia_no_disponible",
+      "x_request_id": "h11-025d2e-14",
+      "resumen": "DEPENDENCIA_NO_DISPONIBLE (dependencia=influxdb)",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-15",
+      "dependencias": [],
+      "metodo": "GET",
+      "path": "/partidos/P-001/estadisticas?desde=2030-06-10T22%3A00%3A00Z&hasta=2030-06-10T20%3A00%3A00Z",
+      "esperado": [
+        "error_validacion"
+      ],
+      "status": 400,
+      "clase": "error_validacion",
+      "x_request_id": "h11-025d2e-15",
+      "resumen": "VALIDACION",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-16",
+      "dependencias": [
+        "iris"
+      ],
+      "metodo": "GET",
+      "path": "/partidos-oficiales/P-009",
+      "esperado": [
+        "exito"
+      ],
+      "status": 200,
+      "clase": "exito",
+      "x_request_id": "h11-025d2e-16",
+      "resumen": "eventos: 2",
+      "log": []
+    },
+    {
+      "request_id": "h11-025d2e-17",
+      "dependencias": [
+        "iris"
+      ],
+      "metodo": "GET",
+      "path": "/partidos-oficiales/P-999",
+      "esperado": [
+        "recurso_inexistente"
+      ],
+      "status": 404,
+      "clase": "recurso_inexistente",
+      "x_request_id": "h11-025d2e-17",
+      "resumen": "RECURSO_NO_ENCONTRADO",
+      "log": []
+    }
+  ]
+}

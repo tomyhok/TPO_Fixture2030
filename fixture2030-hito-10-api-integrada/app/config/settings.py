@@ -73,10 +73,6 @@ class Settings(BaseSettings):
     iris_user: str = "fixture_api"
     iris_password: SecretStr = SecretStr("")
 
-    # --- Reglas de negocio configurables ---
-    cache_partido_ttl_s: int = 300
-    idempotencia_ttl_s: int = 86400
-
     # --- Diagnóstico de salud (Hito 11) ---
     # El chequeo profundo de /health/ready y /health/dependencias se reutiliza
     # durante este tiempo para no consultar las seis bases en cada llamada.

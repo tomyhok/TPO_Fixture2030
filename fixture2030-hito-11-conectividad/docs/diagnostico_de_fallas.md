@@ -1,5 +1,12 @@
 # Diagnóstico de fallas y comportamiento de la API
 
+> Revisión del 19/10/2026: los archivos de evidencia del 17/10 son históricos.
+> La implementación actual usa drivers oficiales, valida las respuestas negativas
+> y corrige el resumen y el modo estricto. No se deben atribuir los resultados
+> anteriores al código corregido. Ver [walkthrough de las correcciones](walkthrough_correcciones.md)
+> y [evidencia nueva](evidencia/revision_2026-10-19/README.md).
+
+
 Grupo 4 — Ingeniería de Datos II — Fixture 2030
 
 Cubre RF17, RF18, RF20, RF21, RNF10, RNF12 y las secciones 5.7 y 6 ("No se

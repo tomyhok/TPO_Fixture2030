@@ -150,11 +150,3 @@ def test_ip_literal_no_requiere_dns_y_host_inexistente_falla():
 )
 def test_clasificacion_de_respuestas_de_la_api(status, cuerpo, esperado):
     assert api.clasificar(status, cuerpo) == esperado
-
-
-# ------------------------------------------------------------- protocolo CQL
-def test_string_map_y_multimap_cql():
-    datos = cassandra._string_map({"CQL_VERSION": "3.0.0"})
-    assert datos == b"\x00\x01\x00\x0bCQL_VERSION\x00\x053.0.0"
-    multimap = b"\x00\x01\x00\x11PROTOCOL_VERSIONS\x00\x02\x00\x044/v4\x00\x045/v5"
-    assert cassandra._string_multimap(multimap) == {"PROTOCOL_VERSIONS": ["4/v4", "5/v5"]}

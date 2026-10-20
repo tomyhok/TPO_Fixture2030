@@ -1,119 +1,54 @@
-# Módulo Hito 9: Entidades Complejas en InterSystems IRIS
+# Grupo 4 — Hito 9: entidades complejas en IRIS
 
-Este módulo implementa la abstracción orientada a objetos de una porción compleja del dominio del Fixture 2030. Se han construido clases persistentes en InterSystems IRIS para gestionar entidades que exceden el simple almacenamiento de datos, encapsulando integridad referencial, jerarquías y validaciones directamente en la base de datos.
+El modelo demuestra identidad, herencia, relación padre-hijo, guardado, navegación y proyección
+SQL con los contenidos de la Clase 10. La corrección reduce los mecanismos adicionales.
 
-## 1. Diagrama de Objetos (UML)
+## Modelo y alcance
 
-A continuación se presenta el modelo estructural diseñado, utilizando herencia clásica y una relación fuerte Padre-Hijo.
+`Persona` tiene Nombre, Apellido y DNI tipados y obligatorios. `Arbitro` hereda Persona y agrega
+Rango; `Tecnico` agrega Licencia. `Partido` tiene Sede, Fecha, Estado, referencia a Arbitro y
+una colección de hijos Evento. Evento tiene Minuto, Tipo, Descripcion y relación inversa al padre.
+Codigo permite identificar el partido para la integración posterior; su índice único evita
+duplicar ese identificador. Es opcional para conservar objetos de la demostración anterior.
 
-```mermaid
-classDiagram
-    class Fixture_Persona {
-        <<%Persistent>>
-        +String Nombre [Required]
-        +String Apellido [Required]
-        +String DNI [Required]
-    }
+Se conservan propiedades tipadas y Required. Se eliminan listas de valores, límites de rango
+y el callback de guardado. No se introduce una regla distinta para cada atributo.
+La **única regla de dominio** es `Partido.AgregarEvento`: rechaza agregar un evento cuando el
+partido ya está Finalizado. El método encapsula creación del hijo, asociación y `%Save()`.
+El ejemplo enseña a usar ese método: no pretende impedir modificaciones externas mediante SQL
+o acceso directo a la colección. Una política global de autorización queda fuera del hito.
 
-    class Fixture_Arbitro {
-        +String Rango [Required, VALUELIST: FIFA | Nacional]
-    }
+## Ejecutar
 
-    class Fixture_Tecnico {
-        +String Licencia [Required]
-    }
+Con Docker disponible, levantar el servicio con el Compose raíz o el del módulo, usando uno
+solo. El almacenamiento durable sigue en el directorio del host configurado en Compose.
+No es necesario borrar datos existentes para compilar esta corrección.
 
-    Fixture_Persona <|-- Fixture_Arbitro : Extends
-    Fixture_Persona <|-- Fixture_Tecnico : Extends
-
-    class Fixture_Partido {
-        <<%Persistent>>
-        +String Sede [Required]
-        +Date Fecha [Required]
-        +String Estado [Required, VALUELIST: Programado | En Juego | Finalizado]
-        +Fixture_Arbitro Arbitro [Required]
-        +Relationship Eventos (children)
-    }
-
-    class Fixture_Evento {
-        <<%Persistent>>
-        +Integer Minuto [Required, MINVAL 1, MAXVAL 130]
-        +String Tipo [Required, VALUELIST: Gol | Tarjeta Amarilla | Tarjeta Roja | Cambio]
-        +String Descripcion
-        +Relationship Partido (parent)
-        +Index PartidoIndex(Partido)
-        -%OnBeforeSave(insert:%Boolean): %Status
-    }
-
-    Fixture_Partido "1" *-- "N" Fixture_Evento : Eventos / Partido
-    Fixture_Partido "N" --> "1" Fixture_Arbitro : Arbitro
+```sh
+docker exec -it fixture2030-iris iris session IRIS -U USER
 ```
 
-## 2. Matriz de Integridad
+En ObjectScript:
 
-Las reglas de integridad implementadas garantizan la consistencia del modelo directamente en la base de datos, sin depender de la aplicación (ORM externo):
+```objectscript
+Do $SYSTEM.OBJ.Load("/scripts/Fixture.Clases.cls","ck")
+Do $SYSTEM.OBJ.Load("/scripts/DemoOperaciones.mac","ck")
+Do ^DemoOperaciones
+```
 
-| Regla de Integridad | Implementación en IRIS | Comportamiento en la Base de Datos |
-| :--- | :--- | :--- |
-| **Integridad Referencial Bidireccional** | Relación `parent`/`children` entre `Partido` y `Evento`. | Al insertar un Evento en la colección de un Partido, IRIS actualiza la propiedad inversa: desde el evento se llega a su partido (`evento.Partido.Sede`) y desde el partido a sus eventos. |
-| **Dependencia de Ciclo de Vida (Borrado en Cascada)** | `[ Cardinality = children ]` en `Eventos`. El ID del evento es `idPartido\|\|n`. | Si se borra un `Partido` (`%DeleteId()`), IRIS borra todos sus `Eventos`: un evento no tiene sentido sin su partido. |
-| **Guardado atómico del grafo** | Un solo `%Save()` sobre el padre. | Se guardan el partido y sus eventos juntos. Si algún evento es inválido (por ejemplo, minuto 0), no se guarda nada, tampoco el partido. |
-| **Árbitro obligatorio** | `Property Arbitro As Fixture.Arbitro [ Required ]` en `Partido`. | No se puede guardar un partido sin árbitro asignado. Solo se acepta un objeto `Arbitro`, no cualquier `Persona`. Borrar un árbitro no borra sus partidos. |
-| **Campos Obligatorios** | `[ Required ]` en las propiedades clave. | Si se intenta guardar un Partido sin `Sede`, o una Persona sin `DNI`, el guardado es rechazado con un error. |
-| **Valores permitidos** | `VALUELIST` en `Estado`, `Tipo` y `Rango`; `MINVAL`/`MAXVAL` en `Minuto`. | Se rechazan estados o tipos de evento que no estén en la lista y minutos fuera de 1..130 (por ejemplo, un evento en el minuto 0). |
-| **Validación de Transición de Estado** | `%OnBeforeSave()` en `Fixture.Evento`. | Prohíbe insertar eventos nuevos si el `Partido` está en estado "Finalizado". El guardado se aborta si no pasa la regla. |
+La rutina crea P-009 si no existe; una segunda ejecución conserva esa muestra y avisa.
+No borra ni reinicia actas ajenas. Muestra herencia, un `%Save()` del padre con sus dos hijos,
+reapertura y navegación del árbitro/hijos/padre, y SELECT sobre la misma proyección mediante
+`%SQL.Statement.%ExecDirect`. El guardado sin Sede demuestra Required. Finalmente guarda
+Finalizado y verifica que AgregarEvento es rechazado sin cambiar la cantidad de eventos.
 
-## 3. Código Fuente del Dominio
+## Evidencia
 
-Todo el código de dominio y las entidades están centralizados en el archivo XML de importación unificado: 
-- [`scripts/Fixture.Clases.cls`](scripts/Fixture.Clases.cls)
+[Compilación y demostración real](docs/revision_2026-10-19/compilacion_y_demo.txt): cinco clases
+compiladas, partido guardado con dos eventos, navegación y SQL, rechazo de propiedad obligatoria
+omitida y `REGLA_OK`, eventos antes=2 y después=2. Antes de compilar se exportaron las definiciones
+del entorno como respaldo local. No se borraron objetos existentes.
 
-Esta definición empaqueta las clases base (`Persona`), herencias especializadas (`Arbitro`, `Tecnico`), y el agregado complejo padre-hijo (`Partido` y `Evento`).
-
-## 4. Operativa
-
-Para compilar, instanciar y navegar los objetos en el entorno local (cumpliendo RNF2 y RNF4):
-
-1. Crear el directorio durable con los permisos que indica la Clase 10 y levantar el servicio (desde `fixture2030-iris/`):
-   ```bash
-   mkdir -p ~/docker/data/iris
-   sudo chown -R "$(id -u):$(id -g)" ~/docker/data/iris
-   sudo chmod -R 777 ~/docker/data/iris
-   docker compose up -d
-   docker compose ps
-   ```
-   Si el contenedor no puede escribir en `/durable`, hacer `docker compose down`, repetir el `chown` y el `chmod`, y volver a levantarlo.
-2. Ingresar al terminal de ObjectScript del contenedor:
-   ```bash
-   docker exec -it fixture2030-iris iris session IRIS
-   ```
-3. Dentro del prompt `USER>`, importar y compilar las clases del modelo y el script de la demo:
-   ```objectscript
-   Do $system.OBJ.Load("/scripts/Fixture.Clases.cls", "ck")
-   Do $system.OBJ.Load("/scripts/DemoOperaciones.mac", "ck")
-   ```
-4. Ejecutar la demostración operativa:
-   ```objectscript
-   Do ^DemoOperaciones
-   ```
-
-El script de demostración (`scripts/DemoOperaciones.mac`) realiza automáticamente las siguientes comprobaciones:
-- **Herencia (RF4):** Crea un `Arbitro` y un `Tecnico`, que extienden `Persona`.
-- **Carga atómica (RF6):** Crea un partido con su árbitro y dos eventos en memoria y ejecuta un único `%Save()` sobre el padre para guardar el grafo entero.
-- **Navegación (RF7):** Abre el partido guardado desde el disco mediante `%OpenId()`, navega al árbitro (`partido.Arbitro.Apellido`), recorre los eventos con `GetAt()` y vuelve del evento al partido (`evento.Partido.Sede`).
-- **SQL Multimodelo (RF8):** Ejecuta `SELECT` con `%ResultSet` sobre las tablas proyectadas `Fixture.Partido`, `Fixture.Evento` y `Fixture.Persona` (que incluye las filas de Arbitro y Tecnico), y muestra que coinciden con los objetos creados.
-- **Campo obligatorio (RF5):** Intenta guardar un partido sin `Sede` y muestra el error de IRIS.
-- **Validación (RF9):** Cambia el estado del partido a "Finalizado" en memoria y trata de insertarle un evento extra para provocar y capturar el rechazo dictado por la regla interna `%OnBeforeSave()`. También intenta guardar un evento en el minuto 0, que se rechaza por `MINVAL`, y comprueba que el partido nuevo tampoco se guardó.
-
-Para salir del Terminal: `Halt`.
-
-## 5. Evidencia de Ejecución
-
-La evidencia se generó con `bash tools/generar_evidencia.sh` (desde `fixture2030-iris/`, con el contenedor levantado), que compila las clases, corre la demo y guarda la salida del Terminal de IRIS en `docs/evidencia/`. La ejecución registrada es del 2026-10-09 con IRIS Community 2026.2 (Build 221U), partiendo de `~/docker/data/iris` vacío.
-
-| Archivo | Qué muestra |
-| :--- | :--- |
-| [`00_ambiente.txt`](docs/evidencia/00_ambiente.txt) | Contenedor levantado y versión de IRIS. |
-| [`01_compilacion.txt`](docs/evidencia/01_compilacion.txt) | Las 5 clases y la rutina compilan sin errores (RNF2). |
-| [`02_demo.txt`](docs/evidencia/02_demo.txt) | Salida completa de `Do ^DemoOperaciones`: objetos guardados, navegación, SQL y los tres rechazos (sin `Sede`, partido Finalizado y minuto 0). |
-| [`03_persistencia.txt`](docs/evidencia/03_persistencia.txt) | Después de `docker restart`, las consultas SQL devuelven los mismos datos: el partido (ya Finalizado), sus 2 eventos y las 2 personas. El partido con el evento en el minuto 0 no existe. |
+Las capturas de `docs/evidencia/` corresponden a la implementación anterior; no prueban los
+mecanismos eliminados en la versión actual. El Hito 10 consulta estas clases por SQL/DB-API y
+no necesita una clase de fachada ni métodos adicionales de escritura.

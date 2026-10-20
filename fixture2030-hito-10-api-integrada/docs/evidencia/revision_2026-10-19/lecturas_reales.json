@@ -1,0 +1,219 @@
+{
+  "fecha_utc": "2026-10-20T00:00:00.073594+00:00",
+  "transporte": "TestClient ASGI; adaptadores y seis fuentes reales, sin servidor HTTP externo",
+  "casos": [
+    {
+      "fuente": "mongodb",
+      "ruta": "/equipos/ARG",
+      "status": 200,
+      "cuerpo": {
+        "codigo_iso": "ARG",
+        "nombre": "Argentina",
+        "confederacion": "CONMEBOL",
+        "grupo": "A",
+        "ranking_fifa": 1,
+        "director_tecnico": "Martinez",
+        "pais_anfitrion": true
+      }
+    },
+    {
+      "fuente": "neo4j",
+      "ruta": "/partidos/P-001/eventos",
+      "status": 200,
+      "cuerpo": {
+        "codigo_partido": "P-001",
+        "eventos": [
+          {
+            "id_evento": "EV-001",
+            "tipo": "Gol",
+            "minuto": 23,
+            "jugador": {
+              "id_jugador": "ARG-10",
+              "nombre": "Andrés Fuentes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fuente": "cassandra",
+      "ruta": "/partidos/P-001/comentarios?ventana=203006152016",
+      "status": 200,
+      "cuerpo": {
+        "codigo_partido": "P-001",
+        "ventana": "203006152016",
+        "items": [
+          {
+            "id_comentario": "2e379e0a-e506-11f5-800a-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152016",
+            "id_usuario": "U-1003",
+            "usuario_alias": "tribuna_sur",
+            "equipo_apoyado": "ARG",
+            "texto": "Que jugada de contraataque, casi gol",
+            "idioma": "es",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 30,
+            "creado_en": "2030-06-15T20:16:44Z"
+          },
+          {
+            "id_comentario": "27a92689-e506-11f5-8009-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152016",
+            "id_usuario": "U-1001",
+            "usuario_alias": "hincha_albiceleste",
+            "equipo_apoyado": "ARG",
+            "texto": "Tres amarillas en diez minutos, se descontrolo",
+            "idioma": "es",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 28,
+            "creado_en": "2030-06-15T20:16:33Z"
+          },
+          {
+            "id_comentario": "211aaf08-e506-11f5-8008-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152016",
+            "id_usuario": "U-1003",
+            "usuario_alias": "tribuna_sur",
+            "equipo_apoyado": "ARG",
+            "texto": "Partidazo, no se puede dejar de mirar",
+            "idioma": "es",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 26,
+            "creado_en": "2030-06-15T20:16:22Z"
+          },
+          {
+            "id_comentario": "1a8c3787-e506-11f5-8007-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152016",
+            "id_usuario": "U-1001",
+            "usuario_alias": "hincha_albiceleste",
+            "equipo_apoyado": "ARG",
+            "texto": "Se viene el gol, presionan alto",
+            "idioma": "es",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 24,
+            "creado_en": "2030-06-15T20:16:11Z"
+          },
+          {
+            "id_comentario": "13fdc006-e506-11f5-8006-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152016",
+            "id_usuario": "U-1003",
+            "usuario_alias": "tribuna_sur",
+            "equipo_apoyado": "ARG",
+            "texto": "El VAR tarda demasiado en revisar",
+            "idioma": "es",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 22,
+            "creado_en": "2030-06-15T20:16:00Z"
+          }
+        ],
+        "cursor_siguiente": null
+      }
+    },
+    {
+      "fuente": "redis",
+      "ruta": "/sesiones/S-0001",
+      "status": 404,
+      "cuerpo": {
+        "error": {
+          "codigo": "SESION_NO_VIGENTE",
+          "mensaje": "No existe una sesión vigente con id 'S-0001'.",
+          "request_id": "f744ea2d-c34e-4d71-a65a-eeda1ea2ce61",
+          "detalles": []
+        }
+      }
+    },
+    {
+      "fuente": "influxdb",
+      "ruta": "/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T20:15:00Z",
+      "status": 503,
+      "cuerpo": {
+        "error": {
+          "codigo": "DEPENDENCIA_NO_DISPONIBLE",
+          "mensaje": "La fuente de datos 'influxdb' no está disponible.",
+          "request_id": "2bc8bad6-9da6-47a0-840c-2020ca65818e",
+          "detalles": [
+            {
+              "dependencia": "influxdb"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fuente": "iris",
+      "ruta": "/partidos-oficiales/P-009",
+      "status": 200,
+      "cuerpo": {
+        "codigo_partido": "P-009",
+        "sede": "Estadio Centenario",
+        "fecha": "2030-07-15",
+        "estado": "Finalizado",
+        "arbitro": {
+          "nombre": "Facundo",
+          "apellido": "Tello",
+          "rango": "FIFA"
+        },
+        "eventos": [
+          {
+            "minuto": 12,
+            "tipo": "Gol",
+            "descripcion": "Gol de Uruguay"
+          },
+          {
+            "minuto": 45,
+            "tipo": "Tarjeta Amarilla",
+            "descripcion": "Falta fuerte"
+          }
+        ]
+      }
+    }
+  ],
+  "salud": {
+    "estado": "degraded",
+    "verificado_en": "2026-10-20T00:00:02.739584Z",
+    "desde_cache": false,
+    "edad_s": 0.0,
+    "ttl_cache_s": 10.0,
+    "dependencias": [
+      {
+        "nombre": "mongodb",
+        "estado": "up",
+        "motivo": null,
+        "latencia_ms": 2.6
+      },
+      {
+        "nombre": "neo4j",
+        "estado": "up",
+        "motivo": null,
+        "latencia_ms": 8.4
+      },
+      {
+        "nombre": "cassandra",
+        "estado": "up",
+        "motivo": null,
+        "latencia_ms": 4.8
+      },
+      {
+        "nombre": "redis",
+        "estado": "up",
+        "motivo": null,
+        "latencia_ms": 1.6
+      },
+      {
+        "nombre": "influxdb",
+        "estado": "not_configured",
+        "motivo": "FALTA_CONFIGURACION:INFLUX_TOKEN",
+        "latencia_ms": null
+      },
+      {
+        "nombre": "iris",
+        "estado": "up",
+        "motivo": null,
+        "latencia_ms": 17.8
+      }
+    ]
+  }
+}

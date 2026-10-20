@@ -80,7 +80,7 @@ Todos los datos del módulo tienen una decisión de ciclo de vida:
 | `cache:equipo:<iso>` | TTL 3600 s + `DEL` al cambiar | Ver sección 3 |
 | `contador:partido:<id>:visitas` | Cada visita hace `INCR` + `EXPIRE 172800` en `MULTI/EXEC`: el contador vence 48 h después de la última visita | `INCR` no pone ni renueva TTL, y si la clave había vencido la crea **sin** TTL. Al mandar el `EXPIRE` en la misma transacción nunca queda un contador permanente. Interesa durante el partido y el día siguiente |
 | `conectados:partido:<id>` | Cada ingreso hace `SADD` + `EXPIRE 10800` en `MULTI/EXEC` (3 h desde el último ingreso). Cuando el usuario sale se hace `SREM` | Mismo motivo que el contador: `SADD` sobre una clave vencida la crea sin TTL. 3 h cubren previa + partido + post |
-| `encuesta:<id>:figura` | **Sin TTL** mientras está abierta. Al cerrar: se guarda el resultado en la fuente de verdad y se pone `EXPIRE 86400` | Si tuviera TTL podría vencer o ser elegida para evicción (`volatile-lru`) en medio de la votación. Después del cierre queda 24 h para mostrar el resultado |
+| `encuesta:<id>:figura` | **Sin TTL** mientras está abierta. Al cerrar: se guarda el resultado en la fuente de verdad y se pone `EXPIRE 86400` | Si tuviera TTL podría vencer en medio de la votación. Con `noeviction` no hay expulsión por presión de memoria. Después del cierre queda 24 h para mostrar el resultado |
 
 ## 3. Fuente de verdad y caché (patrón Cache-Aside)
 

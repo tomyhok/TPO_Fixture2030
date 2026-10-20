@@ -16,7 +16,6 @@ from app.services.actas_service import ActasService
 from app.services.comentarios_service import ComentariosService
 from app.services.equipos_service import EquiposService
 from app.services.estadisticas_service import EstadisticasService
-from app.services.idempotencia import Idempotencia
 from app.services.partidos_service import PartidosService
 from app.services.salud_service import SaludService
 from app.services.sesiones_service import SesionesService
@@ -73,14 +72,13 @@ def crear_adaptadores(settings: Settings) -> Adaptadores:
 
 
 def crear_servicios(a: Adaptadores, settings: Settings) -> Servicios:
-    idempotencia = Idempotencia(a.redis, settings.idempotencia_ttl_s)
     return Servicios(
-        equipos=EquiposService(a.mongodb, a.neo4j),
-        partidos=PartidosService(a.neo4j, a.redis, settings.cache_partido_ttl_s),
-        comentarios=ComentariosService(a.cassandra, a.neo4j, idempotencia),
+        equipos=EquiposService(a.mongodb),
+        partidos=PartidosService(a.neo4j),
+        comentarios=ComentariosService(a.cassandra),
         sesiones=SesionesService(a.redis),
         estadisticas=EstadisticasService(a.influxdb),
-        actas=ActasService(a.iris, idempotencia),
+        actas=ActasService(a.iris),
         salud=SaludService(
             a.como_dict(),
             faltantes=settings.configuracion_faltante(),

@@ -10,7 +10,6 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.errores import (
-    ConflictoEstado,
     DependenciaNoDisponible,
     DependenciaTimeout,
     ErrorAPI,
@@ -98,7 +97,6 @@ def instalar_manejadores(app: FastAPI) -> None:
 _DESCRIPCIONES = {
     400: "Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna base.",
     404: "Recurso inexistente.",
-    409: "Conflicto con el estado actual del recurso o de la clave de idempotencia.",
     500: "Error interno seguro: el detalle técnico queda solo en el log.",
     503: "Una fuente de datos no está disponible.",
     504: "Una fuente de datos no respondió dentro del timeout.",
@@ -110,7 +108,6 @@ _EJEMPLOS = {
         [{"campo": "path.codigo_iso", "mensaje": "String should match pattern '^[A-Z]{3}$'"}],
     ),
     404: RecursoNoEncontrado("No existe la selección 'XYZ'."),
-    409: ConflictoEstado("El partido está Finalizado: el acta no admite eventos nuevos."),
     500: ErrorInterno(),
     503: DependenciaNoDisponible("mongodb"),
     504: DependenciaTimeout("neo4j"),

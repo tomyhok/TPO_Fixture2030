@@ -16,7 +16,7 @@ Siga estos pasos exactos para levantar el entorno y cargar el subgrafo desde cer
 Abra una terminal en la carpeta `fixture2030-neo4j` y levante el contenedor:
 
 ```bash
-docker compose up -d
+docker compose --env-file ../.env up -d
 ```
 *Nota: Este comando utiliza la imagen `neo4j:latest` y configura el plugin APOC, tal como se requiere en la especificación.*
 
@@ -33,7 +33,7 @@ Ingrese a [http://localhost:7474](http://localhost:7474) en su navegador web.
 Conéctese utilizando las credenciales locales definidas en el `docker-compose.yml`:
 * **URL de conexión:** `neo4j://localhost:7687`
 * **Usuario:** `neo4j`
-* **Contraseña:** `fixture2030`
+* **Contraseña:** valor de `NEO4J_PASSWORD` en el `.env` raíz, excluido de Git.
 
 ### 4. Ejecución de Scripts (Carga y Consultas)
 Dentro del editor de Neo4j Browser, copie y ejecute el contenido de los archivos ubicados en la carpeta `queries/` **estrictamente en este orden**:
@@ -50,3 +50,11 @@ Dentro del editor de Neo4j Browser, copie y ejecute el contenido de los archivos
 * `/import`: Volumen mapeado para la lectura de archivos JSON.
 * `/queries`: Scripts Cypher organizados por propósito.
 * `docker-compose.yml`: Definición del servicio y volúmenes de Neo4j.
+
+## Evidencia de ejecución incorporada
+
+[Revisión real del 19 de octubre](docs/evidencia/revision_2026-10-19/README.md):
+dos cargas con iguales conteos, CRUD de un evento reservado, tres recorridos y captura
+de Neo4j Browser conectado al grafo local. Para repetir scripts: `python tools/generar_evidencia.py`
+con el driver Neo4j instalado y la contraseña en el `.env` raíz o del Hito 10.
+No reemplaza evidencia anterior y no elimina eventos ajenos a `EV-H5-DEMO`.

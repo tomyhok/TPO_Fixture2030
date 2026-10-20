@@ -1,0 +1,384 @@
+{
+  "fecha_utc": "2026-10-20T00:10:25.203758+00:00",
+  "transporte": "HTTP real a Uvicorn local temporal; adaptadores y motores reales",
+  "resultados": [
+    {
+      "caso": "liveness",
+      "ruta": "/health/live",
+      "status": 200,
+      "request_id": "feedback-00",
+      "cuerpo": {
+        "estado": "up",
+        "version": "1.1.0",
+        "activa_desde_s": 0.2
+      }
+    },
+    {
+      "caso": "readiness",
+      "ruta": "/health/ready",
+      "status": 200,
+      "request_id": "feedback-01",
+      "cuerpo": {
+        "listo": true,
+        "estado": "degraded",
+        "disponibles": [
+          "mongodb",
+          "neo4j",
+          "cassandra",
+          "redis",
+          "iris"
+        ],
+        "no_disponibles": [
+          "influxdb"
+        ],
+        "verificado_en": "2026-10-20T00:10:25.051715Z",
+        "desde_cache": false
+      }
+    },
+    {
+      "caso": "diagnóstico por dependencia",
+      "ruta": "/health/dependencias?refrescar=true",
+      "status": 200,
+      "request_id": "feedback-02",
+      "cuerpo": {
+        "estado": "degraded",
+        "verificado_en": "2026-10-20T00:10:25.082304Z",
+        "desde_cache": false,
+        "edad_s": 0.0,
+        "ttl_cache_s": 10.0,
+        "dependencias": [
+          {
+            "nombre": "mongodb",
+            "estado": "up",
+            "motivo": null,
+            "latencia_ms": 4.4
+          },
+          {
+            "nombre": "neo4j",
+            "estado": "up",
+            "motivo": null,
+            "latencia_ms": 7.3
+          },
+          {
+            "nombre": "cassandra",
+            "estado": "up",
+            "motivo": null,
+            "latencia_ms": 17.8
+          },
+          {
+            "nombre": "redis",
+            "estado": "up",
+            "motivo": null,
+            "latencia_ms": 2.7
+          },
+          {
+            "nombre": "influxdb",
+            "estado": "not_configured",
+            "motivo": "FALTA_CONFIGURACION:INFLUX_TOKEN",
+            "latencia_ms": null
+          },
+          {
+            "nombre": "iris",
+            "estado": "up",
+            "motivo": null,
+            "latencia_ms": 2.0
+          }
+        ]
+      }
+    },
+    {
+      "caso": "CU01 equipo",
+      "ruta": "/equipos/ARG",
+      "status": 200,
+      "request_id": "feedback-03",
+      "cuerpo": {
+        "codigo_iso": "ARG",
+        "nombre": "Argentina",
+        "confederacion": "CONMEBOL",
+        "grupo": "A",
+        "ranking_fifa": 1,
+        "director_tecnico": "Martinez",
+        "pais_anfitrion": true
+      }
+    },
+    {
+      "caso": "CU01 equipo inexistente",
+      "ruta": "/equipos/XYZ",
+      "status": 404,
+      "request_id": "feedback-04",
+      "cuerpo": {
+        "error": {
+          "codigo": "RECURSO_NO_ENCONTRADO",
+          "mensaje": "No existe la selección 'XYZ'.",
+          "request_id": "feedback-04",
+          "detalles": []
+        }
+      }
+    },
+    {
+      "caso": "CU01 código inválido",
+      "ruta": "/equipos/arg",
+      "status": 400,
+      "request_id": "feedback-05",
+      "cuerpo": {
+        "error": {
+          "codigo": "VALIDACION",
+          "mensaje": "La solicitud tiene parámetros o cuerpo inválidos.",
+          "request_id": "feedback-05",
+          "detalles": [
+            {
+              "campo": "path.codigo_iso",
+              "mensaje": "String should match pattern '^[A-Z]{3}$'"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "caso": "CU06 eventos",
+      "ruta": "/partidos/P-001/eventos?limit=5",
+      "status": 200,
+      "request_id": "feedback-06",
+      "cuerpo": {
+        "codigo_partido": "P-001",
+        "eventos": [
+          {
+            "id_evento": "EV-001",
+            "tipo": "Gol",
+            "minuto": 23,
+            "jugador": {
+              "id_jugador": "ARG-10",
+              "nombre": "Andrés Fuentes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "caso": "CU06 partido sin eventos",
+      "ruta": "/partidos/P-002/eventos",
+      "status": 200,
+      "request_id": "feedback-07",
+      "cuerpo": {
+        "codigo_partido": "P-002",
+        "eventos": []
+      }
+    },
+    {
+      "caso": "CU06 partido inexistente",
+      "ruta": "/partidos/P-999/eventos",
+      "status": 404,
+      "request_id": "feedback-08",
+      "cuerpo": {
+        "error": {
+          "codigo": "RECURSO_NO_ENCONTRADO",
+          "mensaje": "No existe el partido 'P-999'.",
+          "request_id": "feedback-08",
+          "detalles": []
+        }
+      }
+    },
+    {
+      "caso": "CU08 muro de comentarios",
+      "ruta": "/partidos/P-001/comentarios?ventana=203006152015&limit=5",
+      "status": 200,
+      "request_id": "feedback-09",
+      "cuerpo": {
+        "codigo_partido": "P-001",
+        "ventana": "203006152015",
+        "items": [
+          {
+            "id_comentario": "0a745805-e506-11f5-8005-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152015",
+            "id_usuario": "U-1002",
+            "usuario_alias": "verdeamarelo10",
+            "equipo_apoyado": "BRA",
+            "texto": "Penal clarisimo que no cobraron",
+            "idioma": "pt",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 20,
+            "creado_en": "2030-06-15T20:15:44Z"
+          },
+          {
+            "id_comentario": "03e5e084-e506-11f5-8004-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152015",
+            "id_usuario": "U-1004",
+            "usuario_alias": "carioca_futbol",
+            "equipo_apoyado": "BRA",
+            "texto": "Que atajada tremenda, salvo el partido",
+            "idioma": "pt",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 18,
+            "creado_en": "2030-06-15T20:15:33Z"
+          },
+          {
+            "id_comentario": "fd576903-e505-11f5-8003-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152015",
+            "id_usuario": "U-1002",
+            "usuario_alias": "verdeamarelo10",
+            "equipo_apoyado": "BRA",
+            "texto": "Cambio necesario, el mediocampo esta perdido",
+            "idioma": "pt",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 16,
+            "creado_en": "2030-06-15T20:15:22Z"
+          },
+          {
+            "id_comentario": "f6c8f182-e505-11f5-8002-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152015",
+            "id_usuario": "U-1004",
+            "usuario_alias": "carioca_futbol",
+            "equipo_apoyado": "BRA",
+            "texto": "Golazo de media distancia, imposible para el arquero",
+            "idioma": "pt",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 14,
+            "creado_en": "2030-06-15T20:15:11Z"
+          },
+          {
+            "id_comentario": "f03a7a01-e505-11f5-8001-00000005f1c7",
+            "codigo_partido": "P-001",
+            "ventana": "203006152015",
+            "id_usuario": "U-1002",
+            "usuario_alias": "verdeamarelo10",
+            "equipo_apoyado": "BRA",
+            "texto": "El arbitro cobro mal ese offside",
+            "idioma": "pt",
+            "estado_moderacion": "publicado",
+            "minuto_partido": 12,
+            "creado_en": "2030-06-15T20:15:00Z"
+          }
+        ],
+        "cursor_siguiente": null
+      }
+    },
+    {
+      "caso": "CU08 ventana sin comentarios",
+      "ruta": "/partidos/P-001/comentarios?ventana=203001010000",
+      "status": 200,
+      "request_id": "feedback-10",
+      "cuerpo": {
+        "codigo_partido": "P-001",
+        "ventana": "203001010000",
+        "items": [],
+        "cursor_siguiente": null
+      }
+    },
+    {
+      "caso": "CU10 sesión",
+      "ruta": "/sesiones/S-0001",
+      "status": 404,
+      "request_id": "feedback-11",
+      "cuerpo": {
+        "error": {
+          "codigo": "SESION_NO_VIGENTE",
+          "mensaje": "No existe una sesión vigente con id 'S-0001'.",
+          "request_id": "feedback-11",
+          "detalles": []
+        }
+      }
+    },
+    {
+      "caso": "CU12 estadísticas",
+      "ruta": "/partidos/P-001/estadisticas?desde=2030-06-10T20%3A00%3A00Z&hasta=2030-06-10T20%3A15%3A00Z&resolucion=5m",
+      "status": 503,
+      "request_id": "feedback-12",
+      "cuerpo": {
+        "error": {
+          "codigo": "DEPENDENCIA_NO_DISPONIBLE",
+          "mensaje": "La fuente de datos 'influxdb' no está disponible.",
+          "request_id": "feedback-12",
+          "detalles": [
+            {
+              "dependencia": "influxdb"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "caso": "CU12 ventana sin puntos",
+      "ruta": "/partidos/P-001/estadisticas?desde=2031-01-01T00%3A00%3A00Z&hasta=2031-01-01T01%3A00%3A00Z",
+      "status": 503,
+      "request_id": "feedback-13",
+      "cuerpo": {
+        "error": {
+          "codigo": "DEPENDENCIA_NO_DISPONIBLE",
+          "mensaje": "La fuente de datos 'influxdb' no está disponible.",
+          "request_id": "feedback-13",
+          "detalles": [
+            {
+              "dependencia": "influxdb"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "caso": "CU12 intervalo invertido",
+      "ruta": "/partidos/P-001/estadisticas?desde=2030-06-10T22%3A00%3A00Z&hasta=2030-06-10T20%3A00%3A00Z",
+      "status": 400,
+      "request_id": "feedback-14",
+      "cuerpo": {
+        "error": {
+          "codigo": "VALIDACION",
+          "mensaje": "El intervalo es inválido: 'desde' debe ser anterior a 'hasta'.",
+          "request_id": "feedback-14",
+          "detalles": [
+            {
+              "campo": "query.desde",
+              "mensaje": "desde < hasta"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "caso": "CU13 acta oficial",
+      "ruta": "/partidos-oficiales/P-009",
+      "status": 200,
+      "request_id": "feedback-15",
+      "cuerpo": {
+        "codigo_partido": "P-009",
+        "sede": "Estadio Centenario",
+        "fecha": "2030-07-15",
+        "estado": "Finalizado",
+        "arbitro": {
+          "nombre": "Facundo",
+          "apellido": "Tello",
+          "rango": "FIFA"
+        },
+        "eventos": [
+          {
+            "minuto": 12,
+            "tipo": "Gol",
+            "descripcion": "Gol de Uruguay"
+          },
+          {
+            "minuto": 45,
+            "tipo": "Tarjeta Amarilla",
+            "descripcion": "Falta fuerte"
+          }
+        ]
+      }
+    },
+    {
+      "caso": "CU13 acta inexistente",
+      "ruta": "/partidos-oficiales/P-999",
+      "status": 404,
+      "request_id": "feedback-16",
+      "cuerpo": {
+        "error": {
+          "codigo": "RECURSO_NO_ENCONTRADO",
+          "mensaje": "No existe el acta del partido 'P-999'.",
+          "request_id": "feedback-16",
+          "detalles": []
+        }
+      }
+    }
+  ]
+}

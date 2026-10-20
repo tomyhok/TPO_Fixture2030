@@ -2,7 +2,7 @@
 
 El contrato se deriva del código (rutas, validaciones y schemas Pydantic), así
 que no puede describir endpoints que no existen. La prueba
-tests/unit/test_contrato_openapi.py falla si el archivo queda desactualizado.
+tests/unit/test_api_esencial.py falla si el archivo queda desactualizado.
 
 Uso (desde fixture2030-hito-10-api-integrada/):
     .venv/Scripts/python scripts/exportar_openapi.py

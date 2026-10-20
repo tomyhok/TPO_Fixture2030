@@ -133,7 +133,7 @@ def test_readiness_sin_ninguna_fuente_responde_503(crear_cliente, adaptadores):
 
 
 def test_configuracion_faltante_solo_informa_nombres():
-    faltantes = Settings(_env_file=None, mongo_user="admin", neo4j_password="secreto").configuracion_faltante()
+    faltantes = Settings(_env_file=None, mongo_user="admin", mongo_password="", neo4j_password="secreto").configuracion_faltante()
     assert "MONGO_PASSWORD" in faltantes["mongodb"]
     assert faltantes["neo4j"] == []
     assert all("secreto" not in v for lista in faltantes.values() for v in lista)

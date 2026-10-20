@@ -16,8 +16,8 @@ services:
       # Puerto nativo CQL para cqlsh, drivers y cassandra-stress.
       - "9042:9042"
     volumes:
-      # RNF2: datos persistentes en la notebook, segun la convencion de la materia.
-      - ~/docker/data/cassandra:/var/lib/cassandra
+      # RNF2: volumen nombrado de Docker; compartido con el Compose raíz.
+      - cassandra_data:/var/lib/cassandra
       # Scripts CQL, generadores y datasets accesibles desde dentro del contenedor.
       - ./scripts:/scripts:ro
       - ./tools:/tools:ro
@@ -30,6 +30,10 @@ services:
       start_period: 90s
     networks:
       - fixture2030-network
+
+volumes:
+  cassandra_data:
+    name: fixture2030_cassandra_data
 
 networks:
   fixture2030-network:

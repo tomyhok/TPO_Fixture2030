@@ -34,7 +34,7 @@ INFO persistence
 
 # ---------------------------------------------------------------------
 # 4) Memoria y politica de memoria (RF10).
-#    Esperado: maxmemory_human:256.00M y maxmemory_policy:volatile-lru
+#    Esperado: maxmemory_human:256.00M y maxmemory_policy:noeviction
 # ---------------------------------------------------------------------
 ECHO "=== 4) Memoria ==="
 INFO memory

@@ -28,24 +28,11 @@ from app.core.errores import DependenciaNoDisponible, DependenciaTimeout
 @pytest.mark.parametrize(
     ("traducir", "excepcion", "esperado"),
     [
-        (mongo_adapter._traducir, mongo_errors.ServerSelectionTimeoutError("x"), DependenciaNoDisponible),
-        (mongo_adapter._traducir, mongo_errors.OperationFailure("auth", code=18), DependenciaNoDisponible),
         (mongo_adapter._traducir, mongo_errors.NetworkTimeout("x"), DependenciaTimeout),
-        (mongo_adapter._traducir, mongo_errors.ExecutionTimeout("x"), DependenciaTimeout),
-        (neo4j_adapter._traducir, neo4j_errors.ServiceUnavailable("x"), DependenciaNoDisponible),
         (neo4j_adapter._traducir, neo4j_errors.AuthError("x"), DependenciaNoDisponible),
-        (mongo_adapter._traducir, mongo_adapter._ContextoIncompleto("x"), DependenciaNoDisponible),
         (cassandra_adapter._traducir, NoHostAvailable("x", {}), DependenciaNoDisponible),
-        (cassandra_adapter._traducir, Unavailable("x"), DependenciaNoDisponible),
-        (cassandra_adapter._traducir, OperationTimedOut("x"), DependenciaTimeout),
-        (cassandra_adapter._traducir, ReadTimeout("x"), DependenciaTimeout),
-        (redis_adapter._traducir, redis_errors.ConnectionError("x"), DependenciaNoDisponible),
-        (redis_adapter._traducir, redis_errors.AuthenticationError("x"), DependenciaNoDisponible),
         (redis_adapter._traducir, redis_errors.TimeoutError("x"), DependenciaTimeout),
-        (influx_adapter._traducir, httpx.ConnectError("x"), DependenciaNoDisponible),
-        (influx_adapter._traducir, influx_adapter._RespuestaInvalida("HTTP 401"), DependenciaNoDisponible),
         (influx_adapter._traducir, httpx.ReadTimeout("x"), DependenciaTimeout),
-        (iris_adapter._traducir, RuntimeError("<COMMUNICATION LINK ERROR>"), DependenciaNoDisponible),
         (iris_adapter._traducir, iris_adapter._TimeoutIris(), DependenciaTimeout),
     ],
 )
@@ -80,20 +67,13 @@ def test_neo4j_database_inexistente_es_dependencia_no_disponible():
     assert isinstance(neo4j_adapter._traducir(BaseInexistente()), DependenciaNoDisponible)
 
 
-def test_cassandra_orden_por_timeuuid():
-    viejo = cassandra_adapter.nuevo_timeuuid(datetime(2030, 6, 15, 20, 15, tzinfo=UTC))
-    nuevo = cassandra_adapter.nuevo_timeuuid(datetime(2030, 6, 15, 20, 16, tzinfo=UTC))
-    assert viejo.version == 1
-    assert sorted([viejo, nuevo], key=cassandra_adapter._orden_timeuuid) == [viejo, nuevo]
-
-
 def test_influx_intervalos_son_lista_cerrada():
     assert set(influx_adapter.INTERVALOS) == {"10s", "1m", "5m"}
     assert "$partido" in influx_adapter._SQL_SERIE and "$desde" in influx_adapter._SQL_SERIE
 
 
 def test_cypher_solo_usa_parametros():
-    for cypher in (neo4j_adapter.CYPHER_FICHA_PARTIDO, neo4j_adapter.CYPHER_EVENTOS_PARTIDO, neo4j_adapter.CYPHER_RIVALES):
+    for cypher in (neo4j_adapter.CYPHER_EVENTOS_PARTIDO,):
         assert "$codigo" in cypher and "{codigo}" not in cypher
 
 

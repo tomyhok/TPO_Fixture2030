@@ -18,39 +18,12 @@ from app.dependencias import Adaptadores, crear_adaptadores, crear_servicios
 from app.routes import actas, comentarios, equipos, estadisticas, partidos, salud, sesiones
 
 
-DESCRIPCION = """
-API REST que integra los módulos NoSQL del Fixture Mundial 2030. Cada ruta resuelve un
-caso de uso documentado en `docs/casos_de_uso.md` y llega a la fuente que le corresponde
-mediante un adaptador propio:
+DESCRIPCION = """Seis lecturas representativas, una por motor: MongoDB, Neo4j,
+Cassandra, Redis, InfluxDB e IRIS. Contratos, validación y errores uniformes.
+La API no escribe datos de dominio. Los endpoints de salud corresponden al Hito 11.
+Todas las respuestas incluyen X-Request-ID. Laboratorio local sin autenticación HTTP."""
 
-| Módulo | Fuente | Hito |
-|---|---|---|
-| Equipos y jugadores | MongoDB | 4 |
-| Partidos, eventos y relaciones | Neo4j | 5 |
-| Comentarios | Cassandra | 6 |
-| Sesiones y caché | Redis | 7 |
-| Estadísticas temporales | InfluxDB 3 | 8 |
-| Actas oficiales | InterSystems IRIS | 9 |
-
-**Errores.** Todas las respuestas de error usan el esquema `ErrorRespuesta`. Toda respuesta
-incluye el header `X-Request-ID` (se reutiliza el que envía el cliente si es válido), que
-también aparece en los logs de la ruta y del adaptador.
-
-**Autenticación.** No implementada en este hito: la API se ejecuta en el laboratorio local.
-"""
-
-TAGS = [
-    {"name": "Equipos y jugadores (MongoDB)", "description": "Colecciones `equipos` y `jugadores` (Hito 4)."},
-    {"name": "Partidos y relaciones (Neo4j)", "description": "Grafo de partidos, equipos, sedes y eventos (Hito 5)."},
-    {"name": "Comentarios (Cassandra)", "description": "Muro por partición y publicación (Hito 6)."},
-    {"name": "Sesiones (Redis)", "description": "Sesiones con TTL (Hito 7)."},
-    {"name": "Estadísticas (InfluxDB)", "description": "Ventanas temporales agregadas (Hito 8)."},
-    {"name": "Actas oficiales (IRIS)", "description": "Entidad compleja con transiciones validadas (Hito 9)."},
-    {
-        "name": "Salud",
-        "description": "Liveness, readiness y diagnóstico de conectividad por fuente (Hitos 10 y 11).",
-    },
-]
+TAGS = []
 
 
 def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None = None) -> FastAPI:

@@ -1,0 +1,14 @@
+{
+  "fecha_utc": "2026-10-19T23:56:52.220977+00:00",
+  "antes": {
+    "maxmemory-policy": "volatile-lru"
+  },
+  "despues": {
+    "maxmemory-policy": "noeviction"
+  },
+  "ttl_sonda_s": 30,
+  "maxmemory": {
+    "maxmemory": "268435456"
+  },
+  "nota": "No se fuerza OOM en el servicio compartido; noeviction rechaza escrituras bajo presión, el TTL sigue operando."
+}

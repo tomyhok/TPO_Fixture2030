@@ -145,10 +145,11 @@ rm -rf ~/docker/data/redis
 | Usuarios conectados | `conectados:partido:<codigo_partido>` | Set | 3 h |
 | Encuesta figura del partido | `encuesta:partido:<codigo_partido>:figura` | Sorted Set | sin TTL abierta, 24 h al cerrar |
 
-* **Memoria:** `maxmemory 256mb` con política `volatile-lru`.
+* **Memoria:** `maxmemory 256mb` con política `noeviction` (las sesiones no se expulsan por presión de memoria).
 * **Persistencia:** AOF + snapshot RDB, como en el laboratorio de clase.
 * **Concurrencia:** `INCR`, `ZINCRBY`, `HINCRBY` y `MULTI/EXEC`; nunca
   "leer → modificar → escribir" desde la aplicación.
+* **Presión de memoria:** se rechazan nuevas escrituras; monitorear memoria y errores OOM. El TTL sigue venciendo según la vigencia definida.
 * **Validez de sesión:** `HGET sesion:<id> usuario_id` devuelve un valor.
 
 ---

@@ -39,16 +39,6 @@ class MetodoNoPermitido(ErrorAPI):
     codigo = "METODO_NO_PERMITIDO"
 
 
-class ConflictoEstado(ErrorAPI):
-    status_http = 409
-    codigo = "CONFLICTO_ESTADO"
-
-
-class ConflictoIdempotencia(ErrorAPI):
-    status_http = 409
-    codigo = "CONFLICTO_IDEMPOTENCIA"
-
-
 class ErrorInterno(ErrorAPI):
     status_http = 500
     codigo = "ERROR_INTERNO"

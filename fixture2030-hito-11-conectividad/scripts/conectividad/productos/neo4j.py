@@ -6,14 +6,12 @@ Bolt (7687), que es el que usa el adaptador.
 | Capa          | Prueba                                     | Qué NO permite concluir                         |
 |---------------|--------------------------------------------|-------------------------------------------------|
 | portal_http   | GET NEO4J_HTTP_URL (discovery JSON)        | Nada sobre Bolt ni credenciales                 |
-| protocolo     | handshake Bolt crudo (magic 0x6060B017)    | Si la credencial sirve                          |
+| protocolo     | driver.get_server_info()                  | Permisos y contexto del módulo                  |
 | autenticacion | driver.verify_authentication()             | Si la database configurada existe               |
 | autorizacion  | SHOW CURRENT USER (database system)        | Permisos finos: Community no tiene RBAC         |
 | contexto      | db.info() + db.labels() en NEO4J_DATABASE  | Si hay datos del partido de prueba              |
 | lectura       | MATCH parametrizado y acotado de un partido | Rendimiento de recorridos profundos             |
 """
-
-import socket
 
 from conectividad.config import Config, host_puerto
 from conectividad.productos.comun import capa_configuracion, capa_contenedor, clasificar_generico
@@ -21,10 +19,6 @@ from conectividad.red import capa_red, clasificar_error_http, http, puerto_cerra
 from conectividad.registro import NATIVAS, Cadena, Paso, Registro, fail, ok, resumen_excepcion, warn
 
 NOMBRE = "neo4j"
-MAGIC_BOLT = b"\x60\x60\xb0\x17"
-# Propuestas [0, rango, menor, mayor]: 5.8 hasta 5.0, 4.4, y dos vacías.
-PROPUESTAS_BOLT = bytes([0, 8, 8, 5, 0, 0, 4, 4]) + b"\x00" * 8
-
 CYPHER_PARTIDO = """
 MATCH (p:Partido {codigo_partido: $codigo})
 OPTIONAL MATCH (e:Equipo)-[d:DISPUTA]->(p)
@@ -72,30 +66,6 @@ def _clasificar(exc: BaseException, capa: str) -> Paso:
     return clasificar_generico(exc, capa)
 
 
-def _handshake_bolt(direccion: str, puerto: int, timeout_s: float) -> Paso:
-    with socket.create_connection((direccion, puerto), timeout=timeout_s) as s:
-        s.settimeout(timeout_s)
-        s.sendall(MAGIC_BOLT + PROPUESTAS_BOLT)
-        respuesta = s.recv(64)
-    if respuesta.startswith(b"HTTP"):
-        return fail(
-            f"el puerto respondió HTTP ({respuesta.split(b'\r\n')[0].decode(errors='replace')}), no Bolt",
-            "Puerto incorrecto: se apunta al puerto HTTP del Browser (7474) en lugar de Bolt (7687).",
-            "Corregir el puerto de NEO4J_URI.",
-        )
-    if len(respuesta) < 4:
-        return fail(
-            "el listener cerró la conexión sin responder el handshake Bolt",
-            "El puerto pertenece a otro protocolo o el servidor no terminó de iniciar.",
-            "Verificar el puerto y docker logs fixture2030-neo4j.",
-        )
-    _, _, menor, mayor = respuesta[:4]
-    if mayor == 0:
-        return fail("sin versión Bolt en común con el cliente", "Servidor o driver demasiado viejos/nuevos.",
-                    "Actualizar el driver de Neo4j.")
-    return ok(f"versión Bolt {mayor}.{menor} negociada (magic 0x6060B017)")
-
-
 def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> None:
     uri = cfg.get("NEO4J_URI")
     host, puerto = host_puerto(uri, 7687)
@@ -129,14 +99,13 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
 
     if not c.bloqueada_por:
         c.ejecutar("portal_http", "GET Browser/discovery", portal, destino=url_http)
-    direccion = capa_red(c, host, puerto, cfg.decimal("TCP_TIMEOUT_S"), "NEO4J_URI")
+    capa_red(c, host, puerto, cfg.decimal("TCP_TIMEOUT_S"), "NEO4J_URI")
     if not (capas & (NATIVAS | {"sonda"})):
         return
-    c.ejecutar("protocolo", "handshake Bolt", lambda: _handshake_bolt(direccion or host, puerto, operacion_s))
     try:
         from neo4j import READ_ACCESS, GraphDatabase, Query
     except ImportError:
-        c.sin_herramienta("neo4j (driver de Python)", tuple(NATIVAS - {"protocolo"}) + ("sonda",))
+        c.sin_herramienta("neo4j (driver de Python)")
         return
 
     driver = GraphDatabase.driver(
@@ -147,6 +116,16 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
         user_agent="fixture2030-diagnostico-h11",
     )
     try:
+        def protocolo() -> Paso:
+            from neo4j.exceptions import AuthError
+            try:
+                info = driver.get_server_info()
+            except AuthError:
+                return ok("el servidor respondió Bolt y rechazó la identidad; se verifica en autenticación")
+            return ok(f"driver Bolt: {info.agent}, protocolo {info.protocol_version}; la conexión incluye identidad")
+
+        c.ejecutar("protocolo", "get_server_info (driver)", protocolo)
+
         def autenticacion() -> Paso:
             if driver.verify_authentication():
                 return ok(f"usuario '{cfg.get('NEO4J_USER')}' autenticado por Bolt")
@@ -199,6 +178,8 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
             def inexistente() -> Paso:
                 with driver.session(database=database, default_access_mode=READ_ACCESS) as s:
                     fila = s.run(Query(CYPHER_EVENTOS, timeout=operacion_s), codigo="P-999").single()
+                if fila is not None:
+                    return fail("P-999 existe", "El dato no sirve como sonda de ausencia.", "Elegir un código inexistente.")
                 return ok(f"partido P-999 -> {'sin filas' if fila is None else fila.data()}: "
                           "partido inexistente (la API responde 404)")
 
@@ -208,6 +189,9 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
                     fila = s.run(Query(CYPHER_EVENTOS, timeout=operacion_s), codigo=codigo).single()
                 if fila is None:
                     return warn(f"partido {codigo} inexistente: no sirve como ejemplo de resultado vacío")
+                if fila["eventos"] != 0:
+                    return fail(f"partido {codigo} tiene {fila['eventos']} eventos", "No es un resultado vacío.",
+                                "Seleccionar un partido sin eventos.")
                 return ok(f"partido {codigo} existe con {fila['eventos']} eventos: resultado vacío válido "
                           "(la API responde 200 con lista vacía)")
 
@@ -217,6 +201,8 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
                         s.run(Query("RETURN 1", timeout=operacion_s)).consume()
                 except Exception as exc:  # noqa: BLE001 - se espera un error de cliente
                     codigo = getattr(exc, "code", type(exc).__name__)
+                    if codigo != "Neo.ClientError.Database.DatabaseNotFound":
+                        return _clasificar(exc, "sonda")
                     return ok(f"database 'noexiste_h11' -> {codigo}: error de contexto, no de conexión "
                               "(la API lo traduce a 503)")
                 return fail("la database inexistente no produjo error", "Comportamiento inesperado.",
@@ -224,10 +210,13 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
 
             def conexion_fallida() -> Paso:
                 libre = puerto_cerrado()
-                otro = GraphDatabase.driver(f"bolt://127.0.0.1:{libre}", auth=("neo4j", "x"), connection_timeout=1)
+                otro = GraphDatabase.driver(f"bolt://127.0.0.1:{libre}", auth=("neo4j", "x"), connection_timeout=1, connection_acquisition_timeout=2)
                 try:
                     otro.verify_connectivity()
-                except Exception as exc:  # noqa: BLE001 - se espera ServiceUnavailable
+                except Exception as exc:  # noqa: BLE001 - se verifica el tipo esperado
+                    from neo4j.exceptions import ServiceUnavailable
+                    if not isinstance(exc, ServiceUnavailable):
+                        return _clasificar(exc, "sonda")
                     return ok(f"bolt://127.0.0.1:{libre} sin listener -> {type(exc).__name__}: "
                               "error de conexión, distinto de 'sin filas'")
                 finally:

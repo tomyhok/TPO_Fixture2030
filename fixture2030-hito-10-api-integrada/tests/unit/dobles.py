@@ -35,86 +35,27 @@ class MongoDoble(Doble):
         "ESP": {"codigo_iso": "ESP", "nombre": "Espana", "confederacion": "UEFA", "grupo": "K",
                 "ranking_fifa": 11, "director_tecnico": "Keller", "pais_anfitrion": True},
     }
-    JUGADORES = {
-        "ARG-10": {"id_jugador": "ARG-10", "nombre": "Andrés Fuentes", "dorsal": 10, "posicion": "DEF",
-                   "club_actual": "No informado", "fecha_nacimiento": "2004-10-18", "edad": 25,
-                   "altura_cm": 179, "pie_habil": "izquierdo", "codigo_equipo": "ARG"},
-    }
-
     def obtener_equipo(self, codigo_iso: str) -> dict[str, Any] | None:
         self._usar("obtener_equipo")
         return dict(self.EQUIPOS[codigo_iso]) if codigo_iso in self.EQUIPOS else None
 
-    def existe_equipo(self, codigo_iso: str) -> bool:
-        self._usar("existe_equipo")
-        return codigo_iso in self.EQUIPOS
-
-    def listar_equipos(self, confederacion, grupo, page, size):
-        self._usar("listar_equipos")
-        items = [
-            {k: v for k, v in e.items() if k not in ("director_tecnico", "pais_anfitrion")}
-            for e in self.EQUIPOS.values()
-            if (confederacion is None or e["confederacion"] == confederacion)
-            and (grupo is None or e["grupo"] == grupo)
-        ]
-        return items[(page - 1) * size : page * size], len(items)
-
-    def listar_jugadores(self, codigo_equipo, posicion, page, size):
-        self._usar("listar_jugadores")
-        items = [
-            {k: j[k] for k in ("id_jugador", "nombre", "dorsal", "posicion", "club_actual")}
-            for j in self.JUGADORES.values()
-            if j["codigo_equipo"] == codigo_equipo and (posicion is None or j["posicion"] == posicion)
-        ]
-        return items[(page - 1) * size : page * size], len(items)
-
-    def obtener_jugador(self, id_jugador: str):
-        self._usar("obtener_jugador")
-        return dict(self.JUGADORES[id_jugador]) if id_jugador in self.JUGADORES else None
-
 
 class Neo4jDoble(Doble):
-    FICHAS = {
-        "P-001": {"codigo_partido": "P-001", "fecha": "2030-06-10", "fase": "Grupos",
-                  "local": {"codigo_iso": "ARG", "nombre": "Argentina"},
-                  "visitante": {"codigo_iso": "ESP", "nombre": "Espana"},
-                  "sede": {"codigo_sede": "MON", "nombre": "Estadio Monumental", "ciudad": "Buenos Aires"}},
-        "P-002": {"codigo_partido": "P-002", "fecha": "2030-06-12", "fase": "Grupos",
-                  "local": None, "visitante": None, "sede": None},
-    }
     EVENTOS = {
         "P-001": [{"id_evento": "EV-001", "tipo": "Gol", "minuto": 23,
                    "jugador": {"id_jugador": "ARG-10", "nombre": "Andrés Fuentes"}}],
         "P-002": [],
     }
 
-    def existe_partido(self, codigo: str) -> bool:
-        self._usar("existe_partido")
-        return codigo in self.FICHAS
-
-    def ficha_partido(self, codigo: str):
-        self._usar("ficha_partido")
-        return dict(self.FICHAS[codigo]) if codigo in self.FICHAS else None
 
     def eventos_partido(self, codigo: str, limit: int):
         self._usar("eventos_partido")
-        if codigo not in self.FICHAS:
+        if codigo not in self.EVENTOS:
             return None
         return {"codigo_partido": codigo, "eventos": self.EVENTOS[codigo][:limit]}
 
-    def rivales(self, codigo_iso: str, limit: int):
-        self._usar("rivales")
-        if codigo_iso != "ARG":
-            return None
-        return {"codigo_iso": "ARG", "rivales": [
-            {"codigo_iso": "ESP", "nombre": "Espana", "codigo_partido": "P-001",
-             "fecha": "2030-06-10", "condicion": "local"}][:limit]}
-
 
 class CassandraDoble(Doble):
-    def __init__(self) -> None:
-        super().__init__()
-        self.publicados: list[dict[str, Any]] = []
 
     def leer_muro(self, codigo, ventana, limit, cursor):
         self._usar("leer_muro")
@@ -127,52 +68,15 @@ class CassandraDoble(Doble):
         ] if ventana == "203006152016" and cursor is None else []
         return filas[:limit], len(filas) > limit
 
-    def publicar(self, comentario: dict[str, Any]) -> None:
-        self._usar("publicar")
-        self.publicados.append(comentario)
-
 
 class RedisDoble(Doble):
     def __init__(self) -> None:
         super().__init__()
         self.sesiones = {"S-0001": {"usuario_id": "U-0001", "rol": "fan", "estado": "activa", "ttl_restante_s": 1700}}
-        self.cache: dict[str, str] = {}
-        self.idem: dict[str, str] = {}
 
     def leer_sesion(self, id_sesion):
         self._usar("leer_sesion")
         return dict(self.sesiones[id_sesion]) if id_sesion in self.sesiones else None
-
-    def borrar_sesion(self, id_sesion):
-        self._usar("borrar_sesion")
-        return 1 if self.sesiones.pop(id_sesion, None) else 0
-
-    def leer_cache_partido(self, codigo):
-        self._usar("leer_cache_partido")
-        return self.cache.get(codigo)
-
-    def guardar_cache_partido(self, codigo, valor_json, ttl_s):
-        self._usar("guardar_cache_partido")
-        self.cache[codigo] = valor_json
-
-    def reservar_idempotencia(self, clave, valor_json, ttl_s):
-        self._usar("reservar_idempotencia")
-        if clave in self.idem:
-            return False
-        self.idem[clave] = valor_json
-        return True
-
-    def leer_idempotencia(self, clave):
-        self._usar("leer_idempotencia")
-        return self.idem.get(clave)
-
-    def completar_idempotencia(self, clave, valor_json):
-        self._usar("completar_idempotencia")
-        self.idem[clave] = valor_json
-
-    def liberar_idempotencia(self, clave):
-        self._usar("liberar_idempotencia")
-        self.idem.pop(clave, None)
 
 
 class InfluxDoble(Doble):
@@ -193,7 +97,6 @@ class InfluxDoble(Doble):
 
 
 class IrisDoble(Doble):
-    TRANSICIONES = {("Programado", "En Juego"), ("En Juego", "Finalizado")}
 
     def __init__(self) -> None:
         super().__init__()
@@ -209,28 +112,5 @@ class IrisDoble(Doble):
     def obtener_acta(self, codigo):
         self._usar("obtener_acta")
         if codigo not in self.actas:
-            return {"ok": 0, "error": "NO_ENCONTRADO"}
-        return {"ok": 1, "acta": json.loads(json.dumps(self.actas[codigo]))}
-
-    def cambiar_estado(self, codigo, estado):
-        self._usar("cambiar_estado")
-        if codigo not in self.actas:
-            return {"ok": 0, "error": "NO_ENCONTRADO"}
-        acta = self.actas[codigo]
-        if acta["estado"] == estado:
-            return {"ok": 1, "cambiado": 0, "acta": acta}
-        if (acta["estado"], estado) not in self.TRANSICIONES:
-            return {"ok": 0, "error": "TRANSICION_INVALIDA", "estado_actual": acta["estado"]}
-        acta["estado"] = estado
-        return {"ok": 1, "cambiado": 1, "acta": acta}
-
-    def registrar_evento(self, codigo, minuto, tipo, descripcion):
-        self._usar("registrar_evento")
-        if codigo not in self.actas:
-            return {"ok": 0, "error": "NO_ENCONTRADO"}
-        acta = self.actas[codigo]
-        if acta["estado"] == "Finalizado":
-            return {"ok": 0, "error": "PARTIDO_FINALIZADO", "estado_actual": "Finalizado"}
-        evento = {"minuto": minuto, "tipo": tipo, "descripcion": descripcion}
-        acta["eventos"].append(evento)
-        return {"ok": 1, "evento": evento, "acta": acta}
+            return None
+        return json.loads(json.dumps(self.actas[codigo]))

@@ -41,13 +41,13 @@ Se definen en `docker-compose.yml`, en la seccion `environment` del servicio
 | Variable | Valor | Para que sirve |
 |---|---|---|
 | `MONGO_INITDB_ROOT_USERNAME` | `admin` | Usuario administrador que crea la imagen al inicializarse |
-| `MONGO_INITDB_ROOT_PASSWORD` | `password123` | Contrasena de ese usuario |
+| `MONGO_INITDB_ROOT_PASSWORD` | `MONGO_PASSWORD` del `.env` raíz | Contrasena de ese usuario |
 | `MONGO_INITDB_DATABASE` | `fixture2030` | Base sobre la que se ejecutan los scripts de `init-scripts/` |
 
 ## Inicio y verificacion
 
 ```bash
-docker compose up -d
+docker compose --env-file ../.env up -d
 docker compose ps
 ```
 
@@ -73,8 +73,8 @@ Jugadores sin equipo valido: 0
 Todos los comandos siguen esta forma:
 
 ```bash
-docker compose exec mongodb mongosh \
-  -u admin -p password123 --authenticationDatabase admin \
+docker compose --env-file ../.env exec mongodb mongosh \
+  -u admin --authenticationDatabase admin \
   fixture2030 --file <ruta del script>
 ```
 
@@ -83,36 +83,36 @@ scripts de inicializacion y `/queries/` para los de recuperacion:
 
 ```bash
 # Volver a ejecutar la carga (es idempotente: no genera duplicados)
-docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
   fixture2030 --file /docker-entrypoint-initdb.d/02-carga.js
 
 # Inserciones y actualizaciones
-docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
   fixture2030 --file /queries/01-operaciones.js
 
 # Consultas de recuperacion
-docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
   fixture2030 --file /queries/02-consultas.js
 
 # Agregacion
-docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
   fixture2030 --file /queries/03-agregacion.js
 
 # Analisis de eficiencia
-docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
   fixture2030 --file /queries/04-explain.js
 ```
 
 ## Conectarse a mano
 
 ```bash
-docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin fixture2030
+docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin fixture2030
 ```
 
 Desde afuera del contenedor, con Compass o cualquier cliente:
 
 ```
-mongodb://admin:password123@localhost:27017/fixture2030?authSource=admin
+mongodb://localhost:27017/fixture2030?authSource=admin
 ```
 
 ## Persistencia
@@ -122,7 +122,7 @@ Los datos viven en el volumen `mongodb_data`, asi que sobreviven a
 
 ```bash
 docker compose restart
-docker compose exec mongodb mongosh -u admin -p password123 --authenticationDatabase admin \
+docker compose --env-file ../.env exec mongodb mongosh -u admin --authenticationDatabase admin \
   fixture2030 --eval 'db.jugadores.countDocuments()'
 ```
 
@@ -134,3 +134,5 @@ docker compose logs mongodb      # logs
 docker compose down              # parar (los datos se conservan)
 docker compose down -v           # parar y borrar los datos
 ```
+
+Las contraseñas se configuran en el `.env` raíz, excluido de Git. Los comandos de `mongosh` solicitan la contraseña por consola. En Compass completar usuario y contraseña en los campos de autenticación; no guardarlos en una URI versionada.

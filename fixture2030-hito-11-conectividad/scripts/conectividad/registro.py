@@ -31,7 +31,7 @@ CAPAS = (
 )
 NATIVAS = set(CAPAS[3:])
 # Pruebas complementarias: informan, pero no bloquean la cadena.
-SECUNDARIAS = ("contenedor", "portal_http", "sonda", "api")
+SECUNDARIAS = ("contenedor", "portal_http", "sonda", "api", "diagnostico")
 ABREVIATURA = {
     "configuracion": "Cfg",
     "resolucion": "DNS",
@@ -123,9 +123,9 @@ def resumen_excepcion(exc: BaseException, largo: int = 160) -> str:
 
 # ------------------------------------------------------------------ registro
 class Registro:
-    def __init__(self, redactor: Redactor, salida: TextIO = sys.stdout, umbral_lento_ms: float = 1000.0):
+    def __init__(self, redactor: Redactor, salida: TextIO | None = None, umbral_lento_ms: float = 1000.0):
         self.redactor = redactor
-        self.salida = salida
+        self.salida = sys.stdout if salida is None else salida
         self.umbral_lento_ms = umbral_lento_ms
         self.resultados: list[Resultado] = []
 
@@ -248,6 +248,9 @@ def estado_producto(resultados: list[Resultado]) -> tuple[str, str]:
     """Clasifica el producto (RNF9) y devuelve (estado, diagnóstico resumido)."""
     cadena = [r for r in resultados if r.capa in CAPAS]
     secundarias = [r for r in resultados if r.capa in SECUNDARIAS]
+    error_diagnostico = next((r for r in secundarias if r.capa == "diagnostico" and r.estado == FAIL), None)
+    if error_diagnostico:
+        return "desconocido", f"no se pudo completar la evaluación: {error_diagnostico.detalle}"
     if any(r.datos.get("no_configurado") for r in cadena):
         falta = next(r.detalle for r in cadena if r.datos.get("no_configurado"))
         return "no configurado", falta
@@ -260,7 +263,7 @@ def estado_producto(resultados: list[Resultado]) -> tuple[str, str]:
     if not any(r.capa == "lectura" and r.estado in (OK, WARN) for r in cadena):
         ultima = max((CAPAS.index(r.capa) for r in ejecutadas), default=0)
         return "desconocido", f"solo se probó hasta la capa '{CAPAS[ultima]}': no alcanza para declararlo disponible"
-    degradan = [r for r in secundarias if r.estado == FAIL and r.capa != "sonda"] + [
+    degradan = [r for r in secundarias if r.estado == FAIL] + [
         r for r in resultados if r.datos.get("degrada")
     ]
     if degradan:
@@ -276,13 +279,13 @@ def matriz(registro: Registro, productos: list[str]) -> list[dict[str, Any]]:
     filas = []
     for producto in productos:
         propios = [r for r in registro.resultados if r.producto == producto]
-        estado, diagnostico = estado_producto(propios)
+        api = [r for r in registro.resultados if r.capa == "api" and producto in r.datos.get("dependencias", [])]
+        estado, diagnostico = estado_producto(propios + [r for r in api if r not in propios])
         capas = {}
         for capa in CAPAS:
             estados = [r.estado for r in propios if r.capa == capa]
             capas[capa] = FAIL if FAIL in estados else (WARN if WARN in estados else (estados[0] if estados else "-"))
         lectura = [r.duracion_ms for r in propios if r.capa == "lectura" and r.estado in (OK, WARN) and r.duracion_ms]
-        api = [r for r in registro.resultados if r.capa == "api" and producto in r.datos.get("dependencias", [])]
         api_estado = "-" if not api else (FAIL if any(r.estado == FAIL for r in api) else (
             WARN if any(r.estado == WARN for r in api) else (SKIP if all(r.estado == SKIP for r in api) else OK)))
         sondas = [r for r in propios if r.capa == "sonda" and r.estado != SKIP]

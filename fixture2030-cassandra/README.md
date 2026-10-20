@@ -28,7 +28,7 @@ docker compose up -d
 ```
 
 Este comando usa la imagen `cassandra:latest` (RNF1) y persiste los datos en
-`~/docker/data/cassandra` (RNF2).
+el volumen nombrado `fixture2030_cassandra_data`, montado en `/var/lib/cassandra` (RNF2).
 
 ### 2. Verificar que el nodo esté disponible
 
@@ -107,15 +107,12 @@ docker compose exec cassandra cqlsh -k fixture2030
 ### Detener el entorno
 
 ```bash
-docker compose down          # conserva los datos en ~/docker/data/cassandra
+docker compose down          # conserva el volumen fixture2030_cassandra_data
 ```
 
-Para empezar de cero hay que borrar el bind mount a mano, de forma consciente:
-
-```bash
-docker compose down
-rm -rf ~/docker/data/cassandra
-```
+`docker compose down` conserva los datos. Eliminar el volumen implica perderlos;
+no es necesario para aplicar esta correccion. Si se parte del Compose antiguo,
+seguir [la migracion segura](docs/revision_2026-10-19/README.md) antes de recrear el servicio.
 
 ---
 
@@ -155,7 +152,7 @@ de TTL y trade-offs, está en [`docs/analisis_hito6.md`](docs/analisis_hito6.md)
 
 ```text
 fixture2030-cassandra/
-  docker-compose.yml              Servicio Cassandra, puerto 9042, bind mount de datos
+  docker-compose.yml              Servicio Cassandra, puerto 9042, volumen nombrado de datos
   scripts/
     01-keyspace.cql               Keyspace, estrategia y factor de replicación
     02-tablas.cql                 Tablas, claves primarias e índice secundario

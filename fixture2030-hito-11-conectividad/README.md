@@ -19,7 +19,21 @@ Configuración → Resolución → TCP → Protocolo → Autenticación → Auto
 > ejecutada por falta de herramienta, de configuración o porque falló una capa
 > previa"; **no** significa "producto caído".
 
-## Resultado de la última evaluación
+## Estado de la revisión del 19/10/2026
+
+La revisión docente posterior ya compila el modelo IRIS simplificado, usa SQL/DB-API
+y prepara Cassandra sobre volumen nombrado. El modo completo verifica cinco motores
+y marca InfluxDB sin configurar por el token faltante. Ver `docs/evidencia/revision_2026-10-19/feedback_completo.md`.
+La descripción de la primera revisión que sigue se conserva como antecedente.
+
+La versión corregida usa drivers oficiales y tiene pruebas de regresión para la
+matriz, el modo estricto, las capas aisladas y las sondas negativas.
+Ver el [walkthrough](docs/walkthrough_correcciones.md) y la
+[evidencia nueva](docs/evidencia/revision_2026-10-19/README.md).
+El entorno local todavía requiere preparar Cassandra e IRIS y proporcionar el
+token de InfluxDB: contenedores activos no equivalen a módulos preparados.
+
+## Evaluación histórica del 17/10/2026
 
 Corrida del 2026-10-17 00:33 UTC (modo completo, 97 pruebas: 95 OK, 1 WARN, 0 FAIL, 1 SKIP) desde la notebook (Windows 11, Git Bash), commit
 base `db0f5fc` con los cambios de este hito. Detalle en
@@ -115,7 +129,7 @@ Opciones del evaluador (`bash scripts/evaluar_conectividad.sh --help`):
 | `--json archivo` / `--markdown archivo` | Guarda resultados y matriz |
 | `--estricto` | Código de salida 1 si hay algún FAIL (para automatizar); por defecto siempre 0 |
 
-Pruebas del propio diagnóstico (sin bases): `../fixture2030-hito-10-api-integrada/.venv/Scripts/python -m pytest tests -q` (21 pruebas).
+Pruebas del propio diagnóstico (sin bases): `../fixture2030-hito-10-api-integrada/.venv/Scripts/python -m pytest tests -q` (42 pruebas, incluidas las regresiones de la revisión).
 
 ## Estructura
 
@@ -163,7 +177,7 @@ Este hito agrega a [`../fixture2030-hito-10-api-integrada`](../fixture2030-hito-
 * `GET /health/live`, `GET /health/ready` y `GET /health/dependencias` con estados `up`, `down`, `degraded`, `unknown` y `not_configured`, y un chequeo profundo reutilizado durante `HEALTH_CACHE_TTL_S` (ver [`docs/health_readiness.md`](docs/health_readiness.md)). `GET /health` del Hito 10 se mantiene sin cambios de contrato.
 * Traducción de `Neo.ClientError.Database.DatabaseNotFound` a 503 (antes 500).
 * Verificación única del contexto de MongoDB: una database incorrecta da 503 y no un 404 falso.
-* 14 pruebas unitarias nuevas (136 en total) y el contrato `openapi/openapi.yaml` regenerado.
+* Regresiones de salud y contrato `openapi/openapi.yaml` regenerado. Después de simplificar el Hito 10, la API tiene 61 pruebas aprobadas y una omitida por configuración; el diagnóstico tiene 42 aprobadas.
 
 ## Trazabilidad con el enunciado
 

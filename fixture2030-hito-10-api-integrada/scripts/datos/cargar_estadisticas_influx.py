@@ -60,7 +60,7 @@ def main() -> int:
     settings = obtener_settings()
     token = settings.token_influx()
     if not token:
-        print("No hay token de InfluxDB: definir INFLUX_TOKEN o ejecutar fixture2030-influxDB/scripts/inicializacion.sh")
+        print("No hay token de InfluxDB: recuperar el token del servidor existente y definir INFLUX_TOKEN. Inicializar solo un servidor nuevo.")
         return 1
     with httpx.Client(base_url=settings.influx_url, timeout=30) as cliente:
         for codigo, local, visitante, inicio in PARTIDOS:

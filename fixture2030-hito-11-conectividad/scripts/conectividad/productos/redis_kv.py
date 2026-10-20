@@ -2,7 +2,7 @@
 
 | Capa          | Prueba                                   | Qué NO permite concluir                         |
 |---------------|------------------------------------------|-------------------------------------------------|
-| protocolo     | PING en RESP crudo (sin cliente)         | Si la credencial es válida                      |
+| protocolo     | PING mediante redis-py                   | Si la credencial es válida                      |
 | autenticacion | conexión del cliente + ACL WHOAMI        | Permisos sobre las claves                       |
 | autorizacion  | DBSIZE (comando de lectura del keyspace) | Si la base lógica es la correcta                |
 | contexto      | CLIENT INFO (db) + INFO keyspace         | Si existe la clave de prueba                    |
@@ -13,7 +13,6 @@ No es dato de dominio y se autodestruye, pero es una escritura: está
 desactivada salvo REDIS_SONDA_EXPIRACION=1.
 """
 
-import socket
 import time
 import uuid
 
@@ -48,25 +47,6 @@ def _clasificar(exc: BaseException, capa: str) -> Paso:
     return clasificar_generico(exc, capa)
 
 
-def _ping_resp(direccion: str, puerto: int, timeout_s: float) -> Paso:
-    with socket.create_connection((direccion, puerto), timeout=timeout_s) as s:
-        s.settimeout(timeout_s)
-        s.sendall(b"*1\r\n$4\r\nPING\r\n")
-        respuesta = s.recv(128)
-    linea = respuesta.split(b"\r\n")[0].decode(errors="replace")
-    if linea == "+PONG":
-        return ok("RESP: PING -> +PONG")
-    if linea.startswith("-NOAUTH"):
-        return ok("RESP válido: el servidor exige AUTH (-NOAUTH) antes de operar")
-    if linea.startswith("-LOADING"):
-        return fail("Redis cargando el dataset (-LOADING)", "Recién iniciado: lee AOF/RDB.", "Esperar y repetir.")
-    return fail(
-        f"respuesta que no es RESP: {linea[:40]!r}",
-        "Puerto incorrecto: el listener habla otro protocolo.",
-        "Verificar REDIS_PORT (6379).",
-    )
-
-
 def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> None:
     host, puerto, db = cfg.get("REDIS_HOST"), cfg.entero("REDIS_PORT"), cfg.entero("REDIS_DB")
     clave = cfg.get("REDIS_CLAVE_PRUEBA")
@@ -76,16 +56,15 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
     capa_configuracion(c, cfg, ["REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "REDIS_DB", "REDIS_CLAVE_PRUEBA"],
                        ["REDIS_HOST", "REDIS_PORT", "REDIS_DB"])
     capa_contenedor(c, cfg, "redis")
-    direccion = capa_red(c, host, puerto, cfg.decimal("TCP_TIMEOUT_S"), "REDIS_PORT") or host
+    capa_red(c, host, puerto, cfg.decimal("TCP_TIMEOUT_S"), "REDIS_PORT")
     if not (capas & (NATIVAS | {"sonda"})):
         return
-    c.ejecutar("protocolo", "PING (RESP crudo)", lambda: _ping_resp(direccion, puerto, operacion_s))
     try:
         import redis
         from redis.backoff import NoBackoff
         from redis.retry import Retry
     except ImportError:
-        c.sin_herramienta("redis-py", tuple(NATIVAS - {"protocolo"}) + ("sonda",))
+        c.sin_herramienta("redis-py")
         return
 
     def cliente(port: int = puerto) -> "redis.Redis":
@@ -96,7 +75,19 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
         )
 
     r = cliente()
+    anonimo = redis.Redis(host=host, port=puerto, db=0, socket_connect_timeout=conexion_s,
+                          socket_timeout=operacion_s, retry=Retry(NoBackoff(), 0))
     try:
+        def protocolo() -> Paso:
+            try:
+                if not anonimo.ping():
+                    return fail("PING no devolvió PONG", "Respuesta inesperada.", "Revisar REDIS_PORT.")
+            except (redis.exceptions.AuthenticationError, redis.exceptions.NoPermissionError):
+                return ok("el servidor respondió RESP y exige identidad o permisos; todavía no valida la credencial")
+            return ok("PING mediante redis-py -> PONG (sin credenciales)")
+
+        c.ejecutar("protocolo", "PING (redis-py)", protocolo)
+
         def autenticacion() -> Paso:
             usuario = r.execute_command("ACL WHOAMI")
             if cfg.get("REDIS_PASSWORD"):
@@ -142,10 +133,14 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
                 if cfg.get("REDIS_SONDA_EXPIRACION") != "1":
                     return skip("desactivada (REDIS_SONDA_EXPIRACION=0): escribe una clave diag: de 1,5 s")
                 temporal = f"diag:h11:expira:{uuid.uuid4().hex[:8]}"
-                r.set(temporal, "1", px=1500, nx=True)
+                if not r.set(temporal, "1", px=1500, nx=True):
+                    return fail("no se creó la clave temporal", "La clave ya existía.", "Repetir con otra clave.")
                 antes = r.pttl(temporal)
                 time.sleep(1.7)
                 existe, despues = r.exists(temporal), r.pttl(temporal)
+                if not (0 < antes <= 1500 and existe == 0 and despues == -2):
+                    return fail(f"expiración no verificada: PTTL inicial={antes}, EXISTS={existe}, PTTL final={despues}",
+                                "No se observó la transición esperada.", "Repetir y revisar el TTL.")
                 return ok(f"{temporal}: PTTL {antes} ms -> tras 1,7 s EXISTS {existe}, PTTL {despues}. "
                           "Expirada se lee igual que ausente; solo el TTL observado antes las distingue")
 
@@ -169,4 +164,5 @@ def evaluar(cfg: Config, registro: Registro, capas: set[str], sondas: bool) -> N
             c.ejecutar("sonda", "clave expirada", expiracion)
             c.ejecutar("sonda", "Redis no disponible", no_disponible)
     finally:
+        anonimo.close()
         r.close()

@@ -1,4 +1,4 @@
-"""Casos de uso CU10 (validar sesión) y CU11 (cerrar sesión)."""
+"""Lectura representativa del motor, con validación de entrada."""
 
 from typing import Any
 
@@ -16,7 +16,3 @@ class SesionesService:
         if datos is None:
             raise SesionNoVigente(f"No existe una sesión vigente con id '{id_sesion}'.")
         return Sesion(id_sesion=id_sesion, **datos)
-
-    def cerrar(self, id_sesion: str) -> None:
-        # Idempotente: borrar una sesión inexistente deja el mismo estado final.
-        self._redis.borrar_sesion(id_sesion)

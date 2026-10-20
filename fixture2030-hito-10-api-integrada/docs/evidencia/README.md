@@ -1,3 +1,5 @@
+> Evidencia histórica de la entrega previa. Para las correcciones docentes consultar `../revision_2026-10-19/` (IRIS/InfluxDB) o `revision_2026-10-19/` (API). No atribuir estos resultados al código modificado.
+
 # Evidencia del Hito 10
 
 Todos los archivos se generaron con `bash scripts/generar_evidencia.sh --con-caida`,

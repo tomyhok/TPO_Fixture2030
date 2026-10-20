@@ -36,6 +36,12 @@ herramientas se ejecutan dentro de los containers.
 
 Ejecutar desde esta carpeta, que contiene el `docker-compose.yml` principal:
 
+Crear `.env` a partir de [`.env.example`](.env.example) y completar las contraseñas
+locales antes del primer inicio. Si los volúmenes ya existen, usar sus credenciales
+actuales: modificar `.env` no cambia la contraseña almacenada por el motor.
+El archivo `.env` queda excluido de Git. La API usa su propio `.env` del Hito 10,
+que debe contener las mismas credenciales de MongoDB y Neo4j.
+
 ```powershell
 docker compose up -d
 docker compose ps
@@ -67,14 +73,14 @@ volumenes y comenzar desde cero.
 ### Credenciales
 
 - Usuario: `admin`
-- Contrasena: `password123`
+- Contrasena: valor local de `MONGO_PASSWORD` en `.env` (no se publica).
 - Base de datos: `fixture2030`
 
 ### Verificar la conexion
 
 ```powershell
 docker compose exec mongodb mongosh `
-  -u admin -p password123 `
+  -u admin `
   --authenticationDatabase admin `
   fixture2030 `
   --eval "db.runCommand({ ping: 1 })"
@@ -84,7 +90,7 @@ Para verificar los datos principales:
 
 ```powershell
 docker compose exec mongodb mongosh `
-  -u admin -p password123 `
+  -u admin `
   --authenticationDatabase admin `
   fixture2030 `
   --eval "printjson({ equipos: db.equipos.countDocuments(), jugadores: db.jugadores.countDocuments() })"
@@ -92,10 +98,10 @@ docker compose exec mongodb mongosh `
 
 El resultado esperado es `64` equipos y `1472` jugadores.
 
-La conexion desde MongoDB Compass es:
+En MongoDB Compass configurar el usuario de `.env`, su contraseña local y `authSource=admin`. La dirección sin credenciales es:
 
 ```text
-mongodb://admin:password123@localhost:27017/fixture2030?authSource=admin
+mongodb://localhost:27017/fixture2030?authSource=admin
 ```
 
 ### Scripts de MongoDB
@@ -111,7 +117,7 @@ Para ejecutar manualmente una carga idempotente:
 
 ```powershell
 docker compose exec mongodb mongosh `
-  -u admin -p password123 `
+  -u admin `
   --authenticationDatabase admin `
   fixture2030 `
   --file /docker-entrypoint-initdb.d/02-carga.js
@@ -124,7 +130,7 @@ Las consultas adicionales se encuentran en `fixture2030-mongoDB/queries/`.
 ### Credenciales
 
 - Usuario: `neo4j`
-- Contrasena: `fixture2030`
+- Contrasena: valor local de `NEO4J_PASSWORD` en `.env` (no se publica).
 - Browser: `http://localhost:7474`
 - Bolt: `neo4j://localhost:7687`
 
@@ -166,9 +172,9 @@ Modulo de comentarios masivos del Hito 6. La guia detallada esta en
 - Keyspace: `fixture2030`
 - Sin autenticacion (ambiente local de desarrollo)
 
-A diferencia de MongoDB y Neo4j, los datos de Cassandra **no** se guardan en un
-volumen Docker sino en un bind mount en `~/docker/data/cassandra`, segun la
-convencion de la materia.
+Los datos de Cassandra se guardan en el volumen nombrado Docker
+`fixture2030_cassandra_data`, conforme al RNF2 del Hito 6. La migracion del
+bind mount anterior se documento y no borro el directorio original.
 
 ### Verificar la conexion
 
@@ -327,8 +333,12 @@ bash scripts/evaluar_conectividad.sh       # todo + matriz de conectividad
 
 ## Estructura del proyecto
 
+Las correcciones posteriores a la devolución docente están explicadas en
+[el walkthrough de los hitos 4 a 10](docs/walkthrough_correcciones_feedback.md),
+incluyendo evidencia nueva, compatibilidad del Hito 11 y el token pendiente de InfluxDB.
+
 ```text
-docker-compose.yml                 Compose unificado de MongoDB, Neo4j, Cassandra y Redis
+docker-compose.yml                 Compose unificado de los seis motores
 fixture2030-mongoDB/
   init-scripts/                     Inicializacion y datos JSON de MongoDB
   schemas/                          Validaciones JSON Schema
@@ -363,7 +373,6 @@ fixture2030-iris/
   docker-compose.yml                Compose independiente del modulo
 fixture2030-hito-10-api-integrada/
   app/                              API: rutas, servicios, adaptadores, schemas y config
-  iris/                             Fachada Fixture.API que usa el adaptador IRIS
   openapi/                          Contrato OpenAPI generado del codigo
   scripts/                          Inicio, preparacion de datos, conectividad, pruebas y evidencia
   tests/                            Pruebas unitarias y de integracion
@@ -396,15 +405,10 @@ docker compose down -v
 Luego volver a ejecutar `docker compose up -d` y repetir la preparacion y carga
 de Neo4j.
 
-Los datos de Cassandra y Redis no viven en un volumen Docker, asi que `down -v`
-no los borra. Para reiniciar ese modulo desde cero hay que eliminar el bind mount de
-forma consciente:
-
-```bash
-docker compose down
-rm -rf ~/docker/data/cassandra
-rm -rf ~/docker/data/redis
-```
+Cassandra ahora usa un volumen nombrado; Redis, IRIS e InfluxDB mantienen
+sus directorios persistentes del host. No usar `down -v` si se quieren conservar
+los volumenes de MongoDB, Neo4j y Cassandra. El directorio antiguo de Cassandra
+se conserva como respaldo y ya no es el almacenamiento activo.
 
 Los volumenes Docker son locales a cada computadora y no se versionan en Git.
 El Compose crea los volumenes automaticamente si no existen. Por eso, otro

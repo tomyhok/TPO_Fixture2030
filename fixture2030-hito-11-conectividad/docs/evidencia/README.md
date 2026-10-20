@@ -1,5 +1,9 @@
 # Evidencia del Hito 11
 
+La evidencia de esta carpeta fechada el 17/10/2026 se conserva como histórica.
+La [revisión del 19/10/2026](revision_2026-10-19/README.md) corresponde al código corregido y al entorno local actual.
+
+
 Generada con `bash scripts/generar_evidencia.sh` el 2026-10-17 entre las 00:32
 y las 00:34 UTC, desde la notebook (Windows 11, Git Bash), con commit base
 `db0f5fc` y los cambios del Hito 11. Toda la salida pasó por

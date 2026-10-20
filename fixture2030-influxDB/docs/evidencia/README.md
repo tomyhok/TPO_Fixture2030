@@ -1,3 +1,5 @@
+> Evidencia histórica de la entrega previa. Para las correcciones docentes consultar `../revision_2026-10-19/` (IRIS/InfluxDB) o `revision_2026-10-19/` (API). No atribuir estos resultados al código modificado.
+
 # Evidencia de ejecución (Hito 8)
 
 Toda la evidencia se generó con `bash tools/generar_evidencia.sh 10000000`, que corre los scripts en el orden del README y guarda la salida de cada uno en esta carpeta.

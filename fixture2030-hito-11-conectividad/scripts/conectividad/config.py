@@ -78,10 +78,10 @@ DEFECTOS: dict[str, str] = {
     "IRIS_PORTAL_URL": "http://127.0.0.1:52773/csp/sys/UtilHome.csp",
     "IRIS_NAMESPACE": "USER",
     "IRIS_NAMESPACE_ALTERNATIVO": "USER",
-    "IRIS_USER": "fixture_api",
+    "IRIS_USER": "fixture_api_read",
     "IRIS_PASSWORD": "",
-    "IRIS_CLASE": "Fixture.API",
-    "IRIS_ACTA_PRUEBA": "P-001",
+    "IRIS_CLASE": "Fixture.Partido",
+    "IRIS_ACTA_PRUEBA": "P-009",
     # --- Docker (solo para informar el estado del contenedor) ---
     "DOCKER_PREFIJO": "fixture2030-",
 }

@@ -1,132 +1,49 @@
-# Hito 7 — Memoria y Escalabilidad
+# Hito 7 — memoria y escalabilidad (corregido)
 
-Grupo 4 — Ingeniería de Datos II — Fixture 2030
+## Política elegida
 
-Este documento cubre el apartado **Memoria y escalabilidad** de la sección 8 del
-enunciado (RF10) y la explicación del nodo único pedida en 5.1.
+El Compose raíz y el del módulo usan `--maxmemory 256mb --maxmemory-policy noeviction`.
+Se conserva una sola instancia para el laboratorio. Las sesiones de autenticación y las copias
+de caché tienen significados distintos aunque ambas puedan tener TTL:
 
----
-
-## 1. Configuración elegida
-
-En el `docker-compose.yml`:
-
-```text
---maxmemory 256mb
---maxmemory-policy volatile-lru
-```
-
-Se verifica con `INFO memory` en `scripts/inicializacion.redis`:
-
-```text
-maxmemory_human:256.00M
-maxmemory_policy:volatile-lru
-```
-
-* **256 MB** es el mismo valor del ejemplo de clase: un límite chico, acorde a
-  una notebook. Alcanza de sobra para la muestra (se midieron ~1,9 MB usados).
-  Se configura al arrancar en el Compose en lugar de con `CONFIG SET`, para
-  que no se pierda si se recrea el contenedor.
-* **`volatile-lru`**: cuando se llega al límite, Redis elimina las claves
-  **con TTL** que se usaron hace más tiempo. Las claves sin TTL no se tocan.
-
-## 2. Por qué `volatile-lru`
-
-En la misma instancia conviven copias de caché (descartables) y estado
-temporal (sesiones, contadores, encuesta). Comparamos las políticas vistas en
-clase:
-
-| Política | Qué pasaría en este módulo | ¿La elegimos? |
+| Dato | ¿Se puede reconstruir desde otra fuente? | Política de vigencia |
 |---|---|---|
-| `noeviction` | Al llenarse, Redis rechaza escrituras: no se pueden crear sesiones nuevas ni guardar caché. Nadie más puede entrar a la plataforma | No |
-| `allkeys-lru` | Puede borrar cualquier clave, incluida la encuesta abierta, y se perderían votos | No |
-| `allkeys-lfu` | Mismo problema que `allkeys-lru` con la encuesta | No |
-| `volatile-ttl` | Borra primero las claves con menos TTL restante. Las fichas de partido (300 s) serían siempre las primeras, aunque sean las más leídas | No |
-| **`volatile-lru`** | Solo borra claves con TTL, empezando por las menos usadas. La encuesta abierta (sin TTL) queda protegida | **Sí** |
+| Copia de ficha de equipo/partido | Sí, desde MongoDB/Neo4j | TTL y eliminación al actualizar el origen |
+| Sesión autenticada | No equivale a una copia del perfil; contiene estado de acceso vigente | TTL de inactividad o invalidación explícita; no expulsión arbitraria |
+| Encuesta abierta y contadores | Puede existir estado que no esté guardado en otra fuente | Conservar mientras sea necesario; definir conservación antes de borrar |
 
-La idea es usar el TTL como marca de "esto se puede descartar". En nuestro
-modelo **todas** las claves tienen TTL salvo la encuesta mientras está abierta.
-Se ve en `INFO keyspace`: `keys=18,expires=17` después de la carga (la encuesta
-abierta es la única sin TTL) y `keys=19,expires=19` al final de la corrida,
-cuando la encuesta ya estaba cerrada. Para que esto se mantenga, el contador y
-el Set de conectados reciben su `EXPIRE` en el mismo `MULTI/EXEC` que el `INCR`
-o el `SADD` (ver `ciclo_de_vida_e_invalidacion.md` §2).
+`volatile-lru` podía expulsar cualquier clave con TTL, incluida una sesión todavía activa.
+El TTL expresa hasta cuándo debe ser válida una clave; no autoriza su descarte antes de ese
+momento. Se corrige esa decisión: **noeviction preserva las claves existentes ante presión de
+memoria y rechaza las escrituras que necesitan más memoria**. Se acepta que una nueva sesión,
+una renovación o una carga de caché puedan fallar y deban comunicar ese error. No se promete
+disponibilidad infinita ni protección frente a fallos del proceso o pérdida de persistencia.
 
-Riesgo de esta política: si todas las claves sin TTL llenaran la memoria,
-`volatile-lru` no tendría nada para borrar y se comportaría como `noeviction`.
-En nuestro caso solo hay una encuesta abierta por partido, así que eso no
-debería pasar.
+Expiración y eliminación explícita siguen funcionando: una sesión puede vencer por inactividad
+o cerrarse voluntariamente. Con noeviction, una copia de caché también ocupa memoria hasta
+vencer o ser invalidada. El límite de 256 MB es de laboratorio, no capacidad suficiente para
+millones de sesiones. Hay que medir tamaño de sesión y crecimiento antes de dimensionar.
 
-## 3. TTL vs. evicción
+## Verificación y operación
 
-Son dos mecanismos distintos:
+`CONFIG GET maxmemory-policy`, `INFO memory` e `INFO stats` permiten verificar política,
+memoria usada, expiraciones, evicciones y rechazos. La revisión aplicó `CONFIG SET` sin reiniciar
+la instancia para conservar sus claves; el Compose asegura la misma política al recrearla.
+Se observó un TTL positivo en una clave temporal propia y se la eliminó al terminar.
+[Evidencia](revision_2026-10-19/politica.json). No se llenó deliberadamente la instancia compartida:
+no se presenta una prueba OOM que no fue ejecutada.
 
-* **TTL (expiración):** lo decidimos nosotros por cada dato. Responde a "¿hasta
-  cuándo es válido o seguro este dato?". Se ve en `expired_keys`.
-* **Evicción:** la decide Redis cuando no tiene más memoria. Responde a "¿qué
-  puedo sacrificar para seguir aceptando escrituras?". Se ve en
-  `evicted_keys`.
+Monitorear memoria respecto del límite, errores de escritura y duración de sesiones. Ante
+presión, reducir o invalidar copias reconstruibles mediante su ciclo de vida y aumentar capacidad
+según mediciones. No acortar arbitrariamente la vigencia de autenticación para ocultar saturación.
 
-Una clave con TTL puede desaparecer **antes** de su vencimiento si Redis la
-elige para evicción. Efecto sobre cada tipo de dato:
+## Persistencia y límites
 
-| Dato | Si vence por TTL | Si se elimina por evicción |
-|---|---|---|
-| `cache:partido`, `cache:equipo` | Cache miss → se recarga de la fuente de verdad. Comportamiento esperado | Igual: cache miss y recarga. Sin impacto en los datos |
-| `sesion:` | El usuario estuvo 30 min inactivo y vuelve al login. Comportamiento esperado | Un usuario **activo** pierde su sesión y tiene que volver a loguearse. Molesto pero no se pierde información |
-| `contador:...:visitas` | Ya pasaron 48 h, no se usa más | Se pierde el conteo. Es una métrica en vivo, se acepta |
-| `conectados:partido:` | Ya terminó el partido | Se pierde el conteo de conectados hasta que los usuarios vuelvan a entrar |
-| `encuesta:...:figura` (abierta) | No tiene TTL | No se elimina (protegida por `volatile-lru`) |
+Se conserva AOF y snapshot RDB en `~/docker/data/redis`. Las fichas siguen siendo copias;
+las sesiones son estado de acceso temporal. La persistencia no reemplaza la política de vigencia
+ni prueba alta disponibilidad. El único nodo local es un punto de fallo y comparte recursos con
+los otros motores; no demuestra réplica, recuperación regional ni escala de producción.
 
-En la corrida del laboratorio: `expired_keys:1` (la sesión de prueba de 5 s) y
-`evicted_keys:0`. Nunca se llegó al límite de memoria.
-
-Si en producción `evicted_keys` empezara a subir, la señal sería que la
-instancia necesita más memoria, no que hay que acortar los TTL.
-
-## 4. Persistencia
-
-Igual que el laboratorio de clase, el Compose activa:
-
-* **AOF** (`--appendonly yes`): registra las escrituras para reconstruir el
-  estado al reiniciar.
-* **RDB** (`--save 60 1`): snapshot si hubo al menos 1 cambio en 60 s.
-
-Los archivos quedan en `~/docker/data/redis` (RNF2). En la evidencia
-(`evidencia/11_persistencia.txt`) se reinició el contenedor y las 19 claves
-seguían ahí, con su TTL corriendo.
-
-Que Redis persista no lo convierte en fuente de verdad: las fichas siguen
-siendo copias y la fuente de verdad sigue siendo MongoDB y Neo4j.
-
-## 5. Límites del nodo local
-
-El ambiente es **un único nodo** (standalone). Sirve para aprender el modelo y
-los comandos, pero:
-
-* Es un único punto de falla: si se cae el contenedor, se cae todo el módulo.
-* Toda la memoria y la CPU son las de una sola máquina (y además compartidas con
-  Docker Desktop y los otros contenedores del TPO).
-* No prueba réplicas, failover ni distribución de datos.
-
-**No debe presentarse como una topología de alta disponibilidad.**
-
-## 6. Pasos futuros de escala
-
-| Topología | Qué agrega | Cuándo la usaríamos |
-|---|---|---|
-| Primary + réplicas | Copias del primary. Las lecturas de caché se pueden repartir entre réplicas. Las réplicas pueden estar un poco atrasadas | Si el límite son las lecturas |
-| Sentinel | Monitorea el primary y, si se cae, promueve una réplica (failover automático) | Para que la caída de un nodo no tire las sesiones de todos los usuarios |
-| Redis Cluster | Reparte las claves en slots entre varios primaries. Suma memoria y capacidad de escritura | Si el límite es la memoria o las escrituras (millones de sesiones) |
-
-En Redis Cluster, las operaciones con varias claves tienen que tener todas las
-claves en el mismo slot. Las operaciones del módulo no son multi-clave: cada
-`MULTI/EXEC` trabaja sobre una sola clave (una sesión, un contador o un Set),
-así que las claves podrían repartirse sin cambiar el diseño. Si en el futuro
-hiciera falta una operación atómica sobre varias claves de un mismo usuario, se
-forzarían al mismo slot con **hash tags**, como se vio en clase:
-`sesion:{S-0001}:perfil` y `sesion:{S-0001}:permisos`.
-
-Excepción: `limpieza.redis` hace `DEL` de varias claves en un comando. En un
-Cluster habría que borrarlas de a una, pero es un script de laboratorio, no
-parte de la operación normal.
+Una separación futura en instancias distintas permitiría política de evicción de caché y política
+de sesiones independientes. No se agrega ese despliegue para resolver el laboratorio: se usa
+la política conservadora de una instancia y se explicita su costo de rechazar escrituras.

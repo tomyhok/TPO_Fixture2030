@@ -1,0 +1,10 @@
+{
+  "origen": "bind mount conservado",
+  "destino": "fixture2030_cassandra_data",
+  "tipo": "volume",
+  "archivos_verificados": 147,
+  "sha256_manifiesto": "04f61486858210ae0c7573b9e007bcc67f9ce7cdc493399ff6a92d3f33e98be2",
+  "hashes_coinciden": true,
+  "estado": "healthy",
+  "imagen_id": "sha256:1d18946ead0b0d22ed0371bd7384d86f540465c489f2935e88df35e755073f6b"
+}

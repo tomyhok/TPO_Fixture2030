@@ -1,3 +1,7 @@
+> Revisión: la medición histórica se hizo con el montaje anterior. El Compose actual usa
+> `fixture2030_cassandra_data`; ver `revision_2026-10-19/README.md`. No se reutilizan tiempos
+> históricos como mediciones del nuevo volumen.
+
 # Evidencia de Ejecución — Hito 6 (Cassandra)
 
 Registro exigido por RF13 y RNF9.

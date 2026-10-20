@@ -7,7 +7,6 @@ debe llegar dentro del timeout y nunca ser un 200 vacío.
 """
 
 import time
-import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -67,16 +66,6 @@ def test_health_con_todas_las_fuentes_caidas(cliente_sin_fuentes):
     r = cliente_sin_fuentes.get("/health")
     assert r.status_code == 503
     assert all(d["estado"] in ("caida", "timeout") for d in r.json()["dependencias"])
-
-
-def test_escritura_con_redis_caido_no_escribe(cliente_sin_fuentes):
-    cuerpo = {"id_usuario": "U-1001", "usuario_alias": "hincha", "equipo_apoyado": "ARG",
-              "texto": "no debería guardarse", "idioma": "es", "minuto_partido": 1}
-    r = cliente_sin_fuentes.post(
-        "/partidos/P-001/comentarios", json=cuerpo, headers={"Idempotency-Key": str(uuid.uuid4())}
-    )
-    assert r.status_code in (503, 504)
-    assert r.json()["error"]["detalles"] == [{"dependencia": "redis"}]
 
 
 @pytest.mark.parametrize(

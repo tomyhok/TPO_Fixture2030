@@ -11,10 +11,11 @@ Se corrigieron los puntos pendientes de los hitos 4 a 10 y se mantuvo compatible
 En el Hito 4 la mayor parte de la reducción de alcance ya estaba hecha. Las verificaciones
 actuales tienen evidencia nueva y se distinguen de los resultados históricos.
 
-**Pendiente externo: el token del InfluxDB existente.** Se corrigió y comprobó su entorno,
-pero no se puede volver a demostrar una lectura autorizada ni repetir sus agregaciones sin
-esa credencial. No se presenta ese punto como aprobado. No se borraron sus datos ni se
-reinicializó el servidor para obtener otro token.
+**InfluxDB: token verificado el 23/10/2026.** La corrida del 19/10 se hizo en una notebook
+sin el archivo `.influxdb3-token`, por eso InfluxDB figuraba como no configurado. En la notebook
+que tiene el token se comprobó que el servidor lo acepta. El diagnóstico del Hito 11 dio
+14 OK y 0 FAIL, y la API leyó estadísticas con 200. No se borraron datos ni se regeneró el token.
+El detalle está en la sección del Hito 8.
 
 ## Hito 4 — alcance documental
 
@@ -113,10 +114,12 @@ Corregí además la inicialización para no guardar un token vacío, ocultar err
 o declarar éxito solamente porque el CLI terminó con código cero. Se comprueba autorización
 HTTP y existencia de la base. No ejecuté una inicialización destructiva sobre el servidor existente.
 
-Ver [alcance de la verificación](../fixture2030-influxDB/docs/revision_2026-10-19/README.md) y
-[Compose aplicado y entorno real](../fixture2030-influxDB/docs/revision_2026-10-19/compose_aplicado.json).
-Las mediciones históricas de carga siguen identificadas como históricas. Falta recuperar el token
-para repetir las consultas y completar la evidencia funcional con este entorno.
+El 23/10 se unificó todo en el [README del Hito 8](../fixture2030-influxDB/README.md) y se quitó la
+carpeta `revision_2026-10-19`. Ahora `verificar_entorno.py` también prueba el token, sin guardarlo,
+y sobrescribe un único [`08_entorno.json`](../fixture2030-influxDB/docs/evidencia/08_entorno.json).
+Resultados: 401 sin token, 200 con el token y base `fixture2030` presente. El diagnóstico del Hito 11
+dio 14 OK y 0 FAIL ([`09_conectividad.txt`](../fixture2030-influxDB/docs/evidencia/09_conectividad.txt)).
+La carga de 10M puntos del 07/10 sigue presentada como evidencia histórica y no se repitió.
 
 ## Hito 9 — objetos, guardado y una regla de dominio
 
@@ -171,7 +174,8 @@ Los generadores de evidencia ya no reinician actas, publican comentarios ni deti
 
 Preparé un `.env` local ignorado por Git con las credenciales disponibles y una identidad IRIS
 dedicada de lectura, sin modificar contraseñas existentes. Su rol permite leer la base y SELECT
-del esquema Fixture. Los secretos no aparecen en la evidencia. InfluxDB permanece sin token.
+del esquema Fixture. Los secretos no aparecen en la evidencia. En esa corrida InfluxDB no tenía
+token; el 23/10 se verificó con el token del Hito 8 (ver arriba).
 
 [Guía actual de API](../fixture2030-hito-10-api-integrada/README.md),
 [OpenAPI](../fixture2030-hito-10-api-integrada/openapi/openapi.yaml) y
@@ -197,6 +201,10 @@ Resultados finales:
 - Compilación y demostración IRIS, generador Neo4j, sintaxis Python/Bash y revisión de espacios.
 - Comprobación de archivos locales ignorados y de que las credenciales nuevas no aparecen en la evidencia.
 
+Esos resultados son de la corrida del 19/10, sin el token. Con el token, el 23/10
+`test_lectura_real[influxdb]` pasó, `GET /partidos/P-001/estadisticas` devolvió 200 y
+`/health/dependencias` informó `influxdb=up`.
+
 Las respuestas HTTP se guardaron con su request ID. El servidor temporal se detuvo al terminar.
 No se usan las latencias puntuales para prometer el rendimiento del escenario de producción.
 La [matriz completa](../fixture2030-hito-11-conectividad/docs/evidencia/revision_2026-10-19/feedback_completo.md)
@@ -210,6 +218,7 @@ directorio; IRIS conserva objetos anteriores y agrega la muestra P-009. Los seis
 del laboratorio continúan disponibles según sus verificaciones de proceso; eso no equivale a
 tener autorización de lectura en los seis.
 
-Para cerrar el único punto de verificación pendiente, recuperar el token del InfluxDB existente,
-guardarlo en la configuración local y repetir su validación y la lectura integrada. Los hitos
-1–3 quedan para la revisión del grupo en Google Drive, como se solicitó.
+El punto que quedaba pendiente, el token de InfluxDB, se cerró el 23/10 (ver Hito 8).
+El contenedor de InfluxDB de esa notebook se creó antes de alinear el Compose y todavía publica
+el 8181 en todas las interfaces. Se corrige con `docker compose up -d --force-recreate influxdb`,
+sin perder datos. Los hitos 1–3 quedan para la revisión del grupo en Google Drive, como se solicitó.

@@ -1,0 +1,39 @@
+====================================================================================================
+Hito 11 — Evaluación de conectividad Fixture 2030 — hito8-token-2026-10-23
+  inicio_utc     2026-10-23T16:54:13Z
+  commit         1ee555a (hito-11, con cambios sin commitear)
+  origen         notebook Windows 11 (Git Bash); 127.0.0.1 = puertos publicados por Docker
+  python         3.14.6
+  drivers        pymongo (no instalado), neo4j (no instalado), cassandra-driver (no instalado), redis (no instalado), intersystems-irispython (no instalado)
+  configuracion  fixture2030-hito-10-api-integrada/.env
+  modo           nativo
+  productos      influxdb
+  capas          autenticacion, autorizacion, configuracion, contenedor, contexto, lectura, portal_http, protocolo, resolucion, sonda, tcp
+  timeouts_s     tcp=3 conexion=2 operacion=5 api=15
+====================================================================================================
+
+--- influxdb ---
+[OK  ] influxdb  configuracion      0.0 ms  variables: INFLUX_URL=http://127.0.0.1:8181; INFLUX_DATABASE=fixture2030; INFLUX_TOKEN (vacía); INFLUX_TOKEN_FILE=../fixture2030-influxDB/.influxdb3-token [origen: archivo fixture2030-hito-10-api-integrada/.env, defecto]
+[OK  ] influxdb  configuracion              origen del token: token leído de archivo fixture2030-influxDB/.influxdb3-token (valor oculto)
+[OK  ] influxdb  contenedor       163.4 ms  docker inspect: fixture2030-influxdb: running; puertos publicados: 8181/tcp -> 0.0.0.0:8181. Activo no implica disponible: lo deciden las capas siguientes
+[OK  ] influxdb  resolucion         0.0 ms  getaddrinfo: '127.0.0.1' es una dirección IP literal: no requiere DNS
+[OK  ] influxdb  tcp               19.2 ms  connect(): 127.0.0.1:8181 listener aceptó la conexión
+[OK  ] influxdb  protocolo         48.5 ms  GET /health (sin token): sin token -> 401: el servicio HTTP responde y exige token también en /health (InfluxDB 3 Core con autorización activa)
+[OK  ] influxdb  autenticacion     14.6 ms  GET /health (con token): con token -> 200 OK (token de archivo fixture2030-influxDB/.influxdb3-token)
+[OK  ] influxdb  autorizacion      15.0 ms  listar databases: listado de databases permitido: _internal, fixture2030
+[OK  ] influxdb  contexto           5.7 ms  database + tabla: database 'fixture2030' con la tabla 'estadisticas_partido'
+[OK  ] influxdb  lectura           18.0 ms  COUNT acotado por tiempo: COUNT(*) = 1800 en partido P-001, [2030-06-10T20:00:00Z, 2030-06-10T20:15:00Z) (primero 2030-06-10T20:00:00, último 2030-06-10T20:14:59)
+[OK  ] influxdb  lectura           38.5 ms  agregación date_bin: date_bin(5 min) + AVG(posesion_pct): 3 bloques [50.0, 50.0, 50.0]
+[OK  ] influxdb  sonda              2.5 ms  token inválido: token inválido -> HTTP 401: autenticación rechazada, servicio accesible
+[OK  ] influxdb  sonda             13.2 ms  database inexistente: database inexistente -> HTTP 404 {'error': 'query error: database not found: fixture2030_inexistente_h1: error de contexto
+[OK  ] influxdb  sonda             19.9 ms  ventana sin puntos: ventana 2031-01-01 sin datos -> HTTP 200, COUNT(*) = 0: ausencia de puntos válida (la API responde 200 con series vacías)
+
+====================================================================================================
+Matriz de conectividad (OK | WARN | FAIL | SKIP | - = capa no ejecutada en este modo)
+====================================================================================================
+producto   estado          Cfg   DNS   TCP   Prot  AuthN AuthZ Ctx   Lect  sondas API    lect.ms
+influxdb   disponible      OK    OK    OK    OK    OK    OK    OK    OK    3/3    -         38.5
+           -> todas las capas ejecutadas terminaron OK
+
+Total: 14 | OK: 14 | WARN: 0 | FAIL: 0 | SKIP: 0 | duración 0.6 s
+Interpretación: OK indica que esa prueba concreta funcionó en este momento y desde este origen; no garantiza rendimiento ni disponibilidad permanente. SKIP = prueba no ejecutada (falta de herramienta, de configuración o capa previa fallida), no 'producto caído'.

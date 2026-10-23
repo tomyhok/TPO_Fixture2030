@@ -72,3 +72,6 @@ keyspace `fixture2030`. IRIS tiene clases del Hito 9 anteriores a la fachada
 actual: falta `CodigoIndexOpen`. No hay token local disponible de InfluxDB.
 Son condiciones de preparación del laboratorio, registradas como falla de contexto
 o módulo no configurado, y no se sustituyen por resultados supuestos.
+
+El 23/10/2026 se verificó InfluxDB en la notebook que tiene `.influxdb3-token`: 14 OK y 0 FAIL
+([salida](../../fixture2030-influxDB/docs/evidencia/09_conectividad.txt)).

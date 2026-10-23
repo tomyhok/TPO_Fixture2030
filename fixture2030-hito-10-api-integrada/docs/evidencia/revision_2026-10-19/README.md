@@ -11,8 +11,12 @@ No debe confundirse ese transporte con el de la captura HTTP posterior.
 
 `pruebas.txt`: **61 aprobadas, 1 omitida** (46 unitarias, 10 de fallas de conexión/timeout,
 5 lecturas reales; falta la sexta, InfluxDB). `pruebas_h11.txt`: 42 aprobadas del diagnóstico.
-La omisión y los 503 no se presentan como integración positiva de InfluxDB. Falta recuperar su token
-para repetir consultas del Hito 8 y completar su lectura vía API.
+La omisión y los 503 no se presentan como integración positiva de InfluxDB. Esta corrida se hizo
+en una notebook sin `.influxdb3-token`.
+
+**Actualización 23/10/2026.** En la notebook que tiene el token, `test_lectura_real[influxdb]` pasó.
+`GET /partidos/P-001/estadisticas` devolvió 200 y `/health/dependencias` informó `influxdb=up`.
+Ver la [verificación del Hito 8](../../../../fixture2030-influxDB/docs/evidencia/README.md#verificación-vigente-23102026).
 
 Las marcas están en UTC; la ejecución fue durante el 19 de octubre en Argentina. No se
 usan estos tiempos puntuales para garantizar los objetivos de rendimiento del escenario.

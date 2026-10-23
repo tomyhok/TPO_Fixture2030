@@ -14,6 +14,7 @@ Este módulo resuelve el Hito 8 (estadísticas en vivo del Fixture 2030). Usa **
     *   `consultas_temporales.sh`: Ventana temporal y comparación entre equipos.
     *   `agregaciones.sh`: Resumen por equipo y agregación por minuto.
     *   `validacion.sh`: Cuenta puntos, partidos y series, y verifica la distribución por serie.
+    *   `verificar_entorno.py`: Contrasta los dos Compose con el contenedor, registra versión y digest de la imagen y prueba el token (sin guardarlo).
 *   `tools/generar_evidencia.sh`: Corre todo en orden y guarda la salida en `docs/evidencia/`.
 *   `docs/`:
     *   [Patrones de Acceso](docs/patrones_de_acceso.md)
@@ -46,6 +47,7 @@ Todos los comandos se ejecutan desde la carpeta `fixture2030-influxDB/`. Los scr
    ```bash
    bash scripts/inicializacion.sh
    ```
+   Si `.influxdb3-token` ya existe, el script no crea otro: solo comprueba por HTTP que el servidor lo acepte y que exista la base. El token pertenece al directorio de datos (`~/docker/data/influxdb`) donde se creó: cada integrante tiene el suyo. Si el directorio de datos ya tiene un token de administrador y falta el archivo, el servidor no crea un segundo token. Regenerarlo con `influxdb3 create token --admin --regenerate` invalida el anterior. Lo primero es recuperar el archivo; no borrar los datos para empezar de cero.
 3. **Generar y cargar los puntos:**
    ```bash
    python3 scripts/generacion_puntos.py 1000000 data_estadisticas.lp   # o 10000234 para superar los 10M
@@ -62,12 +64,17 @@ Todos los comandos se ejecutan desde la carpeta `fixture2030-influxDB/`. Los scr
    ```bash
    bash tools/generar_evidencia.sh 10000000
    ```
-6. **Detener o reiniciar sin perder datos:**
+6. **Verificar entorno y token (no modifica datos):**
+   ```bash
+   python scripts/verificar_entorno.py
+   ```
+   Falla si los dos Compose difieren o si el contenedor no corre la imagen y el comando declarados. Sobrescribe `docs/evidencia/08_entorno.json`, así que siempre queda una sola versión vigente.
+7. **Detener o reiniciar sin perder datos:**
    ```bash
    docker compose stop      # o: docker compose down
    docker compose up -d     # los datos siguen en ~/docker/data/influxdb
    ```
-7. **Limpieza (opcional, borra todos los datos cargados):**
+8. **Limpieza (opcional, borra todos los datos cargados):**
    ```bash
    docker compose down
    rm -rf ~/docker/data/influxdb/*
@@ -75,23 +82,28 @@ Todos los comandos se ejecutan desde la carpeta `fixture2030-influxDB/`. Los scr
    ```
    Después de esto hay que volver a empezar desde el paso 1.
 
-## Entorno corregido
+## Entorno
 
-Ambos Compose usan `influxdb:3-core`. La imagen local verificada es 3.12.0;
-[registro de imagen, digest y límites](docs/revision_2026-10-19/README.md). Falta el token
-del servidor existente para repetir consultas: no se presenta la carga histórica como una
-medición nueva del Compose corregido. `python scripts/verificar_entorno.py` registra el entorno.
+El Compose del módulo y el de la raíz declaran el mismo servicio: imagen `influxdb:3-core`, el mismo comando, el puerto 8181 publicado solo en `127.0.0.1` y los datos en `~/docker/data/influxdb`. `influxdb:3-core` identifica la familia Core y avanza con cada publicación (`pull_policy: always`). Para saber exactamente qué binario corrió, `08_entorno.json` registra la versión y el digest de la imagen.
 
 ## Pruebas y Evidencia
 
-Se cargaron **9.999.980 puntos** (se pidieron 10M; la diferencia se explica en el paso 3) en una notebook (Apple M1 Pro, 16 GB) con InfluxDB 3 Core 3.12.0. El método, los tiempos medidos y las limitaciones están en [`docs/evidencia/README.md`](docs/evidencia/README.md), junto con la salida de cada script.
+La evidencia está en [`docs/evidencia/`](docs/evidencia/README.md) y tiene dos partes:
+
+*   **Carga de volumen (07/10/2026):** se cargaron **9.999.980 puntos** (se pidieron 10M; la diferencia se explica en el paso 3) en una notebook Apple M1 Pro de 16 GB con InfluxDB 3 Core 3.12.0. Para esta parte se registraron tiempos de carga, consultas, agregaciones, validación y persistencia (archivos `00` a `07`).
+*   **Verificación del entorno y del acceso (23/10/2026):** se hizo en otra notebook (Windows 11) con InfluxDB 3 Core 3.12.1, contra el servidor que usa la API del Hito 10.
+    *   El servidor rechaza `/health` sin token o con un token inválido (401) y acepta el token de `.influxdb3-token` (200).
+    *   La base `fixture2030` existe con la tabla `estadisticas_partido`, que tiene 29.000 puntos de la muestra del Hito 10 (P-001 y P-002).
+    *   El diagnóstico del Hito 11 dio 14 OK y 0 FAIL: conteo acotado por tiempo, `date_bin` de 5 minutos, base inexistente (404) y ventana sin puntos (200 con conteo 0).
+    *   La API devolvió 200 en `GET /partidos/P-001/estadisticas` e informó InfluxDB `up` en `/health/dependencias`.
+    *   Esta verificación no repite la carga de 10M puntos (archivos `08` y `09`).
 
 ## Seguridad Local
 
 *   El token se crea con `inicializacion.sh` y se guarda en `.influxdb3-token`, que no debe subirse al repositorio. Los scripts lo leen de ese archivo; nunca aparece escrito en el código.
 *   La evidencia filtra la línea del token al guardar la salida de la inicialización.
 *   El archivo generado `data_estadisticas.lp` tampoco debe subirse (pesa entre 137 MB y 1,35 GB).
-*   El puerto 8181 se publica solo en `127.0.0.1` en el Compose del módulo.
+*   El puerto 8181 se publica solo en `127.0.0.1` en ambos Compose. Un contenedor creado con una versión anterior del Compose conserva su publicación anterior hasta recrearlo con `docker compose up -d --force-recreate influxdb`. Los datos y el token se conservan porque están en `~/docker/data/influxdb`. `08_entorno.json` lo indica en `puerto_solo_localhost`.
 
 ## Coherencia con el TPO
 

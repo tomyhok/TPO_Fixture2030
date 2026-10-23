@@ -1,0 +1,104 @@
+{
+  "fecha_utc": "2026-10-23T16:54:03.571770+00:00",
+  "servicio_coincidente": {
+    "image": "influxdb:3-core",
+    "command": [
+      "influxdb3",
+      "serve",
+      "--node-id=fixture2030-local",
+      "--object-store=file",
+      "--data-dir=/var/lib/influxdb3/data",
+      "--http-bind=0.0.0.0:8181"
+    ],
+    "ports": [
+      {
+        "host_ip": "127.0.0.1",
+        "mode": "ingress",
+        "protocol": "tcp",
+        "published": "8181",
+        "target": 8181
+      }
+    ],
+    "volumes": [
+      {
+        "bind": {
+          "create_host_path": true
+        },
+        "source": "C:\\Users\\santi\\docker\\data\\influxdb",
+        "target": "/var/lib/influxdb3/data",
+        "type": "bind"
+      },
+      {
+        "bind": {
+          "create_host_path": true
+        },
+        "read_only": true,
+        "source": "C:\\Users\\santi\\Desktop\\Uade\\5- Ingeniería de Datos II\\TPO\\TPO_Fixture2030\\fixture2030-influxDB\\scripts",
+        "target": "/scripts",
+        "type": "bind"
+      }
+    ]
+  },
+  "imagen_configurada": "influxdb:3-core",
+  "image_id": "sha256:47d815e88248b61498182b9ecc618342a80cda3d8c181a672208347cb3d29e38",
+  "digests": [
+    "influxdb@sha256:47d815e88248b61498182b9ecc618342a80cda3d8c181a672208347cb3d29e38"
+  ],
+  "version": "influxdb3 InfluxDB 3 Core, 3.12.1, revision 692ea4a9943fc343c5fdf830d7dff82eef1f7fca",
+  "runtime": {
+    "contenedor_creado": "2026-10-15T18:47:33.33773061Z",
+    "puertos": {
+      "8181/tcp": [
+        {
+          "HostIp": "",
+          "HostPort": "8181"
+        }
+      ]
+    },
+    "puerto_solo_localhost": false,
+    "montajes": [
+      {
+        "Type": "bind",
+        "Source": "C:\\Users\\santi\\Desktop\\Uade\\5- Ingeniería de Datos II\\TPO\\TPO_Fixture2030\\fixture2030-influxDB\\scripts",
+        "Destination": "/scripts",
+        "RW": false
+      },
+      {
+        "Type": "bind",
+        "Source": "C:\\Users\\santi\\docker\\data\\influxdb",
+        "Destination": "/var/lib/influxdb3/data",
+        "RW": true
+      }
+    ]
+  },
+  "compose_sha256": {
+    "docker-compose.yml": "6461a2a6259b995273e0d5b5ef7ddd13238b7e579f219650c88ad73f673c7f5f",
+    "fixture2030-influxDB/docker-compose.yml": "5e209f1d42d7ae926e65f06c5a3ea540c5b3414cd36e19f442f1f29d1c43b445"
+  },
+  "acceso": {
+    "origen": ".influxdb3-token (valor no registrado)",
+    "presente": true,
+    "health_sin_token": 401,
+    "health_con_token": 200,
+    "token_invalido": 401,
+    "databases": [
+      "_internal",
+      "fixture2030"
+    ],
+    "puntos_por_partido": [
+      {
+        "partido_id": "P-001",
+        "puntos": 14600,
+        "primero": "2030-06-06T18:13:20",
+        "ultimo": "2030-06-10T21:59:59"
+      },
+      {
+        "partido_id": "P-002",
+        "puntos": 14400,
+        "primero": "2030-06-12T20:00:00",
+        "ultimo": "2030-06-12T21:59:59"
+      }
+    ]
+  },
+  "limite": "Verifica entorno, token y datos presentes. No repite la carga histórica de 10M de puntos."
+}

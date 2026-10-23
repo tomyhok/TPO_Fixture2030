@@ -15,9 +15,12 @@ Los endpoints de salud ampliados se conservan por los requisitos del Hito 11.
 5. Ejecutar `python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`.
 6. Abrir `http://127.0.0.1:8000/docs`.
 
-La configuración local preparada durante esta revisión conecta cinco motores. Falta recuperar
-el token del InfluxDB existente: dejarlo vacío produce `not_configured` en el diagnóstico y 503
-en la lectura de estadísticas. No generar otro token ni reinicializar el almacenamiento para ocultarlo.
+El token de InfluxDB no hace falta escribirlo en el `.env`. Con `INFLUX_TOKEN` vacío, la API lo lee
+de `fixture2030-influxDB/.influxdb3-token`, que genera el Hito 8 y no se versiona. Si faltan los dos,
+el diagnóstico informa `not_configured` y la lectura de estadísticas responde 503. En ese caso hay
+que recuperar el archivo; no generar otro token ni reinicializar el almacenamiento. El 23/10/2026 se
+verificó con ese archivo: `test_lectura_real[influxdb]` pasó e InfluxDB figuró `up`
+([evidencia en el Hito 8](../fixture2030-influxDB/docs/evidencia/README.md#verificación-vigente-23102026)).
 
 ## Alcance actual
 

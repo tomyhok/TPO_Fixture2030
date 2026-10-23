@@ -13,6 +13,11 @@ lecturas HTTP de estadísticas; las capas nativas de InfluxDB no se ejecutan sin
 Los WARN incluyen el diagnóstico de disponibilidad parcial y la sesión Redis ausente/vencida.
 Las sondas de los cinco motores configurados terminaron correctamente.
 
+**Actualización 23/10/2026.** Esta corrida se hizo en una notebook sin `.influxdb3-token`. En la notebook
+que tiene el token, InfluxDB dio **14 OK, 0 FAIL** en modo nativo, con todas las capas y las 3 sondas
+([salida](../../../../fixture2030-influxDB/docs/evidencia/09_conectividad.txt)). La API respondió 200
+en estadísticas e informó `influxdb=up`. No se repitió el modo completo de los seis motores.
+
 Pruebas: 61 aprobadas y una omitida en API; 42 aprobadas en Hito 11. La prueba omitida es
 la lectura real de InfluxDB; no se cuenta como éxito. El uso de localhost es el de la notebook.
 El puerto HTTP temporal registrado en los archivos solo corresponde a esta corrida.

@@ -24,14 +24,16 @@ Configuración → Resolución → TCP → Protocolo → Autenticación → Auto
 La revisión docente posterior ya compila el modelo IRIS simplificado, usa SQL/DB-API
 y prepara Cassandra sobre volumen nombrado. El modo completo verifica cinco motores
 y marca InfluxDB sin configurar por el token faltante. Ver `docs/evidencia/revision_2026-10-19/feedback_completo.md`.
+El 23/10/2026, con el token del Hito 8, `--modo nativo --producto influxdb` dio **14 OK, 0 FAIL**
+([salida](../fixture2030-influxDB/docs/evidencia/09_conectividad.txt)).
 La descripción de la primera revisión que sigue se conserva como antecedente.
 
 La versión corregida usa drivers oficiales y tiene pruebas de regresión para la
 matriz, el modo estricto, las capas aisladas y las sondas negativas.
 Ver el [walkthrough](docs/walkthrough_correcciones.md) y la
 [evidencia nueva](docs/evidencia/revision_2026-10-19/README.md).
-El entorno local todavía requiere preparar Cassandra e IRIS y proporcionar el
-token de InfluxDB: contenedores activos no equivalen a módulos preparados.
+Contenedores activos no equivalen a módulos preparados: cada entorno local necesita
+Cassandra e IRIS preparados y el archivo de token de InfluxDB del Hito 8.
 
 ## Evaluación histórica del 17/10/2026
 

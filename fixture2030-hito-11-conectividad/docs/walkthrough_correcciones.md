@@ -157,6 +157,8 @@ como corresponde a esa falla real de contexto, y no mostró sondas falsas en OK.
 
 Esto no certifica una integración completa exitosa: el laboratorio todavía
 necesita el keyspace de Cassandra, clases IRIS compatibles y el token de InfluxDB.
+El token de InfluxDB se verificó el 23/10/2026: 14 OK y 0 FAIL
+([salida](../../fixture2030-influxDB/docs/evidencia/09_conectividad.txt)).
 No se cargaron ni borraron datos para ocultar esas condiciones.
 
 ## 7. Cómo revisar lo que quedó pendiente de guardar

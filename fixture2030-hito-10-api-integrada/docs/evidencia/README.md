@@ -1,4 +1,4 @@
-> Evidencia histórica de la entrega previa. Para las correcciones docentes consultar `../revision_2026-10-19/` (IRIS/InfluxDB) o `revision_2026-10-19/` (API). No atribuir estos resultados al código modificado.
+> Evidencia histórica de la entrega previa. Para las correcciones docentes consultar [`revision_2026-10-19/`](revision_2026-10-19/README.md) (API) y la [verificación vigente de InfluxDB](../../../fixture2030-influxDB/docs/evidencia/README.md#verificación-vigente-23102026). No atribuir estos resultados al código modificado.
 
 # Evidencia del Hito 10
 

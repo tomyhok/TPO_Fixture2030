@@ -1,0 +1,30 @@
+{
+  "corrida": "docs/evidencia/resultados/optimizado_20261029-211547.json",
+  "redis": {
+    "muros": 64,
+    "muros_con_duplicados": 0,
+    "ids_de_corridas_previas_total": 0,
+    "ids_inexistentes_en_cassandra_total": 0,
+    "ultimos_reales_ausentes_total": 0,
+    "elementos_total": 6400,
+    "partido_caliente": {
+      "elementos": 100,
+      "duplicados": 0,
+      "ids_de_corridas_previas": 0,
+      "ids_inexistentes_en_cassandra": 0,
+      "ultimos_reales_ausentes_en_muro": 0
+    }
+  },
+  "escrituras_generadas": 207936,
+  "aceptadas": 207936,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 51,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 768,
+  "filas_en_particiones_controladas": 207936,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}

@@ -1,0 +1,469 @@
+{
+  "modo": "optimizado",
+  "fecha": "2026-10-29T21:25:01",
+  "configuracion": {
+    "modo": "optimizado",
+    "usuarios": 50,
+    "procesos": 3,
+    "rampa": 30,
+    "duracion": 120,
+    "lecturas": 0.8,
+    "semilla": 2030,
+    "tasa": 10.0
+  },
+  "entorno": {
+    "commit": "17b3693 (con cambios sin commitear)",
+    "sha1_scripts": "748e059934f1",
+    "cassandra_version": "5.0.9",
+    "redis_version": "8.10.2",
+    "redis_maxmemory_policy": "volatile-lru",
+    "host": "Darwin 25.6.0, 8 CPUs",
+    "python": "3.14.5"
+  },
+  "corte": "tiempo cumplido",
+  "operaciones_totales": 67500,
+  "sostenimiento": {
+    "segundos": 120,
+    "operaciones": 60000,
+    "throughput_ops_s": 500.0,
+    "errores": 0,
+    "tasa_error_pct": 0.0,
+    "tipos_error": {}
+  },
+  "latencia_ms": {
+    "lectura": {
+      "n": 47895,
+      "min": 0.2,
+      "promedio": 3.15,
+      "p50": 1.67,
+      "p95": 11.1,
+      "p99": 17.57,
+      "max": 77.02
+    },
+    "escritura": {
+      "n": 12105,
+      "min": 1.29,
+      "promedio": 7.08,
+      "p50": 5.63,
+      "p95": 16.15,
+      "p99": 22.02,
+      "max": 76.09
+    }
+  },
+  "cache": {
+    "hits": 47727,
+    "misses": 168
+  },
+  "escrituras": {
+    "intentadas": 13620,
+    "ok": 13620,
+    "rechazadas": 0
+  },
+  "cliente_cpu_pct": 38.9,
+  "ops_por_segundo": [
+    8,
+    25,
+    42,
+    58,
+    75,
+    92,
+    108,
+    125,
+    142,
+    158,
+    175,
+    192,
+    208,
+    225,
+    242,
+    258,
+    275,
+    292,
+    308,
+    325,
+    342,
+    358,
+    375,
+    392,
+    408,
+    425,
+    442,
+    458,
+    475,
+    492,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "recursos_docker": [
+    {
+      "t": 2.7,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "24.08%",
+      "mem": "2.851GiB / 7.653GiB"
+    },
+    {
+      "t": 2.7,
+      "contenedor": "fixture2030-redis",
+      "cpu": "1.27%",
+      "mem": "10.12MiB / 7.653GiB"
+    },
+    {
+      "t": 10.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "9.48%",
+      "mem": "2.85GiB / 7.653GiB"
+    },
+    {
+      "t": 10.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "1.63%",
+      "mem": "9.941MiB / 7.653GiB"
+    },
+    {
+      "t": 17.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "9.17%",
+      "mem": "2.85GiB / 7.653GiB"
+    },
+    {
+      "t": 17.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.04%",
+      "mem": "10.27MiB / 7.653GiB"
+    },
+    {
+      "t": 25.0,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "6.78%",
+      "mem": "2.85GiB / 7.653GiB"
+    },
+    {
+      "t": 25.0,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.08%",
+      "mem": "10.01MiB / 7.653GiB"
+    },
+    {
+      "t": 32.7,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "13.78%",
+      "mem": "2.854GiB / 7.653GiB"
+    },
+    {
+      "t": 32.7,
+      "contenedor": "fixture2030-redis",
+      "cpu": "5.28%",
+      "mem": "10.05MiB / 7.653GiB"
+    },
+    {
+      "t": 40.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "15.08%",
+      "mem": "2.855GiB / 7.653GiB"
+    },
+    {
+      "t": 40.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "4.68%",
+      "mem": "10.34MiB / 7.653GiB"
+    },
+    {
+      "t": 47.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "10.53%",
+      "mem": "2.855GiB / 7.653GiB"
+    },
+    {
+      "t": 47.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "4.52%",
+      "mem": "10.05MiB / 7.653GiB"
+    },
+    {
+      "t": 55.0,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "9.16%",
+      "mem": "2.855GiB / 7.653GiB"
+    },
+    {
+      "t": 55.0,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.11%",
+      "mem": "10.05MiB / 7.653GiB"
+    },
+    {
+      "t": 61.7,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "15.82%",
+      "mem": "2.855GiB / 7.653GiB"
+    },
+    {
+      "t": 61.7,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.58%",
+      "mem": "10.34MiB / 7.653GiB"
+    },
+    {
+      "t": 69.4,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "51.07%",
+      "mem": "2.856GiB / 7.653GiB"
+    },
+    {
+      "t": 69.4,
+      "contenedor": "fixture2030-redis",
+      "cpu": "5.41%",
+      "mem": "10.39MiB / 7.653GiB"
+    },
+    {
+      "t": 76.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "8.61%",
+      "mem": "2.856GiB / 7.653GiB"
+    },
+    {
+      "t": 76.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.50%",
+      "mem": "10.11MiB / 7.653GiB"
+    },
+    {
+      "t": 83.0,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "9.95%",
+      "mem": "2.857GiB / 7.653GiB"
+    },
+    {
+      "t": 83.0,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.70%",
+      "mem": "10.39MiB / 7.653GiB"
+    },
+    {
+      "t": 90.6,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "12.55%",
+      "mem": "2.857GiB / 7.653GiB"
+    },
+    {
+      "t": 90.6,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.99%",
+      "mem": "10.08MiB / 7.653GiB"
+    },
+    {
+      "t": 98.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "37.59%",
+      "mem": "2.883GiB / 7.653GiB"
+    },
+    {
+      "t": 98.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "4.47%",
+      "mem": "10.01MiB / 7.653GiB"
+    },
+    {
+      "t": 105.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "11.31%",
+      "mem": "2.857GiB / 7.653GiB"
+    },
+    {
+      "t": 105.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "4.71%",
+      "mem": "10.01MiB / 7.653GiB"
+    },
+    {
+      "t": 112.9,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "9.41%",
+      "mem": "2.857GiB / 7.653GiB"
+    },
+    {
+      "t": 112.9,
+      "contenedor": "fixture2030-redis",
+      "cpu": "4.61%",
+      "mem": "10.04MiB / 7.653GiB"
+    },
+    {
+      "t": 120.6,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "8.81%",
+      "mem": "2.858GiB / 7.653GiB"
+    },
+    {
+      "t": 120.6,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.59%",
+      "mem": "9.789MiB / 7.653GiB"
+    },
+    {
+      "t": 128.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "12.39%",
+      "mem": "2.858GiB / 7.653GiB"
+    },
+    {
+      "t": 128.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "5.81%",
+      "mem": "9.879MiB / 7.653GiB"
+    },
+    {
+      "t": 135.3,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "10.97%",
+      "mem": "2.858GiB / 7.653GiB"
+    },
+    {
+      "t": 135.3,
+      "contenedor": "fixture2030-redis",
+      "cpu": "3.57%",
+      "mem": "9.879MiB / 7.653GiB"
+    },
+    {
+      "t": 142.0,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "12.42%",
+      "mem": "2.859GiB / 7.653GiB"
+    },
+    {
+      "t": 142.0,
+      "contenedor": "fixture2030-redis",
+      "cpu": "4.31%",
+      "mem": "10.14MiB / 7.653GiB"
+    },
+    {
+      "t": 149.6,
+      "contenedor": "fixture2030-cassandra",
+      "cpu": "14.82%",
+      "mem": "2.859GiB / 7.653GiB"
+    },
+    {
+      "t": 149.6,
+      "contenedor": "fixture2030-redis",
+      "cpu": "4.20%",
+      "mem": "9.793MiB / 7.653GiB"
+    }
+  ]
+}

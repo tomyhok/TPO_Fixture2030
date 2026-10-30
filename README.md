@@ -20,6 +20,10 @@ con tres motores de persistencia:
 - **Evaluacion de conectividad** (Hito 11): diagnostico reproducible, capa por
   capa, de la conexion entre la API y los seis productos, con matriz de
   conectividad, fallas controladas y liveness/readiness en la API.
+- **Pruebas de carga y optimizacion** (Hito 12): pruebas de carga y optimizacion
+  del muro de comentarios en vivo (Cassandra + Redis), integracion conceptual con
+  Data Mart y comparacion relacional condicionada. Ver
+  [`fixture2030-hito-12-carga-optimizacion/`](fixture2030-hito-12-carga-optimizacion/README.md).
 
 ## Requisitos
 
@@ -331,6 +335,23 @@ bash scripts/prueba_api.sh                 # rutas de la API con request ID (API
 bash scripts/evaluar_conectividad.sh       # todo + matriz de conectividad
 ```
 
+## Pruebas de carga y optimizacion (Hito 12)
+
+Pruebas de carga sostenida, triangulacion de cuello de botella, optimizacion con
+muro precomputado en Redis sobre Cassandra, validacion de integridad post-carga,
+integracion conceptual con Data Mart y comparacion relacional condicionada. Guia
+completa en
+[`fixture2030-hito-12-carga-optimizacion/README.md`](fixture2030-hito-12-carga-optimizacion/README.md).
+
+```bash
+cd fixture2030-hito-12-carga-optimizacion
+python scripts/preparar_datos.py --filas 100000 --semilla 2030
+bash scripts/ejecutar_linea_base.sh --tasa 10
+bash scripts/ejecutar_prueba_optimizada.sh --tasa 10
+python scripts/comparar_resultados.py docs/evidencia/resultados/base_X.json docs/evidencia/resultados/optimizado_Y.json
+python scripts/limpiar_datos_de_prueba.py --confirmar   # opcional
+```
+
 ## Estructura del proyecto
 
 Las correcciones posteriores a la devolución docente están explicadas en
@@ -382,6 +403,11 @@ fixture2030-hito-11-conectividad/
   config/                           Configuracion de ejemplo sin secretos
   tests/                            Pruebas unitarias del diagnostico
   docs/                             Mapa de dependencias, topologia, matriz, fallas, health/readiness y evidencia
+fixture2030-hito-12-carga-optimizacion/
+  config/                           Variables de entorno de ejemplo sin secretos
+  scripts/                          Preparacion, generador de carga, comparacion, integridad y limpieza
+  datos-o-generadores/              Descripcion de semilla, distribuciones y generacion reproducible
+  docs/                             Flujo, linea base, hipotesis, Data Mart, comparacion relacional y evidencia
 ```
 
 Los Compose dentro de los modulos se conservan como referencia y para ejecutar

@@ -1,0 +1,262 @@
+Modo base: 50 usuarios en 3 procesos, rampa 30s, sostenimiento 120s, tasa sin pausa
+{
+  "corte": "tiempo cumplido",
+  "sostenimiento": {
+    "segundos": 120,
+    "operaciones": 58140,
+    "throughput_ops_s": 484.5,
+    "errores": 0,
+    "tasa_error_pct": 0.0,
+    "tipos_error": {}
+  },
+  "latencia_ms": {
+    "lectura": {
+      "n": 46427,
+      "min": 5.06,
+      "promedio": 80.04,
+      "p50": 72.35,
+      "p95": 157.95,
+      "p99": 249.35,
+      "max": 542.64
+    },
+    "escritura": {
+      "n": 11713,
+      "min": 2.07,
+      "promedio": 77.77,
+      "p50": 69.74,
+      "p95": 159.12,
+      "p99": 245.91,
+      "max": 521.13
+    }
+  },
+  "cache": {
+    "hits": 0,
+    "misses": 0
+  },
+  "escrituras": {
+    "intentadas": 14592,
+    "ok": 14592,
+    "rechazadas": 0
+  },
+  "cliente_cpu_pct": 139.5
+}
+Resultados en docs/evidencia/resultados/base_20261029-211153.json
+{
+  "corrida": "docs/evidencia/resultados/base_20261029-211153.json",
+  "escrituras_generadas": 14592,
+  "aceptadas": 14592,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 0,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 767,
+  "filas_en_particiones_controladas": 14592,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}
+Modo optimizado: 50 usuarios en 3 procesos, rampa 30s, sostenimiento 120s, tasa sin pausa
+{
+  "corte": "tiempo cumplido",
+  "sostenimiento": {
+    "segundos": 120,
+    "operaciones": 808479,
+    "throughput_ops_s": 6737.3,
+    "errores": 0,
+    "tasa_error_pct": 0.0,
+    "tipos_error": {}
+  },
+  "latencia_ms": {
+    "lectura": {
+      "n": 646843,
+      "min": 0.19,
+      "promedio": 1.45,
+      "p50": 0.98,
+      "p95": 3.86,
+      "p99": 9.36,
+      "max": 95.46
+    },
+    "escritura": {
+      "n": 161636,
+      "min": 1.21,
+      "promedio": 4.54,
+      "p50": 3.35,
+      "p95": 8.76,
+      "p99": 18.93,
+      "max": 617.76
+    }
+  },
+  "cache": {
+    "hits": 646670,
+    "misses": 173
+  },
+  "escrituras": {
+    "intentadas": 207936,
+    "ok": 207936,
+    "rechazadas": 0
+  },
+  "cliente_cpu_pct": 200.4
+}
+Resultados en docs/evidencia/resultados/optimizado_20261029-211547.json
+{
+  "corrida": "docs/evidencia/resultados/optimizado_20261029-211547.json",
+  "redis": {
+    "muros": 64,
+    "muros_con_duplicados": 0,
+    "ids_de_corridas_previas_total": 0,
+    "ids_inexistentes_en_cassandra_total": 0,
+    "ultimos_reales_ausentes_total": 0,
+    "elementos_total": 6400,
+    "partido_caliente": {
+      "elementos": 100,
+      "duplicados": 0,
+      "ids_de_corridas_previas": 0,
+      "ids_inexistentes_en_cassandra": 0,
+      "ultimos_reales_ausentes_en_muro": 0
+    }
+  },
+  "escrituras_generadas": 207936,
+  "aceptadas": 207936,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 51,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 768,
+  "filas_en_particiones_controladas": 207936,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}
+Modo base: 50 usuarios en 3 procesos, rampa 30s, sostenimiento 120s, tasa 10 ops/s por usuario
+{
+  "corte": "tiempo cumplido",
+  "sostenimiento": {
+    "segundos": 120,
+    "operaciones": 59762,
+    "throughput_ops_s": 498.0,
+    "errores": 0,
+    "tasa_error_pct": 0.0,
+    "tipos_error": {}
+  },
+  "latencia_ms": {
+    "lectura": {
+      "n": 47701,
+      "min": 2.11,
+      "promedio": 16.43,
+      "p50": 14.7,
+      "p95": 31.78,
+      "p99": 58.83,
+      "max": 181.86
+    },
+    "escritura": {
+      "n": 12061,
+      "min": 0.72,
+      "promedio": 13.51,
+      "p50": 11.7,
+      "p95": 29.4,
+      "p99": 54.45,
+      "max": 166.46
+    }
+  },
+  "cache": {
+    "hits": 0,
+    "misses": 0
+  },
+  "escrituras": {
+    "intentadas": 13575,
+    "ok": 13575,
+    "rechazadas": 0
+  },
+  "cliente_cpu_pct": 100.0
+}
+Resultados en docs/evidencia/resultados/base_20261029-212119.json
+{
+  "corrida": "docs/evidencia/resultados/base_20261029-212119.json",
+  "escrituras_generadas": 13575,
+  "aceptadas": 13575,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 0,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 847,
+  "filas_en_particiones_controladas": 13575,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}
+Modo optimizado: 50 usuarios en 3 procesos, rampa 30s, sostenimiento 120s, tasa 10 ops/s por usuario
+{
+  "corte": "tiempo cumplido",
+  "sostenimiento": {
+    "segundos": 120,
+    "operaciones": 60000,
+    "throughput_ops_s": 500.0,
+    "errores": 0,
+    "tasa_error_pct": 0.0,
+    "tipos_error": {}
+  },
+  "latencia_ms": {
+    "lectura": {
+      "n": 47895,
+      "min": 0.2,
+      "promedio": 3.15,
+      "p50": 1.67,
+      "p95": 11.1,
+      "p99": 17.57,
+      "max": 77.02
+    },
+    "escritura": {
+      "n": 12105,
+      "min": 1.29,
+      "promedio": 7.08,
+      "p50": 5.63,
+      "p95": 16.15,
+      "p99": 22.02,
+      "max": 76.09
+    }
+  },
+  "cache": {
+    "hits": 47727,
+    "misses": 168
+  },
+  "escrituras": {
+    "intentadas": 13620,
+    "ok": 13620,
+    "rechazadas": 0
+  },
+  "cliente_cpu_pct": 38.9
+}
+Resultados en docs/evidencia/resultados/optimizado_20261029-212501.json
+{
+  "corrida": "docs/evidencia/resultados/optimizado_20261029-212501.json",
+  "redis": {
+    "muros": 64,
+    "muros_con_duplicados": 0,
+    "ids_de_corridas_previas_total": 0,
+    "ids_inexistentes_en_cassandra_total": 0,
+    "ultimos_reales_ausentes_total": 2,
+    "elementos_total": 6292,
+    "partido_caliente": {
+      "elementos": 100,
+      "duplicados": 0,
+      "ids_de_corridas_previas": 0,
+      "ids_inexistentes_en_cassandra": 0,
+      "ultimos_reales_ausentes_en_muro": 1
+    }
+  },
+  "escrituras_generadas": 13620,
+  "aceptadas": 13620,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 0,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 821,
+  "filas_en_particiones_controladas": 13620,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}

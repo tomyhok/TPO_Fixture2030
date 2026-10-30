@@ -1,0 +1,116 @@
+Modo base: 50 usuarios en 3 procesos, rampa 30s, sostenimiento 120s, tasa sin pausa
+{
+  "corte": "tiempo cumplido",
+  "sostenimiento": {
+    "segundos": 120,
+    "operaciones": 98275,
+    "throughput_ops_s": 819.0,
+    "errores": 0,
+    "tasa_error_pct": 0.0,
+    "tipos_error": {}
+  },
+  "latencia_ms": {
+    "lectura": {
+      "n": 78507,
+      "min": 2.33,
+      "promedio": 12.65,
+      "p50": 9.78,
+      "p95": 31.78,
+      "p99": 57.57,
+      "max": 221.25
+    },
+    "escritura": {
+      "n": 19768,
+      "min": 0.78,
+      "promedio": 9.49,
+      "p50": 6.91,
+      "p95": 26.16,
+      "p99": 53.96,
+      "max": 206.02
+    }
+  },
+  "cache": {
+    "hits": 0,
+    "misses": 0
+  },
+  "escrituras": {
+    "intentadas": 25804,
+    "ok": 25804,
+    "rechazadas": 0
+  },
+  "cliente_cpu_pct": 192.2
+}
+Resultados en docs/evidencia/resultados/base_20261029-212927.json
+{
+  "corrida": "docs/evidencia/resultados/base_20261029-212927.json",
+  "escrituras_generadas": 25804,
+  "aceptadas": 25804,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 0,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 954,
+  "filas_en_particiones_controladas": 25804,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}
+Modo base: 50 usuarios en 6 procesos, rampa 30s, sostenimiento 120s, tasa sin pausa
+{
+  "corte": "tiempo cumplido",
+  "sostenimiento": {
+    "segundos": 120,
+    "operaciones": 130552,
+    "throughput_ops_s": 1087.9,
+    "errores": 0,
+    "tasa_error_pct": 0.0,
+    "tipos_error": {}
+  },
+  "latencia_ms": {
+    "lectura": {
+      "n": 104128,
+      "min": 2.55,
+      "promedio": 9.25,
+      "p50": 8.06,
+      "p95": 17.43,
+      "p99": 29.88,
+      "max": 149.36
+    },
+    "escritura": {
+      "n": 26424,
+      "min": 0.79,
+      "promedio": 6.28,
+      "p50": 5.34,
+      "p95": 13.57,
+      "p99": 24.12,
+      "max": 93.95
+    }
+  },
+  "cache": {
+    "hits": 0,
+    "misses": 0
+  },
+  "escrituras": {
+    "intentadas": 34166,
+    "ok": 34166,
+    "rechazadas": 0
+  },
+  "cliente_cpu_pct": 273.8
+}
+Resultados en docs/evidencia/resultados/base_20261029-213317.json
+{
+  "corrida": "docs/evidencia/resultados/base_20261029-213317.json",
+  "escrituras_generadas": 34166,
+  "aceptadas": 34166,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 0,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 1024,
+  "filas_en_particiones_controladas": 34166,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}

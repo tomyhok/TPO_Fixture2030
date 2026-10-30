@@ -1,0 +1,10 @@
+{
+  "fecha": "2026-10-29T20:54:08",
+  "semilla": 2030,
+  "filas_generadas": 100000,
+  "errores_insert": 0,
+  "conteo_comentarios_por_partido": 100000,
+  "conteo_comentarios_por_usuario": 100000,
+  "filas_partido_caliente": 50477,
+  "duracion_s": 29.0
+}

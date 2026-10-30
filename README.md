@@ -15,6 +15,9 @@ con tres motores de persistencia:
 - **InfluxDB** (Hito 8): base de series temporales (InfluxDB 3 Core) para métricas en vivo.
 - **IRIS** (Hito 9): base orientada a objetos / multimodelo para gestionar 
   entidades complejas con relaciones directas y validaciones encapsuladas.
+- **Hito 12**: pruebas de carga y optimización del muro de comentarios en vivo
+  (Cassandra + Redis), Data Mart y comparación relacional. Ver
+  [`fixture2030-hito-12-carga-optimizacion/`](fixture2030-hito-12-carga-optimizacion/README.md).
 
 ## Requisitos
 

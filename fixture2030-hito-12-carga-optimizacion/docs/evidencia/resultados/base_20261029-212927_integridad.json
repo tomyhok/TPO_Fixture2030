@@ -1,0 +1,15 @@
+{
+  "corrida": "docs/evidencia/resultados/base_20261029-212927.json",
+  "escrituras_generadas": 25804,
+  "aceptadas": 25804,
+  "rechazadas": 0,
+  "ids_duplicados_en_cliente": 0,
+  "aceptadas_faltantes_en_por_partido": 0,
+  "aceptadas_faltantes_en_por_usuario": 0,
+  "consultas_de_validacion_reintentadas": 0,
+  "rechazadas_escritas_parcialmente": 0,
+  "particiones_controladas": 954,
+  "filas_en_particiones_controladas": 25804,
+  "particiones_con_diferencias": {},
+  "resultado": "OK"
+}

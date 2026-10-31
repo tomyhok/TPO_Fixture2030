@@ -15,6 +15,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 
 from app.core.errores import DependenciaNoDisponible, DependenciaTimeout, ErrorAPI
+from app.core.metricas import metricas
 from app.core.observabilidad import logger
 
 _log = logger("adaptador")
@@ -44,7 +45,9 @@ def operacion(dependencia: str, nombre: str, traducir: Traductor) -> Iterator[No
 
 
 def _registrar(dependencia: str, nombre: str, inicio: float, resultado: str) -> None:
-    duracion_ms = (time.perf_counter() - inicio) * 1000
+    duracion_s = time.perf_counter() - inicio
+    duracion_ms = duracion_s * 1000
+    metricas.registrar_operacion_db(dependencia, nombre, resultado, duracion_s)
     nivel = 20 if resultado == "ok" else 30  # INFO / WARNING
     _log.log(
         nivel,

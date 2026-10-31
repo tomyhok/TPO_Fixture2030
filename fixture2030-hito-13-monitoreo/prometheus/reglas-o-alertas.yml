@@ -1,0 +1,43 @@
+groups:
+  - name: fixture2030_disponibilidad_y_sla
+    interval: 15s
+    rules:
+      - alert: TargetMonitoreoCaido
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+          equipo_responsable: plataforma-sre
+        annotations:
+          summary: "Target {{ $labels.job }} ({{ $labels.instance }}) no responde al scraping"
+          description: "Prometheus no pudo recolectar métricas de {{ $labels.job }} durante más de 30s. Si es fixture-api, el backend unificado del Fixture 2030 está inaccesible."
+
+      - alert: BaseDatosNoSQLNoDisponible
+        expr: fixture_db_up == 0
+        for: 15s
+        labels:
+          severity: critical
+          equipo_responsable: ingenieria-datos-nosql
+        annotations:
+          summary: "Base de datos NoSQL {{ $labels.db }} no disponible (DOWN)"
+          description: "El diagnóstico de la API integrada reporta fixture_db_up=0 para el motor {{ $labels.db }}. Las rutas asociadas responderán 503/504 manteniendo aislados los otros 5 motores."
+
+      - alert: LatenciaAPISuperaSLA100ms
+        expr: histogram_quantile(0.95, sum by (le, route) (rate(fixture_api_http_request_duration_seconds_bucket[1m]))) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+          equipo_responsable: backend-api
+        annotations:
+          summary: "Latencia p95 en {{ $labels.route }} supera el objetivo SLA de 100ms"
+          description: "El percentil 95 de tiempo de respuesta en la ruta {{ $labels.route }} superó los 100ms (0.1s) durante el último minuto."
+
+      - alert: ErroresDependenciaSostenidos
+        expr: sum by (route, codigo) (rate(fixture_api_http_errors_total{codigo=~"DEPENDENCIA_NO_DISPONIBLE|DEPENDENCIA_TIMEOUT|ERROR_INTERNO"}[1m])) > 0.05
+        for: 30s
+        labels:
+          severity: critical
+          equipo_responsable: ingenieria-datos-nosql
+        annotations:
+          summary: "Tasa de errores {{ $labels.codigo }} sostenida en {{ $labels.route }}"
+          description: "Se están registrando respuestas 503/504/500 en {{ $labels.route }} con código {{ $labels.codigo }}. Verificar conectividad por capas (Hito 11) y salud del contenedor."

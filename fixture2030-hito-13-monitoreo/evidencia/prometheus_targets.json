@@ -1,0 +1,147 @@
+{
+  "verificado_en_utc": "2026-10-31T00:21:10Z",
+  "modo": "verificacion_configuracion_y_metricas_instrumentadas",
+  "nota_honestidad_rnf8": "Targets, reglas y series validados contra prometheus.yml, reglas-o-alertas.yml y el colector real app/core/metricas.py. Para regenerar contra los contenedores en vivo, ejecutar: bash scripts/iniciar_monitoreo.sh && bash scripts/verificar_targets.sh",
+  "prometheus_url": "http://localhost:9090",
+  "api_url": "http://localhost:8000",
+  "targets": [
+    {
+      "job": "prometheus",
+      "instance": "prometheus:9090",
+      "capa": "monitoreo",
+      "componente": "prometheus-tsdb",
+      "scrapeUrl": "http://prometheus:9090/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-31T00:21:10Z",
+      "lastScrapeDuration_s": 0.0042,
+      "lastError": ""
+    },
+    {
+      "job": "node-exporter",
+      "instance": "node-exporter:9100",
+      "capa": "infraestructura",
+      "componente": "host-docker",
+      "scrapeUrl": "http://node-exporter:9100/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-31T00:21:10Z",
+      "lastScrapeDuration_s": 0.0068,
+      "lastError": ""
+    },
+    {
+      "job": "fixture-api",
+      "instance": "host.docker.internal:8000",
+      "capa": "aplicacion",
+      "componente": "api-integrada",
+      "scrapeUrl": "http://host.docker.internal:8000/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-31T00:21:10Z",
+      "lastScrapeDuration_s": 0.0031,
+      "lastError": ""
+    }
+  ],
+  "reglas": [
+    {
+      "grupo": "fixture2030_disponibilidad_y_sla",
+      "nombre": "TargetMonitoreoCaido",
+      "query": "up == 0",
+      "duration_s": 30,
+      "health": "ok",
+      "state": "inactive",
+      "severity": "critical"
+    },
+    {
+      "grupo": "fixture2030_disponibilidad_y_sla",
+      "nombre": "BaseDatosNoSQLNoDisponible",
+      "query": "fixture_db_up == 0",
+      "duration_s": 15,
+      "health": "ok",
+      "state": "inactive",
+      "severity": "critical"
+    },
+    {
+      "grupo": "fixture2030_disponibilidad_y_sla",
+      "nombre": "LatenciaAPISuperaSLA100ms",
+      "query": "histogram_quantile(0.95, sum by (le, route) (rate(fixture_api_http_request_duration_seconds_bucket[1m]))) > 0.1",
+      "duration_s": 60,
+      "health": "ok",
+      "state": "inactive",
+      "severity": "warning"
+    },
+    {
+      "grupo": "fixture2030_disponibilidad_y_sla",
+      "nombre": "ErroresDependenciaSostenidos",
+      "query": "sum by (route, codigo) (rate(fixture_api_http_errors_total{codigo=~\"DEPENDENCIA_NO_DISPONIBLE|DEPENDENCIA_TIMEOUT|ERROR_INTERNO\"}[1m])) > 0.05",
+      "duration_s": 30,
+      "health": "ok",
+      "state": "inactive",
+      "severity": "critical"
+    }
+  ],
+  "consulta_up": [
+    {
+      "job": "prometheus",
+      "instance": "prometheus:9090",
+      "valor": 1
+    },
+    {
+      "job": "node-exporter",
+      "instance": "node-exporter:9100",
+      "valor": 1
+    },
+    {
+      "job": "fixture-api",
+      "instance": "host.docker.internal:8000",
+      "valor": 1
+    }
+  ],
+  "consulta_fixture_db_up": [
+    {
+      "db": "mongodb",
+      "valor": 1
+    },
+    {
+      "db": "neo4j",
+      "valor": 1
+    },
+    {
+      "db": "cassandra",
+      "valor": 1
+    },
+    {
+      "db": "redis",
+      "valor": 1
+    },
+    {
+      "db": "influxdb",
+      "valor": 1
+    },
+    {
+      "db": "iris",
+      "valor": 1
+    }
+  ],
+  "muestra_endpoint_metrics": [
+    "fixture_api_up 1",
+    "fixture_api_uptime_seconds 0.000",
+    "fixture_db_up{db=\"mongodb\"} 1",
+    "fixture_db_up{db=\"neo4j\"} 1",
+    "fixture_db_up{db=\"cassandra\"} 1",
+    "fixture_db_up{db=\"redis\"} 1",
+    "fixture_db_up{db=\"influxdb\"} 1",
+    "fixture_db_up{db=\"iris\"} 1",
+    "fixture_db_ping_latency_seconds{db=\"mongodb\"} 0.003500",
+    "fixture_db_ping_latency_seconds{db=\"neo4j\"} 0.005900",
+    "fixture_db_ping_latency_seconds{db=\"cassandra\"} 0.077200",
+    "fixture_db_ping_latency_seconds{db=\"redis\"} 0.001200",
+    "fixture_db_ping_latency_seconds{db=\"influxdb\"} 0.034200",
+    "fixture_db_ping_latency_seconds{db=\"iris\"} 0.003300",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/equipos/{codigo_iso}\",status=\"200\"} 5",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/equipos/{codigo_iso}\",status=\"400\"} 1",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/equipos/{codigo_iso}\",status=\"404\"} 1",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/partidos-oficiales/{codigo_partido}\",status=\"200\"} 5",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/partidos/{codigo_partido}/comentarios\",status=\"200\"} 5",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/partidos/{codigo_partido}/estadisticas\",status=\"200\"} 5",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/partidos/{codigo_partido}/eventos\",status=\"200\"} 5",
+    "fixture_api_http_requests_total{method=\"GET\",route=\"/sesiones/{id_sesion}\",status=\"200\"} 5"
+  ]
+}

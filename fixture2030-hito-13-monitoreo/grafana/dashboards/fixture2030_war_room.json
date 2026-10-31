@@ -1,0 +1,406 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "1. Disponibilidad de Targets y Salud de los 6 Motores NoSQL (RF3, RF6, RF7)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Estado de recolección (scraping cada 15s) de los tres targets configurados en prometheus.yml: prometheus, node-exporter y fixture-api.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "options": {
+                "0": { "color": "red", "index": 1, "text": "DOWN (0)" },
+                "1": { "color": "green", "index": 0, "text": "UP (1)" }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "up",
+          "legendFormat": "{{job}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Targets Prometheus (up)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Disponibilidad reportada por el diagnóstico profundo de la API integrada para cada una de las 6 bases de datos NoSQL del Fixture 2030.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "options": {
+                "0": { "color": "red", "index": 1, "text": "NO DISPONIBLE (0)" },
+                "1": { "color": "green", "index": 0, "text": "OPERATIVO (1)" }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 16, "x": 8, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "fixture_db_up",
+          "legendFormat": "{{db}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Estado de Salud por Base de Datos NoSQL (fixture_db_up)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 101,
+      "panels": [],
+      "title": "2. Latencia, Volumen de Operaciones (RPS) y Errores de la API Integrada (RF4, RF6, RF8)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Percentil 95 (p95) y promedio de tiempo de respuesta HTTP de la API integrada comparado con el umbral objetivo del TPO (< 100ms = 0.1s).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "thresholdsStyle": { "mode": "line+area" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.05 },
+              { "color": "red", "value": 0.1 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(fixture_api_http_request_duration_seconds_bucket[1m])))",
+          "legendFormat": "p95 {{route}}",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (route) (rate(fixture_api_http_request_duration_seconds_sum[1m])) / clamp_min(sum by (route) (rate(fixture_api_http_request_duration_seconds_count[1m])), 1e-9)",
+          "legendFormat": "prom {{route}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Latencia HTTP API por Ruta (p95 y Promedio — SLA < 100ms)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Tasa de solicitudes HTTP por segundo (RPS) agrupadas por ruta y código de estado HTTP (ventana 1m).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "showPoints": "auto"
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (route, status) (rate(fixture_api_http_requests_total[1m]))",
+          "legendFormat": "{{route}} [HTTP {{status}}]",
+          "refId": "A"
+        }
+      ],
+      "title": "Volumen de Operaciones / Throughput HTTP (req/s por Ruta y Estado)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 102,
+      "panels": [],
+      "title": "3. Comparación entre Subsistemas NoSQL y Errores por Flujo (RF6, RF7)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Comparación directa entre las 6 bases de datos NoSQL: latencia del último chequeo de salud (ping) y tiempo promedio de operación por adaptador.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.05 },
+              { "color": "red", "value": 0.1 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "fixture_db_ping_latency_seconds",
+          "legendFormat": "ping {{db}}",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (db, operation) (rate(fixture_db_operation_duration_seconds_sum[1m])) / clamp_min(sum by (db, operation) (rate(fixture_db_operation_duration_seconds_count[1m])), 1e-9)",
+          "legendFormat": "op {{db}}:{{operation}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Comparación de Latencia por Base de Datos NoSQL (s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Errores acumulados y tasa de respuestas no exitosas por código de error semántico (DEPENDENCIA_NO_DISPONIBLE, DEPENDENCIA_TIMEOUT, VALIDACION_ERROR, RECURSO_NO_ENCONTRADO).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (route, codigo) (fixture_api_http_errors_total)",
+          "legendFormat": "{{codigo}} ({{route}})",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (db, operation, status) (fixture_db_operations_total{status!=\"ok\"})",
+          "legendFormat": "DB Error: {{db}}.{{operation}} [{{status}}]",
+          "refId": "B"
+        }
+      ],
+      "title": "Errores de Aplicación y de Dependencias NoSQL (Acumulado)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "id": 103,
+      "panels": [],
+      "title": "4. Operaciones por Subsistema e Infraestructura del Host (node-exporter — RF4, RF7)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Cantidad de operaciones ejecutadas sobre cada motor NoSQL (MongoDB, Neo4j, Cassandra, Redis, InfluxDB, IRIS), permitiendo comparar volumen por subsistema.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 25 },
+      "id": 7,
+      "options": {
+        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (db, status) (fixture_db_operations_total)",
+          "legendFormat": "{{db}} [{{status}}]",
+          "refId": "A"
+        }
+      ],
+      "title": "Operaciones Totales por Base de Datos NoSQL (fixture_db_operations_total)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Métricas de infraestructura recolectadas vía node-exporter: uso de CPU y memoria utilizada en el nodo de contenedores.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.75 },
+              { "color": "red", "value": 0.9 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 25 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[1m]))",
+          "legendFormat": "Uso CPU Host (node-exporter)",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "legendFormat": "Uso Memoria RAM Host (node-exporter)",
+          "refId": "B"
+        }
+      ],
+      "title": "Infraestructura del Nodo: CPU y Memoria (node-exporter)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["fixture2030", "hito13", "nosql", "prometheus"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Fixture Mundial 2030 — Observabilidad y Monitoreo NoSQL (Hito 13)",
+  "uid": "fixture2030-war-room",
+  "version": 1
+}

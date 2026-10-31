@@ -1,0 +1,53 @@
+======================================================================
+HITO 13 — VERIFICACIÓN DE TARGETS Y REGLAS EN PROMETHEUS
+======================================================================
+Fecha UTC:      2026-10-31T00:21:10Z
+Modo:           verificacion_configuracion_y_metricas_instrumentadas
+Prometheus URL: http://localhost:9090
+API URL:        http://localhost:8000
+
+1. TARGETS CONFIGURADOS (/api/v1/targets):
+  JOB              INSTANCE                     CAPA             HEALTH   DURACION(s)  ERROR
+  --------------------------------------------------------------------------------------------
+  prometheus       prometheus:9090              monitoreo        UP       0.0042       -
+  node-exporter    node-exporter:9100           infraestructura  UP       0.0068       -
+  fixture-api      host.docker.internal:8000    aplicacion       UP       0.0031       -
+
+2. ESTADO DE BASES DE DATOS NoSQL (PromQL: fixture_db_up):
+  - cassandra   : UP (1)
+  - influxdb    : UP (1)
+  - iris        : UP (1)
+  - mongodb     : UP (1)
+  - neo4j       : UP (1)
+  - redis       : UP (1)
+
+3. REGLAS DE ALERTA CARGADAS (/api/v1/rules):
+  - TargetMonitoreoCaido           [CRITICAL] state=inactive health=ok (for=30s)
+  - BaseDatosNoSQLNoDisponible     [CRITICAL] state=inactive health=ok (for=15s)
+  - LatenciaAPISuperaSLA100ms      [WARNING ] state=inactive health=ok (for=60s)
+  - ErroresDependenciaSostenidos   [CRITICAL] state=inactive health=ok (for=30s)
+
+4. MUESTRA DIRECTA DE /metrics EN LA API INTEGRADA:
+  fixture_api_up 1
+  fixture_api_uptime_seconds 0.000
+  fixture_db_up{db="mongodb"} 1
+  fixture_db_up{db="neo4j"} 1
+  fixture_db_up{db="cassandra"} 1
+  fixture_db_up{db="redis"} 1
+  fixture_db_up{db="influxdb"} 1
+  fixture_db_up{db="iris"} 1
+  fixture_db_ping_latency_seconds{db="mongodb"} 0.003500
+  fixture_db_ping_latency_seconds{db="neo4j"} 0.005900
+  fixture_db_ping_latency_seconds{db="cassandra"} 0.077200
+  fixture_db_ping_latency_seconds{db="redis"} 0.001200
+  fixture_db_ping_latency_seconds{db="influxdb"} 0.034200
+  fixture_db_ping_latency_seconds{db="iris"} 0.003300
+  fixture_api_http_requests_total{method="GET",route="/equipos/{codigo_iso}",status="200"} 5
+  fixture_api_http_requests_total{method="GET",route="/equipos/{codigo_iso}",status="400"} 1
+  fixture_api_http_requests_total{method="GET",route="/equipos/{codigo_iso}",status="404"} 1
+  fixture_api_http_requests_total{method="GET",route="/partidos-oficiales/{codigo_partido}",status="200"} 5
+  fixture_api_http_requests_total{method="GET",route="/partidos/{codigo_partido}/comentarios",status="200"} 5
+  fixture_api_http_requests_total{method="GET",route="/partidos/{codigo_partido}/estadisticas",status="200"} 5
+  fixture_api_http_requests_total{method="GET",route="/partidos/{codigo_partido}/eventos",status="200"} 5
+  fixture_api_http_requests_total{method="GET",route="/sesiones/{id_sesion}",status="200"} 5
+======================================================================

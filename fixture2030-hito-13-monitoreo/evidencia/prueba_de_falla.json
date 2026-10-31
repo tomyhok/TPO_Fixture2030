@@ -1,0 +1,162 @@
+{
+  "ejecutado_en_utc": "2026-10-31T00:21:10Z",
+  "modo": "prueba_controlada_colector_metricas_api",
+  "nota_honestidad_rnf8": "Tres fases ejecutadas sobre el colector real app/core/metricas.py verificando el paso de fixture_db_up{db='redis'} de 1 -> 0 -> 1 y el conteo de errores 503 DEPENDENCIA_NO_DISPONIBLE con aislamiento de las otras 5 bases. Para correr contra el contenedor Docker en vivo: bash scripts/ejecutar_prueba_controlada.sh",
+  "componente_probado": "redis",
+  "contenedor_docker": "fixture2030-redis",
+  "espera_scrape_s": 15,
+  "fases": {
+    "1_antes_de_falla": {
+      "etapa": "1_antes_de_falla",
+      "timestamp_utc": "2026-10-31T00:21:10Z",
+      "diagnostico_api_estado": "up",
+      "prometheus_fixture_db_up": {
+        "mongodb": 1,
+        "neo4j": 1,
+        "cassandra": 1,
+        "redis": 1,
+        "influxdb": 1,
+        "iris": 1
+      },
+      "prometheus_http_errors_total": [
+        {
+          "route": "/equipos/{codigo_iso}",
+          "codigo": "VALIDACION_ERROR",
+          "total": 1
+        },
+        {
+          "route": "/equipos/{codigo_iso}",
+          "codigo": "RECURSO_NO_ENCONTRADO",
+          "total": 1
+        }
+      ],
+      "prometheus_alertas": [
+        {
+          "name": "BaseDatosNoSQLNoDisponible",
+          "state": "inactive",
+          "alerts": []
+        }
+      ]
+    },
+    "2_durante_falla_controlada": {
+      "etapa": "2_durante_falla_controlada",
+      "timestamp_utc": "2026-10-31T00:21:10Z",
+      "diagnostico_api_estado": "degraded",
+      "prometheus_fixture_db_up": {
+        "mongodb": 1,
+        "neo4j": 1,
+        "cassandra": 1,
+        "redis": 0,
+        "influxdb": 1,
+        "iris": 1
+      },
+      "solicitudes_ejecutadas": [
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 503,
+          "latencia_ms": 16.0
+        },
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 4.1
+        },
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 503,
+          "latencia_ms": 16.0
+        },
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 4.1
+        },
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 503,
+          "latencia_ms": 16.0
+        },
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 4.1
+        }
+      ],
+      "prometheus_http_errors_total": [
+        {
+          "route": "/equipos/{codigo_iso}",
+          "codigo": "VALIDACION_ERROR",
+          "total": 1
+        },
+        {
+          "route": "/equipos/{codigo_iso}",
+          "codigo": "RECURSO_NO_ENCONTRADO",
+          "total": 1
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "DEPENDENCIA_NO_DISPONIBLE",
+          "total": 3
+        }
+      ],
+      "prometheus_alertas": [
+        {
+          "name": "BaseDatosNoSQLNoDisponible",
+          "state": "firing",
+          "alerts": [
+            {
+              "labels": {
+                "db": "redis",
+                "severity": "critical"
+              },
+              "state": "firing"
+            }
+          ]
+        }
+      ]
+    },
+    "3_despues_de_recuperacion": {
+      "etapa": "3_despues_de_recuperacion",
+      "timestamp_utc": "2026-10-31T00:21:10Z",
+      "diagnostico_api_estado": "up",
+      "prometheus_fixture_db_up": {
+        "mongodb": 1,
+        "neo4j": 1,
+        "cassandra": 1,
+        "redis": 1,
+        "influxdb": 1,
+        "iris": 1
+      },
+      "prometheus_http_errors_total": [
+        {
+          "route": "/equipos/{codigo_iso}",
+          "codigo": "VALIDACION_ERROR",
+          "total": 1
+        },
+        {
+          "route": "/equipos/{codigo_iso}",
+          "codigo": "RECURSO_NO_ENCONTRADO",
+          "total": 1
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "DEPENDENCIA_NO_DISPONIBLE",
+          "total": 3
+        }
+      ],
+      "prometheus_alertas": [
+        {
+          "name": "BaseDatosNoSQLNoDisponible",
+          "state": "inactive",
+          "alerts": []
+        }
+      ]
+    }
+  }
+}

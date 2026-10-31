@@ -18,6 +18,7 @@ from app.core.errores import (
     MetodoNoPermitido,
     RecursoNoEncontrado,
 )
+from app.core.metricas import metricas
 from app.core.observabilidad import logger, nuevo_request_id, request_id_actual
 from app.schemas.comunes import ErrorRespuesta
 
@@ -27,7 +28,14 @@ _log_error = logger("error")
 HEADER_REQUEST_ID = "X-Request-ID"
 
 
-def respuesta_error(error: ErrorAPI) -> JSONResponse:
+def _ruta_plantilla(request: Request) -> str:
+    ruta = getattr(request.scope.get("route"), "path", None)
+    return str(ruta) if ruta else request.url.path
+
+
+def respuesta_error(error: ErrorAPI, request: Request | None = None) -> JSONResponse:
+    if request is not None:
+        request.state.error_codigo = error.codigo
     cuerpo = {
         "error": {
             "codigo": error.codigo,
@@ -44,6 +52,9 @@ def instalar_middleware(app: FastAPI) -> None:
     async def request_id_y_acceso(request: Request, call_next: Any) -> Any:
         request_id = nuevo_request_id(request.headers.get(HEADER_REQUEST_ID))
         token = request_id_actual.set(request_id)
+        es_metricas = request.url.path == "/metrics"
+        if not es_metricas:
+            metricas.iniciar_request()
         inicio = time.perf_counter()
         try:
             respuesta = await call_next(request)
@@ -51,8 +62,15 @@ def instalar_middleware(app: FastAPI) -> None:
             _log_error.exception(
                 "metodo=%s ruta=%s resultado=excepcion_no_controlada", request.method, request.url.path
             )
-            respuesta = respuesta_error(ErrorInterno())
-        duracion_ms = (time.perf_counter() - inicio) * 1000
+            respuesta = respuesta_error(ErrorInterno(), request)
+        duracion_s = time.perf_counter() - inicio
+        duracion_ms = duracion_s * 1000
+        if not es_metricas:
+            ruta_norm = _ruta_plantilla(request)
+            metricas.finalizar_request(request.method, ruta_norm, respuesta.status_code, duracion_s)
+            codigo_err = getattr(request.state, "error_codigo", None)
+            if codigo_err:
+                metricas.registrar_error_http(request.method, ruta_norm, codigo_err)
         respuesta.headers[HEADER_REQUEST_ID] = request_id
         # Solo método, ruta, estado y duración: nunca cuerpos ni query strings.
         _log_acceso.info(
@@ -68,29 +86,31 @@ def instalar_middleware(app: FastAPI) -> None:
 
 def instalar_manejadores(app: FastAPI) -> None:
     @app.exception_handler(ErrorAPI)
-    async def _error_api(_: Request, exc: ErrorAPI) -> JSONResponse:
-        return respuesta_error(exc)
+    async def _error_api(request: Request, exc: ErrorAPI) -> JSONResponse:
+        return respuesta_error(exc, request)
 
     @app.exception_handler(RequestValidationError)
-    async def _validacion(_: Request, exc: RequestValidationError) -> JSONResponse:
+    async def _validacion(request: Request, exc: RequestValidationError) -> JSONResponse:
         detalles = [
             {"campo": ".".join(str(p) for p in e.get("loc", ())), "mensaje": e.get("msg", "")}
             for e in exc.errors()
         ]
-        return respuesta_error(ErrorValidacion("La solicitud tiene parámetros o cuerpo inválidos.", detalles))
+        return respuesta_error(
+            ErrorValidacion("La solicitud tiene parámetros o cuerpo inválidos.", detalles), request
+        )
 
     @app.exception_handler(StarletteHTTPException)
-    async def _http(_: Request, exc: StarletteHTTPException) -> JSONResponse:
+    async def _http(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         if exc.status_code == 404:
-            return respuesta_error(RecursoNoEncontrado("La ruta solicitada no existe."))
+            return respuesta_error(RecursoNoEncontrado("La ruta solicitada no existe."), request)
         if exc.status_code == 405:
-            return respuesta_error(MetodoNoPermitido("El método no está permitido para esta ruta."))
-        return respuesta_error(ErrorInterno())
+            return respuesta_error(MetodoNoPermitido("El método no está permitido para esta ruta."), request)
+        return respuesta_error(ErrorInterno(), request)
 
     @app.exception_handler(Exception)
     async def _inesperado(request: Request, exc: Exception) -> JSONResponse:
         _log_error.exception("metodo=%s ruta=%s resultado=error_inesperado", request.method, request.url.path)
-        return respuesta_error(ErrorInterno())
+        return respuesta_error(ErrorInterno(), request)
 
 
 # ----------------------------------------------------------------- OpenAPI

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Defensa Final ante la FIFA — Plataforma NoSQL Fixture Mundial 2030</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&family=Fira+Code&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --color-sidebar: #0F172A;
+      --color-canvas: #F8FAFC;
+      --color-card: #FFFFFF;
+      --color-text-main: #1E293B;
+      --color-text-muted: #64748B;
+      --color-success: #10B981;
+      --color-warning: #F59E0B;
+      --color-alert: #EF4444;
+      --color-primary: #2563EB;
+      --font-display: 'Inter', sans-serif;
+      --font-body: 'Roboto', sans-serif;
+      --font-code: 'Fira Code', monospace;
+    }
+
+    body {
+      background-color: var(--color-canvas);
+      color: var(--color-text-main);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+
+    .slide-container {
+      width: 100vw;
+      height: 100vh;
+      background: var(--color-canvas);
+      display: flex;
+      flex-direction: row;
+    }
+
+    .sidebar {
+      width: 270px;
+      height: 100vh;
+      background: var(--color-sidebar);
+      padding: 28px 18px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+    }
+
+    .sidebar-header {
+      color: #93C5FD;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #334155;
+    }
+
+    .nav-list {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-item { margin-bottom: 6px; }
+
+    .nav-link {
+      color: #CBD5E1;
+      text-decoration: none;
+      font-size: 13px;
+      padding: 8px 12px;
+      display: block;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-link.active {
+      background: #1E293B;
+      color: #38BDF8;
+      font-weight: 600;
+      border-left: 3px solid #38BDF8;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 40px 56px;
+      height: 100vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    section {
+      margin-bottom: 70px;
+      min-height: 82vh;
+      padding-top: 10px;
+    }
+
+    .card {
+      background: var(--color-card);
+      border-radius: 10px;
+      padding: 26px 30px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+      border: 1px solid #E2E8F0;
+      margin-bottom: 24px;
+    }
+
+    h1 { font-family: var(--font-display); font-size: 40px; font-weight: 700; color: #0F172A; line-height: 1.15; margin-bottom: 14px; }
+    h2 { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: #0F172A; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+    h2 i { color: var(--color-primary); font-size: 24px; }
+    h3 { font-family: var(--font-display); font-size: 19px; font-weight: 600; color: #1E293B; margin-bottom: 10px; }
+    p { font-size: 16px; line-height: 1.6; margin-bottom: 14px; color: #334155; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+    .code-block {
+      background: #0F172A;
+      color: #E2E8F0;
+      font-family: var(--font-code);
+      font-size: 13px;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    .metric-card {
+      border-left: 5px solid var(--color-success);
+      padding: 14px 18px;
+      background: #F0FDF4;
+      border-radius: 6px;
+    }
+    .metric-card.warning { border-left-color: var(--color-warning); background: #FFFBEB; }
+    .metric-card.alert { border-left-color: var(--color-alert); background: #FEF2F2; }
+    .metric-card.info { border-left-color: var(--color-primary); background: #EFF6FF; }
+    .metric-value { font-size: 24px; font-weight: 700; color: #0F172A; }
+    .metric-label { font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+    th { background: #F1F5F9; text-align: left; padding: 10px 14px; font-weight: 600; color: #334155; border-bottom: 2px solid #E2E8F0; }
+    td { padding: 10px 14px; border-bottom: 1px solid #F1F5F9; color: #334155; vertical-align: top; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-cp { background: #DBEAFE; color: #1E40AF; }
+    .badge-ap { background: #D1FAE5; color: #065F46; }
+    .badge-mem { background: #FEF3C7; color: #92400E; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <nav class="sidebar">
+      <div class="sidebar-header">Defensa TPO · FIFA 2030</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#portada" class="nav-link active">1. Portada y Desafío FIFA</a></li>
+        <li class="nav-item"><a href="#arquitectura" class="nav-link">2. Persistencia Políglota</a></li>
+        <li class="nav-item"><a href="#bloque-a" class="nav-link">3. MongoDB, Neo4j e IRIS</a></li>
+        <li class="nav-item"><a href="#bloque-b" class="nav-link">4. Cassandra, Redis e InfluxDB</a></li>
+        <li class="nav-item"><a href="#cap" class="nav-link">5. Distribución y Teorema CAP</a></li>
+        <li class="nav-item"><a href="#api-h10-h11" class="nav-link">6. API Integrada y 9 Capas</a></li>
+        <li class="nav-item"><a href="#carga-h12" class="nav-link">7. Pruebas de Carga y Mejora</a></li>
+        <li class="nav-item"><a href="#monitoreo-h13" class="nav-link">8. Prometheus y Grafana</a></li>
+        <li class="nav-item"><a href="#falla-controlada" class="nav-link">9. Prueba de Falla y Alertas</a></li>
+        <li class="nav-item"><a href="#cierre" class="nav-link">10. Límites, Trade-offs y Cierre</a></li>
+      </ul>
+      <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #334155; color: #94A3B8; font-size: 12px;">
+        <div>Ingeniería de Datos II (UADE)</div>
+        <div style="color: #38BDF8; font-weight: 600; margin-top: 4px;">Grupo 4 · Hito 13 Final</div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+
+      <!-- SLIDE 1: PORTADA Y DESAFÍO FIFA -->
+      <section id="portada">
+        <div class="card" style="border-top: 8px solid var(--color-primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="badge badge-cp">DEFENSA TÉCNICA ANTE LA FIFA · 20 MINUTOS</span>
+            <span style="font-size: 13px; color: #64748B; font-weight: 600;">Hitos 1 al 13 Integrados</span>
+          </div>
+          <h1>Plataforma NoSQL del Fixture Mundial 2030</h1>
+          <p style="font-size: 19px; color: #475569;">Arquitectura de Persistencia Políglota, Evaluación de Conectividad, Optimización bajo Carga y Observabilidad con Prometheus + Grafana</p>
+
+          <div class="grid-3" style="margin-top: 24px;">
+            <div class="metric-card info">
+              <div class="metric-label">Escala Geográfica</div>
+              <div class="metric-value">6 Países · 3 Continentes</div>
+              <p style="font-size: 13px; margin: 4px 0 0 0;">ARG, PRY, URY, ESP, PRT, MAR · 64 Selecciones · 127 Partidos</p>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Objetivos de Diseño (SLA)</div>
+              <div class="metric-value">&lt; 100 ms · 99,99%</div>
+              <p style="font-size: 13px; margin: 4px 0 0 0;">2–3M usuarios simultáneos · Picos de 100.000+ ops/s en vivo</p>
+            </div>
+            <div class="metric-card warning">
+              <div class="metric-label">Tesis Central</div>
+              <div class="metric-value">6 Modelos NoSQL</div>
+              <p style="font-size: 13px; margin: 4px 0 0 0;">Un único motor relacional no resuelve patrones de acceso contrapuestos</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>¿Por qué una única estructura relacional o un solo motor NoSQL no es suficiente?</h3>
+          <div class="grid-2">
+            <div>
+              <p><strong>1. Contención de escritura vs. consistencia normativa:</strong> Un pico de decenas de miles de comentarios por segundo tras un gol saturaría los locks e índices B-Tree de la misma base que custodia las actas arbitrales oficiales.</p>
+              <p><strong>2. Impedancia estructural:</strong> Recorrer cruces de rivales y sedes requiere travesías de grafos libres de índice, no <em>JOINs</em> recursivos ni escaneos tabulares.</p>
+            </div>
+            <div>
+              <p><strong>3. Ciclo de vida heterogéneo:</strong> Las sesiones de millones de espectadores viven 30 minutos en RAM con TTL nativo, mientras que la telemetría del partido exige compresión columnar por ventana de tiempo (<code>DATE_BIN</code>).</p>
+              <p><strong>4. Aislamiento de fallas:</strong> Desacoplar cada flujo detrás de su adaptador permite que si un motor se degrada, los otros cinco continúen operativos.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: ARQUITECTURA POLÍGLOTA -->
+      <section id="arquitectura">
+        <h2><i class="fas fa-sitemap"></i> 2. Arquitectura General y Matriz de Responsabilidades</h2>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Subsistema / Hito</th>
+                <th>Motor NoSQL</th>
+                <th>Modelo</th>
+                <th>Patrón de Acceso Dominante</th>
+                <th>Endpoint en API Integrada</th>
+                <th>Latencia Base (H11)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Equipos y Jugadores</strong> (H4)</td>
+                <td>MongoDB 7.0</td>
+                <td>Documental</td>
+                <td>Lectura de ficha agregada por <code>codigo_iso</code> (<code>IXSCAN</code>)</td>
+                <td><code>GET /equipos/{codigo_iso}</code></td>
+                <td><strong>3,5 ms</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Partidos y Eventos</strong> (H5)</td>
+                <td>Neo4j</td>
+                <td>Grafo</td>
+                <td>Travesía <code>Partido &larr; Evento &larr; Jugador</code> y sedes</td>
+                <td><code>GET /partidos/{codigo}/eventos</code></td>
+                <td><strong>5,9 ms</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Comentarios en Vivo</strong> (H6/H12)</td>
+                <td>Cassandra</td>
+                <td>Columnar</td>
+                <td>Escritura masiva y lectura particionada por <code>(partido, ventana, shard)</code></td>
+                <td><code>GET /partidos/{codigo}/comentarios</code></td>
+                <td><strong>77,2 ms</strong> (1,67 ms con H12)</td>
+              </tr>
+              <tr>
+                <td><strong>Sesiones y Caché</strong> (H7/H12)</td>
+                <td>Redis</td>
+                <td>Clave-Valor</td>
+                <td>Lectura en memoria <code>O(1)</code> con TTL (<code>HGETALL + TTL</code>) y muro <code>LRANGE</code></td>
+                <td><code>GET /sesiones/{id_sesion}</code></td>
+                <td><strong>1,2 ms</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Estadísticas en Vivo</strong> (H8)</td>
+                <td>InfluxDB 3 Core</td>
+                <td>Series Temporales</td>
+                <td>Ingesta Line Protocol y agregación temporal <code>DATE_BIN</code></td>
+                <td><code>GET /partidos/{codigo}/estadisticas</code></td>
+                <td><strong>34,2 ms</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Actas Oficiales FIFA</strong> (H9)</td>
+                <td>InterSystems IRIS</td>
+                <td>Objetos / Multimodelo</td>
+                <td>Herencia, relación padre-hijo e invariante <code>AgregarEvento</code></td>
+                <td><code>GET /partidos-oficiales/{codigo}</code></td>
+                <td><strong>3,3 ms</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: BLOQUE A (MONGODB, NEO4J, IRIS) -->
+      <section id="bloque-a">
+        <h2><i class="fas fa-database"></i> 3. Decisiones de Modelado: Documental, Grafo y Objetos</h2>
+        <div class="grid-3">
+          <div class="card">
+            <span class="badge badge-cp">Hito 4 · MongoDB (Documental)</span>
+            <h3 style="margin-top: 10px;">64 Selecciones y 1.472 Jugadores</h3>
+            <p><strong>Decisión clave:</strong> Separar <code>equipos</code> y <code>jugadores</code> en dos colecciones con validación <code>$jsonSchema</code>.</p>
+            <p><strong>Por qué no embebimos los 23 jugadores dentro del equipo:</strong> Para consultar y actualizar jugadores por posición (índice compuesto <code>{equipo_iso: 1, posicion: 1}</code>) sin reescribir el documento raíz del equipo.</p>
+            <div class="code-block">db.equipos.find({codigo_iso:"ARG"}).explain("executionStats")
+// stage: "IXSCAN", totalDocsExamined: 1</div>
+          </div>
+
+          <div class="card">
+            <span class="badge badge-cp">Hito 5 · Neo4j (Grafo)</span>
+            <h3 style="margin-top: 10px;">1.542 Nodos y 1.480 Relaciones</h3>
+            <p><strong>Decisión clave:</strong> Nodos <code>:Equipo</code>, <code>:Jugador</code>, <code>:Partido</code>, <code>:Sede</code>, <code>:Evento</code> con restricciones <code>UNIQUENESS</code> y carga idempotente vía <code>MERGE</code>.</p>
+            <p><strong>Qué resuelve:</strong> Consultas de caminos (rivales enfrentados, jugadores por sede, eventos por partido) sin <em>JOINs</em> tabulares.</p>
+            <div class="code-block">MATCH (p:Partido {codigo: $codigo})
+OPTIONAL MATCH (p)&lt;-[:OCURRE_EN]-(e:Evento)
+               &lt;-[:PROTAGONIZA]-(j:Jugador)
+RETURN p.codigo, e, j ORDER BY e.minuto ASC</div>
+          </div>
+
+          <div class="card">
+            <span class="badge badge-cp">Hito 9 · InterSystems IRIS (Objetos)</span>
+            <h3 style="margin-top: 10px;">Actas Oficiales e Invariantes</h3>
+            <p><strong>Decisión clave:</strong> Herencia <code>Fixture.Persona &rarr; Arbitro / Tecnico</code> y relación padre-hijo <code>Partido &harr; EventoPartido</code>.</p>
+            <p><strong>Regla encapsulada:</strong> <code>Partido.AgregarEvento()</code> verifica el estado; si es <code>"Finalizado"</code>, rechaza el evento protegiendo el acta FIFA.</p>
+            <div class="code-block">If ..Estado = "Finalizado" {
+  Quit $$$ERROR($$$GeneralError,
+    "No se pueden agregar eventos...")
+}
+// Verificado: antes=2, despues=2, REGLA_OK</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: BLOQUE B (CASSANDRA, REDIS, INFLUXDB) -->
+      <section id="bloque-b">
+        <h2><i class="fas fa-bolt"></i> 4. Decisiones de Alta Frecuencia: Columnar, Clave-Valor y Temporal</h2>
+        <div class="grid-3">
+          <div class="card">
+            <span class="badge badge-ap">Hito 6 · Cassandra (Columnar)</span>
+            <h3 style="margin-top: 10px;">Comentarios Masivos (1M+)</h3>
+            <p><strong>Particionamiento:</strong> Clave primaria compuesta <code>((codigo_partido, ventana, shard), id_comentario)</code> con <code>CLUSTERING ORDER BY (id_comentario DESC)</code>.</p>
+            <p><strong>Trade-off:</strong> El <code>shard (0..3)</code> por minuto evita <em>hot partitions</em> al escribir en un gol, pero obliga a leer los 4 shards al consultar la ventana.</p>
+            <div class="code-block">PRIMARY KEY (
+  (codigo_partido, ventana, shard),
+  id_comentario
+) WITH CLUSTERING ORDER BY (id_comentario DESC);</div>
+          </div>
+
+          <div class="card">
+            <span class="badge badge-mem">Hito 7 · Redis (Clave-Valor)</span>
+            <h3 style="margin-top: 10px;">Sesiones vs. Caché (noeviction)</h3>
+            <p><strong>Corrección conceptual clave:</strong> Una sesión activa (<code>sesion:S-0001</code>, TTL 1800s) es estado de acceso, no una copia descartable como la caché.</p>
+            <p><strong>Decisión:</strong> Política <code>noeviction</code> en vez de <code>volatile-lru</code> para impedir que la presión de memoria expulse sesiones antes de su vencimiento.</p>
+            <div class="code-block">redis-server --appendonly yes --save 60 1
+  --maxmemory 256mb
+  --maxmemory-policy noeviction</div>
+          </div>
+
+          <div class="card">
+            <span class="badge badge-ap">Hito 8 · InfluxDB 3 Core (Temporal)</span>
+            <h3 style="margin-top: 10px;">Estadísticas en Vivo (10M+ pts)</h3>
+            <p><strong>Control de cardinalidad:</strong> Solo tags acotados (<code>partido_id</code>, <code>equipo_id</code>, <code>fase</code>); métricas variables en fields (<code>posesion_pct</code>, <code>tiros</code>, <code>usuarios_activos</code>).</p>
+            <p><strong>Consulta analítica:</strong> Downsampling en vivo con <code>DATE_BIN</code> (intervalos cerrados <code>10s</code>, <code>1m</code>, <code>5m</code>).</p>
+            <div class="code-block">SELECT DATE_BIN(INTERVAL '1 minute', time)
+  AS instante, equipo_id,
+  AVG(posesion_pct) AS posesion_pct_prom
+FROM estadisticas_partido GROUP BY 1, 2</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: DISTRIBUCIÓN Y CAP -->
+      <section id="cap">
+        <h2><i class="fas fa-globe-americas"></i> 5. Estrategia de Distribución, Replicación y Teorema CAP</h2>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Motor</th>
+                <th>Clasificación CAP</th>
+                <th>Estrategia de Distribución / Replicación</th>
+                <th>Comportamiento ante Caída o Partición de Red</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Cassandra</strong></td>
+                <td><span class="badge badge-ap">AP</span></td>
+                <td>Anillo <em>Peer-to-Peer</em> sin maestro con <code>NetworkTopologyStrategy</code> en los datacenters de Sudamérica y Europa/África. Sharding por <code>(partido, ventana, shard)</code>.</td>
+                <td>Sigue aceptando escrituras de comentarios con <code>LOCAL_ONE</code> / <code>LOCAL_QUORUM</code> y <em>Hinted Handoff</em>. Prioriza no bloquear nunca al espectador en un gol.</td>
+              </tr>
+              <tr>
+                <td><strong>MongoDB</strong></td>
+                <td><span class="badge badge-cp">CP</span></td>
+                <td>Replica Set (1 Primary + Secondaries en cada región anfitriona). El catálogo completo (1.536 docs) cabe en RAM de todos los nodos.</td>
+                <td>Si cae el primario, los secundarios eligen nuevo primario por mayoría Raft/Paxos. Garantiza consistencia del catálogo oficial.</td>
+              </tr>
+              <tr>
+                <td><strong>Neo4j / IRIS</strong></td>
+                <td><span class="badge badge-cp">CP / ACID</span></td>
+                <td>Escrituras transaccionales en nodo primario/espejo (<em>IRIS Mirroring</em> / Neo4j Raft) y réplicas de lectura para consultas de recorrido.</td>
+                <td>Prioriza integridad de grafos y actas arbitrales FIFA. En caso de indisponibilidad, la API devuelve <code>503</code> aislado sin corromper el acta.</td>
+              </tr>
+              <tr>
+                <td><strong>Redis</strong></td>
+                <td><span class="badge badge-mem">Memoria + AOF</span></td>
+                <td>Separación de instancias: Store de Sesiones (<code>noeviction</code> + AOF) y Caché de Muros (<code>allkeys-lru</code>, TTL 60s).</td>
+                <td>Si cae o vence el muro en Redis, se reconstruye automáticamente desde Cassandra (fuente de verdad) con lock <code>SET NX EX 2</code>.</td>
+              </tr>
+              <tr>
+                <td><strong>InfluxDB 3</strong></td>
+                <td><span class="badge badge-ap">AP (Ingesta)</span></td>
+                <td>Almacenamiento columnar Apache Parquet sobre Object Store desacoplado del nodo de consulta HTTP.</td>
+                <td>Ingesta por lotes resiliente; permite downsampling histórico sin afectar la lectura del partido en curso.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: API INTEGRADA (H10) Y CONECTIVIDAD 9 CAPAS (H11) -->
+      <section id="api-h10-h11">
+        <h2><i class="fas fa-plug"></i> 6. Integración por API (Hito 10) y Diagnóstico de 9 Capas (Hito 11)</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Arquitectura Ruta &rarr; Servicio &rarr; Adaptador</h3>
+            <p>La API integrada expone 6 lecturas representativas y protege a las bases:</p>
+            <ul style="margin-left: 18px; font-size: 15px; line-height: 1.7;">
+              <li><strong>Validación previa (400):</strong> Si el parámetro es inválido (ej. <code>/equipos/arg</code>), rechaza sin tocar la base (verificado en tests).</li>
+              <li><strong>Traducción uniforme (503 / 504):</strong> Envuelve cada driver en <code>operacion()</code>, midiendo latencia y ocultando detalles internos del motor.</li>
+              <li><strong>Readiness desacoplado (<code>/health/ready</code>):</strong> La API sigue lista mientras al menos 1 fuente esté activa; una fuente caída no corta las otras 5.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Cadena de Conectividad de 9 Capas (Hito 11)</h3>
+            <div class="code-block">Configuración &rarr; Resolución &rarr; TCP &rarr; Protocolo &rarr; Autenticación
+  &rarr; Autorización &rarr; Contexto &rarr; Lectura mínima &rarr; Endpoint API</div>
+            <p><strong>Hallazgos reales corregidos gracias al Hito 11:</strong></p>
+            <ul style="margin-left: 18px; font-size: 14px; line-height: 1.6;">
+              <li><code>NEO4J_DATABASE</code> inexistente daba <code>500</code> &rarr; corregido a <code>503</code>.</li>
+              <li><code>MONGO_DATABASE</code> inexistente daba un falso <code>404</code> &rarr; corregido a <code>503</code>.</li>
+              <li>Caché de diagnóstico (<code>HEALTH_CACHE_TTL_S=10s</code>) con lock para que sondeos y scraping no multipliquen pings sobre las 6 bases.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: PRUEBAS DE CARGA Y OPTIMIZACIÓN (H12) -->
+      <section id="carga-h12">
+        <h2><i class="fas fa-tachometer-alt"></i> 7. Evidencia Empírica: Pruebas de Carga y Optimización (Hito 12)</h2>
+        <div class="card">
+          <h3>El Cuello de Botella del Muro en Vivo y su Triangulación</h3>
+          <p>En la línea base, cada lectura del muro ejecutaba un <strong>fan-out de 12 consultas a Cassandra</strong> (3 ventanas &times; 4 shards). A 500 ops/s (80% lecturas), generaba <strong>4.800 consultas/s</strong>. Con <code>nodetool proxyhistograms</code> demostramos que cada consulta en Cassandra tardaba solo <code>0,06 ms</code> (p50), pero el fan-out de 12 viajes de red y serialización llevaba la lectura a <code>14,70 ms</code> (p50) y <code>58,83 ms</code> (p99).</p>
+
+          <div class="grid-3" style="margin: 18px 0;">
+            <div class="metric-card">
+              <div class="metric-label">Latencia Lectura p50 (500 ops/s)</div>
+              <div class="metric-value">14,70 ms &rarr; 1,67 ms</div>
+              <p style="font-size: 13px; margin: 4px 0 0 0;"><strong>&minus;88,6%</strong> al leer <code>LRANGE muro:P-001 0 19</code> en Redis</p>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Uso de CPU en Cassandra</div>
+              <div class="metric-value">77,0% &rarr; 15,5%</div>
+              <p style="font-size: 13px; margin: 4px 0 0 0;"><strong>&minus;80,0%</strong> liberando a Cassandra para escrituras</p>
+            </div>
+            <div class="metric-card info">
+              <div class="metric-label">Capacidad Máxima (Lazo Cerrado)</div>
+              <div class="metric-value">484 &rarr; 6.737 ops/s</div>
+              <p style="font-size: 13px; margin: 4px 0 0 0;"><strong>14&times; más throughput</strong> con 99,6% cache hits y 0 errores</p>
+            </div>
+          </div>
+
+          <p style="font-size: 14px; color: #475569;"><strong>Diseño sin corrupción:</strong> Cassandra sigue siendo la fuente de verdad. En cada escritura se actualiza Redis con <code>LPUSHX</code> + <code>LTRIM 0 99</code> (si el muro venció, no crea una lista de 1 elemento; solo la lectura lo reconstruye completo desde Cassandra usando un lock <code>SET lock:muro:P-001 NX EX 2</code>).</p>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: OBSERVABILIDAD CON PROMETHEUS Y GRAFANA (H13) -->
+      <section id="monitoreo-h13">
+        <h2><i class="fas fa-chart-area"></i> 8. Observabilidad con Prometheus y Grafana (Hito 13)</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Arquitectura Pull (Scraping cada 15s)</h3>
+            <p>Integramos el stack de monitoreo (<code>prometheus:9090</code>, <code>grafana:3000</code>, <code>node-exporter:9100</code>) con el endpoint <code>GET /metrics</code> instrumentado en la API integrada:</p>
+            <ul style="margin-left: 18px; font-size: 14px; line-height: 1.7;">
+              <li><strong>Gauges:</strong> <code>fixture_db_up{db}</code>, <code>fixture_db_ping_latency_seconds{db}</code>, <code>fixture_api_in_flight_requests</code>.</li>
+              <li><strong>Counters:</strong> <code>fixture_api_http_requests_total</code>, <code>fixture_api_http_errors_total</code>, <code>fixture_db_operations_total</code>.</li>
+              <li><strong>Histograms:</strong> <code>fixture_api_http_request_duration_seconds_bucket</code> y <code>fixture_db_operation_duration_seconds_bucket</code> (con bucket en <code>0.1s = 100ms</code>).</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Consultas PromQL Clave en el War Room</h3>
+            <div class="code-block"># 1. Cumplimiento del SLA de Latencia p95 (&lt; 100ms = 0.1s)
+histogram_quantile(0.95, sum by (le, route) (
+  rate(fixture_api_http_request_duration_seconds_bucket[1m])
+))
+
+# 2. Latencia promedio comparada por motor NoSQL (RF7)
+sum by (db, operation) (rate(fixture_db_operation_duration_seconds_sum[1m]))
+/ clamp_min(sum by (db, operation) (
+  rate(fixture_db_operation_duration_seconds_count[1m])), 1e-9)
+
+# 3. Errores de dependencia por segundo (excluyendo 400/404)
+sum by (route, codigo) (rate(fixture_api_http_errors_total{
+  codigo=~"DEPENDENCIA_NO_DISPONIBLE|DEPENDENCIA_TIMEOUT"}[1m]))</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: PRUEBA DE FALLA CONTROLADA Y ALERTAS -->
+      <section id="falla-controlada">
+        <h2><i class="fas fa-bell"></i> 9. Alertas Operativas y Prueba de Falla Controlada (RF9, RF10)</h2>
+        <div class="card">
+          <h3>Verificación Experimental en Tres Fases (<code>ejecutar_prueba_controlada.py</code>)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Indicador en Prometheus / API</th>
+                <th>Fase 1: Operación Normal</th>
+                <th>Fase 2: Durante <code>docker stop fixture2030-redis</code></th>
+                <th>Fase 3: Tras <code>docker start fixture2030-redis</code></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>GET /health/dependencias</code></td>
+                <td><span class="badge badge-ap">up (6/6 motores OK)</span></td>
+                <td><span class="badge badge-mem">degraded (5/6 motores OK)</span></td>
+                <td><span class="badge badge-ap">up (6/6 motores OK)</span></td>
+              </tr>
+              <tr>
+                <td><code>fixture_db_up{db="redis"}</code></td>
+                <td><strong>1 (OPERATIVO)</strong></td>
+                <td><strong style="color: #DC2626;">0 (NO DISPONIBLE)</strong></td>
+                <td><strong>1 (OPERATIVO)</strong></td>
+              </tr>
+              <tr>
+                <td><code>fixture_db_up{db="mongodb"}</code> (y otros 4)</td>
+                <td><strong>1 (OPERATIVO)</strong></td>
+                <td><strong>1 (Aislamiento total)</strong></td>
+                <td><strong>1 (OPERATIVO)</strong></td>
+              </tr>
+              <tr>
+                <td><code>GET /sesiones/S-0001</code> vs <code>GET /equipos/ARG</code></td>
+                <td><code>200 OK</code> / <code>200 OK</code></td>
+                <td><code>503 DEPENDENCIA_NO_DISPONIBLE</code> / <code>200 OK</code></td>
+                <td><code>200 OK</code> / <code>200 OK</code></td>
+              </tr>
+              <tr>
+                <td>Alerta <code>BaseDatosNoSQLNoDisponible</code></td>
+                <td><code>inactive</code></td>
+                <td><strong style="color: #DC2626;">pending &rarr; firing (for: 15s)</strong></td>
+                <td><code>inactive</code> (resuelta automáticamente)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: LÍMITES, TRADE-OFFS Y CIERRE -->
+      <section id="cierre">
+        <h2><i class="fas fa-flag-checkered"></i> 10. Honestidad Experimental, Trade-offs y Evolución</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Lo Medido en Laboratorio vs. Proyección Mundialista</h3>
+            <ul style="margin-left: 18px; font-size: 15px; line-height: 1.7;">
+              <li><strong>Medido realmente:</strong> 6 motores integrados, tiempos de lectura entre <code>1,2 ms</code> y <code>77,2 ms</code>, salto de <code>484</code> a <code>6.737 ops/s</code> con muro en Redis, diagnóstico de 9 capas y observabilidad extremo a extremo sin pérdida de datos.</li>
+              <li><strong>Límite declarado del laboratorio:</strong> 1 contenedor por motor en una máquina local; no se midió latencia WAN intercontinental ni los <code>100.000 req/s</code> globales (que requieren escalar horizontalmente nodos y generadores de carga).</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Trade-offs Aceptados y Próxima Iteración</h3>
+            <ul style="margin-left: 18px; font-size: 15px; line-height: 1.7;">
+              <li><strong>Complejidad operativa:</strong> Mantener 6 motores exige 6 drivers y monitoreo unificado, pero evita que un pico en comentarios degrade actas oficiales o catálogos.</li>
+              <li><strong>Frescura acotada (60s):</strong> El muro en Redis acepta hasta 60s de retraso puntual en un <em>cache miss</em> a cambio de reducir un 80% el CPU de Cassandra.</li>
+              <li><strong>Evolución:</strong> Proyección asíncrona al <strong>Data Mart estrella</strong> (Hito 12) para analítica FIFA y exporters dedicados por motor.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card" style="background: #0F172A; color: white; text-align: center;">
+          <h3 style="color: #38BDF8; font-size: 22px;">¿Preguntas de la Comisión Técnica de la FIFA?</h3>
+          <p style="color: #CBD5E1; margin-bottom: 0;">Repositorio completo, contratos OpenAPI, scripts reproducibles y evidencia sin secretos disponibles para demostración inmediata.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    const mainContent = document.querySelector('.main-content');
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    mainContent.onscroll = () => {
+      sections.forEach(sec => {
+        let top = mainContent.scrollTop;
+        let offset = sec.offsetTop - 120;
+        let height = sec.offsetHeight;
+        let id = sec.getAttribute('id');
+        if (top >= offset && top < offset + height) {
+          navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + id) {
+              link.classList.add('active');
+            }
+          });
+        }
+      });
+    };
+  </script>
+</body>
+</html>

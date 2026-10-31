@@ -3,7 +3,8 @@
 **Repositorio:** https://github.com/tomyhok/TPO_Fixture2030
 
 Proyecto de Ingenieria de Datos II para modelar la informacion del Fixture 2030
-con tres motores de persistencia:
+con seis motores de persistencia NoSQL, API REST integrada, evaluacion de conectividad,
+pruebas de carga y monitoreo con Prometheus + Grafana:
 
 - **MongoDB** (Hito 4): modelo documental de equipos y jugadores.
 - **Neo4j** (Hito 5): modelo de grafos para representar equipos, jugadores,
@@ -16,7 +17,7 @@ con tres motores de persistencia:
 - **IRIS** (Hito 9): base orientada a objetos / multimodelo para gestionar 
   entidades complejas con relaciones directas y validaciones encapsuladas.
 - **API REST integrada** (Hito 10): API HTTP (FastAPI) que expone los seis
-  modulos mediante adaptadores separados, con contrato OpenAPI y pruebas.
+  modulos mediante adaptadores separados, con contrato OpenAPI, pruebas y endpoint `/metrics`.
 - **Evaluacion de conectividad** (Hito 11): diagnostico reproducible, capa por
   capa, de la conexion entre la API y los seis productos, con matriz de
   conectividad, fallas controladas y liveness/readiness en la API.
@@ -24,12 +25,16 @@ con tres motores de persistencia:
   del muro de comentarios en vivo (Cassandra + Redis), integracion conceptual con
   Data Mart y comparacion relacional condicionada. Ver
   [`fixture2030-hito-12-carga-optimizacion/`](fixture2030-hito-12-carga-optimizacion/README.md).
+- **Monitoreo y defensa final** (Hito 13): observabilidad con Prometheus, Grafana y
+  Node Exporter integrada con `/metrics` de la API, alertas, prueba controlada y
+  material de defensa ante la FIFA. Ver
+  [`fixture2030-hito-13-monitoreo/`](fixture2030-hito-13-monitoreo/README.md).
 
 ## Requisitos
 
 - Docker Desktop con Docker Compose.
 - Puertos disponibles: `27017`, `7474`, `7687`, `9042`, `6379`, `8181`, `1972`,
-  `52773` y `8000` (API del Hito 10).
+  `52773`, `8000` (API del Hito 10), `9090` (Prometheus), `3000` (Grafana) y `9100` (Node Exporter).
 - Python 3 en el host para el generador de datos de Cassandra, y Python 3.12
   para la API del Hito 10.
 
@@ -313,7 +318,7 @@ de datos, ejecucion, pruebas y evidencia) esta en
 cd fixture2030-hito-10-api-integrada
 cp .env.example .env                 # completar las contrasenas
 bash scripts/preparar_datos.sh       # datos de muestra de las seis fuentes
-bash scripts/iniciar_api.sh          # Swagger UI: http://127.0.0.1:8000/docs
+bash scripts/iniciar_api.sh          # Swagger UI: http://127.0.0.1:8000/docs | Métricas: /metrics
 ```
 
 > **Cambio en IRIS:** `ISC_DATA_DIRECTORY` paso de `/durable` a `/durable/iris`
@@ -350,6 +355,21 @@ bash scripts/ejecutar_linea_base.sh --tasa 10
 bash scripts/ejecutar_prueba_optimizada.sh --tasa 10
 python scripts/comparar_resultados.py docs/evidencia/resultados/base_X.json docs/evidencia/resultados/optimizado_Y.json
 python scripts/limpiar_datos_de_prueba.py --confirmar   # opcional
+```
+
+## Monitoreo y defensa final (Hito 13)
+
+Observabilidad transversal con Prometheus, Grafana y Node Exporter integrada con
+`GET /metrics` de la API del Hito 10, reglas de alerta, prueba controlada reversible
+y defensa técnica ante la FIFA. Guía completa en
+[`fixture2030-hito-13-monitoreo/README.md`](fixture2030-hito-13-monitoreo/README.md).
+
+```bash
+cd fixture2030-hito-13-monitoreo
+bash scripts/iniciar_monitoreo.sh            # Prometheus :9090, Grafana :3000, Node Exporter :9100
+bash scripts/verificar_targets.sh            # Verifica targets UP y reglas en Prometheus
+bash scripts/ejecutar_prueba_controlada.sh   # Prueba de falla reversible (3 fases)
+bash scripts/limpiar_entorno.sh              # Detiene monitoreo sin borrar volúmenes
 ```
 
 ## Estructura del proyecto
@@ -393,7 +413,7 @@ fixture2030-iris/
   README.md                         Documentación del modelo, UML y matriz de integridad
   docker-compose.yml                Compose independiente del modulo
 fixture2030-hito-10-api-integrada/
-  app/                              API: rutas, servicios, adaptadores, schemas y config
+  app/                              API: rutas, servicios, adaptadores, schemas, config y /metrics
   openapi/                          Contrato OpenAPI generado del codigo
   scripts/                          Inicio, preparacion de datos, conectividad, pruebas y evidencia
   tests/                            Pruebas unitarias y de integracion
@@ -408,6 +428,13 @@ fixture2030-hito-12-carga-optimizacion/
   scripts/                          Preparacion, generador de carga, comparacion, integridad y limpieza
   datos-o-generadores/              Descripcion de semilla, distribuciones y generacion reproducible
   docs/                             Flujo, linea base, hipotesis, Data Mart, comparacion relacional y evidencia
+fixture2030-hito-13-monitoreo/
+  prometheus/                       Reglas de alerta de Prometheus
+  grafana/                          Provisioning automatico y dashboard War Room (JSON)
+  scripts/                          Inicio, verificacion de targets, prueba controlada y limpieza
+  docs/                             Inventario, PromQL, alertas, decisiones, limitaciones y defensa FIFA
+  evidencia/                        Salidas de targets, prueba de falla, vista dashboard y escaneo de secretos
+  defensa/                          Presentacion HTML interactiva, guion de 20 minutos y estrategia de demo
 ```
 
 Los Compose dentro de los modulos se conservan como referencia y para ejecutar

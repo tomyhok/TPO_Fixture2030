@@ -42,6 +42,22 @@ Salud: `/health` verifica las seis fuentes; `/health/live` no consulta bases;
 el chequeo durante un TTL configurable. Esta reutilización es del diagnóstico en memoria,
 no una caché Redis de datos del negocio.
 
+## Front de integración (demo)
+
+Con la API levantada, abrir `http://localhost:8000/demo/`. Es una página estática
+(`app/front/index.html`, sin dependencias) servida por la misma API, que solo usa las
+rutas GET públicas. Muestra:
+
+- **Estado de las fuentes**: `/health/dependencias?refrescar=true`.
+- **Recorrido de un partido**: encadena Redis (sesión → `usuario_id`), IRIS (acta →
+  `codigo_partido`), Neo4j (eventos → `id_jugador` → `codigo_iso`), Cassandra (comentarios →
+  `equipo_apoyado`, `id_usuario`), InfluxDB (series → tag `equipo`) y finalmente MongoDB con
+  cada `codigo_iso` descubierto. Cada paso indica estado HTTP, latencia, `X-Request-ID` y qué
+  clave lleva a la siguiente base.
+- **Mapa de integración**: las bases no se comunican entre sí; la API las une por claves de
+  negocio compartidas, que se resaltan en el diagrama cuando el dato aparece.
+- **Vista integrada**: ficha del partido combinando las seis lecturas.
+
 ## Contratos, validación y pruebas
 
 OpenAPI: `openapi/openapi.yaml`, regenerado con `python scripts/exportar_openapi.py`.

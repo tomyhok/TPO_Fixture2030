@@ -7,8 +7,10 @@ Swagger UI: http://localhost:8000/docs   ·   OpenAPI: http://localhost:8000/ope
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app import VERSION
 from app.config.settings import Settings, obtener_settings
@@ -24,6 +26,7 @@ La API no escribe datos de dominio. Los endpoints de salud corresponden al Hito 
 Todas las respuestas incluyen X-Request-ID. Laboratorio local sin autenticación HTTP."""
 
 TAGS = []
+DIR_FRONT = Path(__file__).parent / "front"
 
 
 def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None = None) -> FastAPI:
@@ -52,6 +55,8 @@ def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None 
     instalar_manejadores(app)
     for modulo in (equipos, partidos, comentarios, sesiones, estadisticas, actas, salud):
         app.include_router(modulo.router)
+    # Front de demostración (solo lectura): consume las mismas rutas públicas desde el navegador.
+    app.mount("/demo", StaticFiles(directory=DIR_FRONT, html=True), name="demo")
     instalar_openapi(app)
     return app
 

@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixture 2030</title>
+<style>
+  :root {
+    --bg: #f3f5f8; --panel: #ffffff; --panel-2: #f7f9fb; --text: #18202c; --muted: #5b6575; --line: #dfe3ea;
+    --brand: #0b2a4a; --brand-text: #ffffff; --accent: #12805c; --accent-text: #ffffff; --link: #1a5fb4;
+    --ok: #12805c; --warn: #a86400; --err: #c0392b; --chip: #e8eef6;
+    --mongodb: #3f9142; --neo4j: #0d7fd8; --cassandra: #1287b1; --redis: #d82c20; --influxdb: #9b4dca; --iris: #d06400;
+    --sombra: 0 1px 2px rgba(16, 24, 40, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1319; --panel: #171c24; --panel-2: #1c222c; --text: #e7eaf0; --muted: #9aa3b2; --line: #2a313d;
+      --brand: #0a1c30; --accent: #2fb47f; --accent-text: #08130e; --link: #7fb0ff;
+      --ok: #3ccf8e; --warn: #f0b04a; --err: #ff6b5c; --chip: #222a36; --sombra: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  button, input, select { font: inherit; }
+  .cont { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+  /* cabecera */
+  .top { background: var(--brand); color: var(--brand-text); position: sticky; top: 0; z-index: 10; }
+  .top .cont { display: flex; align-items: center; gap: 18px; height: 58px; }
+  .marca { font-weight: 800; font-size: 19px; letter-spacing: .3px; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .marca span { background: var(--accent); color: var(--accent-text); border-radius: 6px; padding: 1px 7px; font-size: 13px; }
+  nav { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+  nav a { color: #c9d6e6; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+  nav a.activo, nav a:hover { color: #fff; background: rgba(255,255,255,.1); text-decoration: none; }
+  .usuario { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .usuario small { color: #c9d6e6; }
+  .btn { border: 1px solid transparent; border-radius: 8px; padding: 7px 14px; cursor: pointer; background: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .btn.sec { background: transparent; border-color: var(--line); color: var(--text); font-weight: 500; }
+  .top .btn.sec { color: #fff; border-color: rgba(255,255,255,.35); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+  main { padding: 20px 0 48px; }
+  h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 17px; margin: 0 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--sombra); }
+  .cabpanel { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .cabpanel h2 { margin: 0; }
+  .fuente { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--chip); white-space: nowrap; }
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  @media (max-width: 860px) { .g2 { grid-template-columns: 1fr; } .usuario small { display: none; } }
+  .vacio { color: var(--muted); font-style: italic; margin: 4px 0; }
+
+  /* fixture */
+  .partidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .partido { display: block; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; box-shadow: var(--sombra); transition: border-color .15s, transform .15s; }
+  .partido:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-1px); }
+  .partido .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+  .eq { display: flex; align-items: center; gap: 8px; font-weight: 600; min-width: 0; }
+  .eq.der { flex-direction: row-reverse; text-align: right; }
+  .eq b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .escudo { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; letter-spacing: .3px; }
+  .escudo.g { width: 56px; height: 56px; font-size: 15px; }
+  .marcador { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 0 6px; }
+  .estado { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .estado.vivo { color: var(--err); border-color: var(--err); }
+  .estado.fin { color: var(--muted); }
+  .grupos { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .grupo h3 { margin: 0 0 8px; font-size: 14px; }
+  .fila-eq { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 6px; color: inherit; }
+  .fila-eq:hover { background: var(--panel-2); text-decoration: none; }
+  .fila-eq .escudo { width: 24px; height: 24px; font-size: 9px; }
+  .fila-eq small { margin-left: auto; color: var(--muted); }
+  .buscador { width: 100%; max-width: 320px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); }
+
+  /* partido */
+  .hero { background: linear-gradient(135deg, var(--brand), #14466f); color: #fff; border-radius: 14px; padding: 22px 18px; margin-bottom: 16px; }
+  .hero .versus { gap: 14px; }
+  .hero .eq { font-size: 18px; color: #fff; }
+  .hero .marcador { font-size: 40px; }
+  .hero .info { text-align: center; color: #c9d6e6; font-size: 13px; margin-top: 12px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .hero .estado { color: #fff; border-color: rgba(255,255,255,.4); }
+  .vivo-strip { display: flex; gap: 18px; justify-content: center; margin-top: 12px; font-size: 13px; color: #c9d6e6; flex-wrap: wrap; }
+  .vivo-strip b { color: #fff; font-variant-numeric: tabular-nums; }
+  .punto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff5a4f; margin-right: 6px; animation: latir 1.4s infinite; }
+  @keyframes latir { 50% { opacity: .3; } }
+  .muro-form { display: grid; gap: 8px; margin-bottom: 12px; }
+  .muro-form textarea { width: 100%; min-height: 64px; resize: vertical; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; }
+  .muro-form .fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .muro-form select, .encuesta select { padding: 7px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
+  .contador { margin-left: auto; color: var(--muted); font-size: 12px; }
+  .comentarios { display: grid; gap: 8px; max-height: 540px; overflow: auto; }
+  .comentario { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--panel-2); }
+  .comentario.nuevo { animation: entrar .5s ease-out; border-color: var(--accent); }
+  @keyframes entrar { from { opacity: 0; transform: translateY(-4px); } }
+  .comentario .cab { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+  .comentario .cab small { color: var(--muted); margin-left: auto; }
+  .comentario p { margin: 4px 0 0; overflow-wrap: anywhere; }
+  .tag { font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 4px; color: #fff; }
+  .linea { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .linea li { display: grid; grid-template-columns: 42px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; background: var(--panel-2); }
+  .linea .min { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stats-tabla { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  .stats-tabla td { padding: 5px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .stats-tabla td:first-child, .stats-tabla td:last-child { width: 25%; font-weight: 700; }
+  .stats-tabla td:last-child { text-align: right; }
+  .stats-tabla td:nth-child(2) { text-align: center; color: var(--muted); }
+  svg.grafico { width: 100%; height: auto; display: block; }
+  svg.grafico text { fill: var(--muted); font: 11px system-ui, sans-serif; }
+  .ranking { display: grid; gap: 6px; margin-top: 10px; }
+  .barra { position: relative; border-radius: 6px; background: var(--panel-2); overflow: hidden; padding: 5px 9px; font-size: 13px; display: flex; justify-content: space-between; }
+  .barra i { position: absolute; inset: 0 auto 0 0; background: var(--accent); opacity: .18; }
+  .barra span { position: relative; }
+  .encuesta .fila { display: flex; gap: 8px; flex-wrap: wrap; }
+  .encuesta select { flex: 1; min-width: 0; }
+
+  /* selección */
+  .ficha { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .datos { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 6px; color: var(--muted); font-size: 14px; }
+  .datos b { color: var(--text); display: block; font-size: 17px; }
+  table.plantel { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.plantel th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; padding: 6px; border-bottom: 1px solid var(--line); }
+  table.plantel td { padding: 6px; border-bottom: 1px solid var(--line); }
+  .tabla-scroll { overflow-x: auto; }
+
+  /* modal y avisos */
+  dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); padding: 20px; width: min(420px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgba(5, 10, 20, .55); }
+  dialog form { display: grid; gap: 12px; }
+  dialog label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  dialog input, dialog select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
+  .acciones { display: flex; gap: 8px; justify-content: flex-end; }
+  #avisos { position: fixed; right: 16px; bottom: 16px; display: grid; gap: 8px; z-index: 20; max-width: calc(100vw - 32px); }
+  .aviso { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 8px; padding: 10px 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15); font-size: 14px; max-width: 360px; }
+  .aviso.err { border-left-color: var(--err); }
+  .aviso small { display: block; color: var(--muted); font-size: 11px; }
+  .pie { color: var(--muted); font-size: 13px; text-align: center; padding: 8px 0 24px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="cont">
+    <a class="marca" href="#/">FIXTURE <span>2030</span></a>
+    <nav>
+      <a href="#/" data-nav="fixture">Fixture</a>
+      <a href="#/selecciones" data-nav="selecciones">Selecciones</a>
+      <a href="../demo/">Integración</a>
+      <a href="../docs" target="_blank" rel="noopener">API</a>
+    </nav>
+    <div class="usuario" id="usuario"></div>
+  </div>
+</header>
+
+<main class="cont" id="app"></main>
+<div class="pie cont">Portal de demostración del TPO · Datos servidos por MongoDB, Neo4j, Cassandra, Redis, InfluxDB e IRIS a través de la API.</div>
+
+<dialog id="dlg-login">
+  <form id="form-login">
+    <h2 style="margin:0">Ingresar al portal</h2>
+    <p class="sub" style="margin:0">Se crea una sesión en Redis (<code>sesion:&lt;id&gt;</code>) que vence a los 30 minutos.</p>
+    <label>Alias <input name="alias" required minlength="3" maxlength="24" pattern="[\w .\-]+" placeholder="hincha_celeste"></label>
+    <label>Selección favorita <select name="equipo_favorito" id="sel-favorito"><option value="">Ninguna</option></select></label>
+    <div class="acciones">
+      <button class="btn sec" type="button" id="btn-cancelar">Cancelar</button>
+      <button class="btn" type="submit">Ingresar</button>
+    </div>
+  </form>
+</dialog>
+<div id="avisos" aria-live="polite"></div>
+
+<script>
+// ===================================================================== utilidades
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const FUENTES = { mongodb: "MongoDB", neo4j: "Neo4j", cassandra: "Cassandra", redis: "Redis", influxdb: "InfluxDB", iris: "IRIS" };
+const fuente = (...bs) => `<span style="display:inline-flex;gap:4px;flex-wrap:wrap">${bs.map(b => `<span class="fuente" style="color:var(--${b})">${FUENTES[b]}</span>`).join("")}</span>`;
+const COLORES = { ARG: "#4a90c8", ESP: "#c60b1e", URU: "#1e4fa8", BRA: "#139a43", POR: "#8a1538", MAR: "#c1272d", PAR: "#d52b1e", FRA: "#21468b", ALE: "#3d3d3d", ENG: "#9b1c2c" };
+function colorEquipo(iso) {
+  if (COLORES[iso]) return COLORES[iso];
+  let h = 0; for (const c of iso) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `hsl(${h} 55% 40%)`;
+}
+const escudo = (iso, grande) => `<span class="escudo${grande ? " g" : ""}" style="background:${colorEquipo(iso)}">${esc(iso)}</span>`;
+const fechaLarga = (f) => f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "long", year: "numeric" }) : "Fecha a definir";
+
+function avisar(texto, error = false, detalle = "") {
+  const d = document.createElement("div");
+  d.className = "aviso" + (error ? " err" : "");
+  d.innerHTML = esc(texto) + (detalle ? `<small>${esc(detalle)}</small>` : "");
+  $("#avisos").appendChild(d);
+  setTimeout(() => d.remove(), error ? 7000 : 3500);
+}
+
+// --------------------------------------------------------------- sesión local
+const CLAVE = "fx2030.sesion";
+const guardar = (id) => { try { id ? localStorage.setItem(CLAVE, id) : localStorage.removeItem(CLAVE); } catch {} };
+const recuperar = () => { try { return localStorage.getItem(CLAVE); } catch { return null; } };
+let sesion = null; // SesionPortal vigente
+
+class ErrorApi extends Error { constructor(status, cuerpo) { super(cuerpo?.error?.mensaje || `HTTP ${status}`); this.status = status; this.codigo = cuerpo?.error?.codigo; this.requestId = cuerpo?.error?.request_id; } }
+
+async function api(ruta, { metodo = "GET", cuerpo } = {}) {
+  const headers = { Accept: "application/json" };
+  if (cuerpo !== undefined) headers["Content-Type"] = "application/json";
+  if (sesion) headers["X-Sesion-ID"] = sesion.id_sesion;
+  const r = await fetch(ruta, { method: metodo, headers, body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo) });
+  if (r.status === 204) return null;
+  const datos = await r.json().catch(() => null);
+  if (!r.ok) {
+    if (r.status === 401) { cerrarSesionLocal(); abrirLogin(); }
+    throw new ErrorApi(r.status, datos);
+  }
+  return datos;
+}
+const avisarError = (e) => avisar(e.message, true, e.codigo ? `${e.codigo}${e.requestId ? " · " + e.requestId.slice(0, 8) : ""}` : "");
+
+// --------------------------------------------------------------- caché simple
+const cache = {};
+const unaVez = (clave, fn) => (cache[clave] ??= fn().catch((e) => { delete cache[clave]; throw e; }));
+const partidos = () => unaVez("partidos", () => api("/portal/api/partidos"));
+const equipos = () => unaVez("equipos", () => api("/portal/api/equipos"));
+const nombreEquipo = async (iso) => (await equipos().catch(() => [])).find(e => e.codigo_iso === iso)?.nombre ?? iso;
+
+// ===================================================================== sesión UI
+function pintarUsuario() {
+  const u = $("#usuario");
+  if (!sesion) {
+    u.innerHTML = `<button class="btn" id="btn-login">Ingresar</button>`;
+    $("#btn-login").onclick = abrirLogin;
+    return;
+  }
+  const min = sesion.ttl_restante_s != null ? Math.max(0, Math.round(sesion.ttl_restante_s / 60)) : "∞";
+  const fav = sesion.equipo_favorito;
+  u.innerHTML = `${fav ? `<span class="escudo" style="width:26px;height:26px;font-size:9px;background:${colorEquipo(fav)}">${esc(fav)}</span>` : ""}
+    <span><b>${esc(sesion.alias)}</b> <small>${esc(sesion.id_sesion)} · ${min} min</small></span>
+    <button class="btn sec" id="btn-salir">Salir</button>`;
+  $("#btn-salir").onclick = async () => {
+    try { await api(`/portal/api/sesiones/${sesion.id_sesion}`, { metodo: "DELETE" }); } catch {}
+    cerrarSesionLocal(); avisar("Sesión cerrada (clave eliminada de Redis)."); ruta();
+  };
+}
+function cerrarSesionLocal() { sesion = null; guardar(null); pintarUsuario(); }
+
+async function abrirLogin() {
+  const sel = $("#sel-favorito");
+  if (sel.options.length <= 1) {
+    const lista = await equipos().catch(() => []);
+    sel.insertAdjacentHTML("beforeend", lista.slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .map(e => `<option value="${esc(e.codigo_iso)}">${esc(e.nombre)}</option>`).join(""));
+  }
+  if (!$("#dlg-login").open) $("#dlg-login").showModal();
+}
+$("#btn-cancelar").onclick = () => $("#dlg-login").close();
+$("#form-login").onsubmit = async (ev) => {
+  ev.preventDefault();
+  const f = new FormData(ev.target);
+  try {
+    sesion = await api("/portal/api/sesiones", { metodo: "POST", cuerpo: { alias: f.get("alias"), equipo_favorito: f.get("equipo_favorito") || null } });
+    guardar(sesion.id_sesion);
+    $("#dlg-login").close(); ev.target.reset();
+    pintarUsuario(); avisar(`Hola ${sesion.alias}: sesión ${sesion.id_sesion} creada en Redis.`);
+    ruta();
+  } catch (e) { avisarError(e); }
+};
+
+async function restaurarSesion() {
+  const id = recuperar();
+  if (!id) return pintarUsuario();
+  try { sesion = await api(`/portal/api/sesiones/${encodeURIComponent(id)}`); }
+  catch { sesion = null; guardar(null); }
+  pintarUsuario();
+}
+setInterval(async () => { // refresca el TTL mostrado y detecta vencimientos
+  if (!sesion) return;
+  try { sesion = await api(`/portal/api/sesiones/${sesion.id_sesion}`); pintarUsuario(); }
+  catch (e) { if (e.status === 404) { cerrarSesionLocal(); avisar("Tu sesión venció en Redis.", true); } }
+}, 30000);
+
+// ===================================================================== router
+let timers = [];
+const limpiarTimers = () => { timers.forEach(clearInterval); timers = []; };
+async function ruta() {
+  limpiarTimers();
+  const [_, seccion, id] = (location.hash || "#/").split("/");
+  document.querySelectorAll("nav a[data-nav]").forEach(a => a.classList.toggle("activo",
+    a.dataset.nav === (seccion === "selecciones" || seccion === "seleccion" ? "selecciones" : seccion === "" || seccion === "partido" ? "fixture" : "")));
+  const app = $("#app");
+  app.innerHTML = `<p class="vacio">Cargando…</p>`;
+  try {
+    if (seccion === "partido" && id) await vistaPartido(app, decodeURIComponent(id));
+    else if (seccion === "seleccion" && id) await vistaSeleccion(app, decodeURIComponent(id));
+    else if (seccion === "selecciones") await vistaSelecciones(app);
+    else await vistaFixture(app);
+  } catch (e) {
+    app.innerHTML = `<div class="panel"><h2>No se pudo cargar la página</h2><p>${esc(e.message)}</p><p class="vacio">${esc(e.codigo ?? "")}</p></div>`;
+  }
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", ruta);
+
+// ===================================================================== vistas
+function tarjetaPartido(p, acta, goles) {
+  const [loc, vis] = ordenEquipos(p);
+  const est = acta ? acta.estado : null;
+  const claseEst = est === "En Juego" ? "vivo" : est === "Finalizado" ? "fin" : "";
+  return `<a class="partido" href="#/partido/${esc(p.codigo_partido)}">
+    <div class="meta"><span>${esc(p.fase ?? "")} · ${esc(p.codigo_partido)}</span>${est ? `<span class="estado ${claseEst}">${claseEst === "vivo" ? '<span class="punto"></span>' : ""}${esc(est)}</span>` : `<span class="estado">Programado</span>`}</div>
+    <div class="versus">
+      <div class="eq">${escudo(loc.codigo_iso)}<b>${esc(loc.nombre ?? loc.codigo_iso)}</b></div>
+      <div class="marcador">${goles ? `${goles[loc.codigo_iso] ?? 0} - ${goles[vis.codigo_iso] ?? 0}` : "vs"}</div>
+      <div class="eq der">${escudo(vis.codigo_iso)}<b>${esc(vis.nombre ?? vis.codigo_iso)}</b></div>
+    </div>
+    <div class="meta" style="margin:10px 0 0">${esc(fechaLarga(p.fecha))}<span>${esc(p.sede?.nombre ?? "")}${p.sede?.ciudad ? ", " + esc(p.sede.ciudad) : ""}</span></div>
+  </a>`;
+}
+const ordenEquipos = (p) => {
+  const eqs = p.equipos.slice().sort((a, b) => (a.condicion === "local" ? -1 : 1) - (b.condicion === "local" ? -1 : 1));
+  return [eqs[0] ?? { codigo_iso: "?" }, eqs[1] ?? { codigo_iso: "?" }];
+};
+async function golesPartido(codigo) {
+  const r = await api(`/partidos/${codigo}/eventos?limit=200`).catch(() => null);
+  if (!r) return null;
+  const g = {};
+  for (const ev of r.eventos) if (/^gol/i.test(ev.tipo) && ev.jugador) { const iso = ev.jugador.id_jugador.split("-")[0]; g[iso] = (g[iso] ?? 0) + 1; }
+  return { goles: g, eventos: r.eventos };
+}
+
+async function vistaFixture(app) {
+  const [lista, eqs] = await Promise.all([partidos(), equipos().catch(() => [])]);
+  const extra = await Promise.all(lista.map(p => Promise.all([
+    api(`/partidos-oficiales/${p.codigo_partido}`).catch(() => null),
+    golesPartido(p.codigo_partido),
+  ])));
+  const grupos = {};
+  for (const e of eqs) (grupos[e.grupo] ??= []).push(e);
+  app.innerHTML = `
+    <h1>Copa Mundial 2030</h1>
+    <p class="sub">Argentina · Uruguay · Paraguay · España · Portugal · Marruecos. Elegí un partido para seguirlo en vivo.</p>
+    <div class="cabpanel"><h2>Partidos</h2>${fuente("neo4j", "iris")}</div>
+    <div class="partidos">${lista.map((p, i) => tarjetaPartido(p, extra[i][0], extra[i][1]?.goles)).join("") || '<p class="vacio">No hay partidos cargados en Neo4j.</p>'}</div>
+    <div class="cabpanel" style="margin-top:28px"><h2>Grupos</h2>${fuente("mongodb")}</div>
+    <div class="grupos">${Object.keys(grupos).sort().map(g => `<div class="panel grupo"><h3>Grupo ${esc(g)}</h3>
+      ${grupos[g].map(e => `<a class="fila-eq" href="#/seleccion/${esc(e.codigo_iso)}">${escudo(e.codigo_iso)}<span>${esc(e.nombre)}</span><small>#${e.ranking_fifa}</small></a>`).join("")}</div>`).join("")}</div>`;
+}
+
+async function vistaSelecciones(app) {
+  const eqs = await equipos();
+  app.innerHTML = `<h1>Selecciones</h1><p class="sub">${eqs.length} selecciones clasificadas ${fuente("mongodb")}</p>
+    <input class="buscador" id="buscar" placeholder="Buscar por nombre, código o confederación" autocomplete="off">
+    <div class="grupos" id="lista-sel" style="margin-top:14px"></div>`;
+  const pintar = (q) => {
+    const t = q.trim().toLowerCase();
+    const f = eqs.filter(e => !t || [e.nombre, e.codigo_iso, e.confederacion].some(v => v.toLowerCase().includes(t)));
+    $("#lista-sel").innerHTML = f.map(e => `<a class="partido" href="#/seleccion/${esc(e.codigo_iso)}" style="display:flex;gap:12px;align-items:center">
+      ${escudo(e.codigo_iso)}<div><b>${esc(e.nombre)}</b><div style="color:var(--muted);font-size:13px">${esc(e.confederacion)} · Grupo ${esc(e.grupo)} · Ranking #${e.ranking_fifa}</div></div></a>`).join("")
+      || `<p class="vacio">Ninguna selección coincide con “${esc(q)}”.</p>`;
+  };
+  $("#buscar").oninput = (e) => pintar(e.target.value);
+  pintar("");
+}
+
+async function vistaSeleccion(app, iso) {
+  const [pl, lista] = await Promise.all([api(`/portal/api/equipos/${encodeURIComponent(iso)}/plantel`), partidos().catch(() => [])]);
+  const e = pl.equipo;
+  const suyos = lista.filter(p => p.equipos.some(x => x.codigo_iso === iso));
+  const orden = ["ARQ", "DEF", "MED", "DEL"];
+  const jug = pl.jugadores.slice().sort((a, b) => (orden.indexOf(a.posicion) - orden.indexOf(b.posicion)) || (a.dorsal - b.dorsal));
+  app.innerHTML = `
+    <div class="panel" style="margin-bottom:16px"><div class="ficha">${escudo(e.codigo_iso, true)}
+      <div><h1>${esc(e.nombre)}</h1><div class="datos">
+        <span>Confederación<b>${esc(e.confederacion)}</b></span><span>Grupo<b>${esc(e.grupo)}</b></span>
+        <span>Ranking FIFA<b>#${e.ranking_fifa}</b></span><span>DT<b>${esc(e.director_tecnico ?? "—")}</b></span>
+        ${e.pais_anfitrion ? "<span>Condición<b>Anfitrión</b></span>" : ""}</div></div>
+      <div style="margin-left:auto">${fuente("mongodb")}</div></div></div>
+    <div class="grid g2">
+      <div class="panel"><div class="cabpanel"><h2>Plantel (${jug.length})</h2>${fuente("mongodb")}</div>
+        <div class="tabla-scroll"><table class="plantel"><thead><tr><th>#</th><th>Jugador</th><th>Pos.</th><th>Edad</th><th>Club</th></tr></thead>
+        <tbody>${jug.map(j => `<tr><td>${j.dorsal ?? ""}</td><td>${esc(j.nombre)}</td><td>${esc(j.posicion ?? "")}</td><td>${j.edad ?? ""}</td><td>${esc(j.club_actual ?? "")}</td></tr>`).join("")}</tbody></table></div></div>
+      <div class="panel"><div class="cabpanel"><h2>Partidos</h2>${fuente("neo4j")}</div>
+        ${suyos.length ? `<div class="grid">${suyos.map(p => tarjetaPartido(p, null, null)).join("")}</div>` : '<p class="vacio">Todavía no tiene partidos cargados en el fixture.</p>'}</div>
+    </div>`;
+}
+
+// ------------------------------------------------------------------- partido
+async function vistaPartido(app, codigo) {
+  const lista = await partidos();
+  const p = lista.find(x => x.codigo_partido === codigo);
+  if (!p) throw new ErrorApi(404, { error: { mensaje: `No existe el partido ${codigo}.`, codigo: "RECURSO_NO_ENCONTRADO" } });
+  const [loc, vis] = ordenEquipos(p);
+  const [acta, ev, planteles] = await Promise.all([
+    api(`/partidos-oficiales/${codigo}`).catch(() => null),
+    golesPartido(codigo),
+    Promise.all([loc, vis].map(e => api(`/portal/api/equipos/${e.codigo_iso}/plantel`).catch(() => null))),
+  ]);
+  const goles = ev?.goles ?? {};
+  const est = acta?.estado;
+  app.innerHTML = `
+    <section class="hero">
+      <div class="versus">
+        <a class="eq" href="#/seleccion/${esc(loc.codigo_iso)}">${escudo(loc.codigo_iso, true)}<b>${esc(loc.nombre ?? loc.codigo_iso)}</b></a>
+        <div class="marcador">${goles[loc.codigo_iso] ?? 0} - ${goles[vis.codigo_iso] ?? 0}</div>
+        <a class="eq der" href="#/seleccion/${esc(vis.codigo_iso)}">${escudo(vis.codigo_iso, true)}<b>${esc(vis.nombre ?? vis.codigo_iso)}</b></a>
+      </div>
+      <div class="info">
+        <span class="estado">${est === "En Juego" ? '<span class="punto"></span>' : ""}${esc(est ?? "Programado")}</span>
+        <span>${esc(fechaLarga(p.fecha))}</span><span>${esc(p.sede?.nombre ?? "")}${p.sede?.ciudad ? ", " + esc(p.sede.ciudad) : ""}</span>
+        <span>${esc(p.fase ?? "")}</span>${acta ? `<span>Árbitro: ${esc(acta.arbitro.nombre)} ${esc(acta.arbitro.apellido)}</span>` : ""}
+      </div>
+      <div class="vivo-strip" id="vivo"><span>Cargando datos en vivo…</span></div>
+    </section>
+    <div class="grid g2">
+      <div class="grid">
+        <div class="panel">
+          <div class="cabpanel"><h2>Muro de hinchas</h2>${fuente("cassandra", "redis")}</div>
+          <div id="muro-form"></div>
+          <div class="comentarios" id="muro"><p class="vacio">Cargando comentarios…</p></div>
+          <p style="margin:10px 0 0;font-size:13px"><a href="#" id="ver-muestra">Ver comentarios de la muestra del Hito 6 (ventana 15/06 20:16)</a></p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="panel"><div class="cabpanel"><h2>Estadísticas</h2>${fuente("influxdb")}</div><div id="stats"><p class="vacio">Cargando…</p></div></div>
+        <div class="panel encuesta"><div class="cabpanel"><h2>Figura del partido</h2>${fuente("redis", "mongodb")}</div><div id="encuesta"></div></div>
+        <div class="panel"><div class="cabpanel"><h2>Cronología</h2>${fuente("neo4j", "iris")}</div><div id="cronologia"></div></div>
+      </div>
+    </div>`;
+
+  pintarCronologia(ev?.eventos ?? [], acta);
+  pintarFormMuro(codigo, [loc, vis]);
+  pintarEstadisticas(codigo, p, [loc, vis]);
+  $("#ver-muestra").onclick = async (e) => { e.preventDefault(); await cargarMuestra(codigo); };
+
+  const jugadores = new Map();
+  for (const pl of planteles) for (const j of pl?.jugadores ?? []) jugadores.set(j.id_jugador, j);
+  let ultimoVivo = null;
+  const refrescarVivo = async (visita) => {
+    try {
+      const v = await api(`/portal/api/partidos/${codigo}/${visita ? "visitas" : "vivo"}`, visita ? { metodo: "POST" } : {});
+      ultimoVivo = v;
+      $("#vivo").innerHTML = `<span><span class="punto"></span>Visitas <b>${v.visitas.toLocaleString("es-AR")}</b></span>
+        <span>Conectados <b>${v.conectados}</b></span><span>Votos figura <b>${v.encuesta.reduce((s, x) => s + x.votos, 0)}</b></span>
+        <span style="opacity:.8">Redis · contador, set y sorted set</span>`;
+      pintarEncuesta(codigo, v, jugadores, planteles);
+    } catch (e) { $("#vivo").innerHTML = `<span>Datos en vivo no disponibles: ${esc(e.message)}</span>`; }
+  };
+  const vistos = new Set();
+  const refrescarMuro = async () => {
+    try {
+      const m = await api(`/portal/api/partidos/${codigo}/muro?limit=40`);
+      const primera = vistos.size === 0;
+      $("#muro").innerHTML = m.items.length ? m.items.map(c => {
+        const nuevo = !primera && !vistos.has(c.id_comentario);
+        vistos.add(c.id_comentario);
+        return htmlComentario(c, nuevo);
+      }).join("") : `<p class="vacio">Nadie comentó en los últimos 15 minutos. ¡Sé el primero!</p>`;
+      if (primera) m.items.forEach(c => vistos.add(c.id_comentario));
+    } catch (e) { $("#muro").innerHTML = `<p class="vacio">Muro no disponible: ${esc(e.message)}</p>`; }
+  };
+  window.__refrescarMuro = refrescarMuro;
+  window.__refrescarVivo = () => refrescarVivo(false);
+  await Promise.all([refrescarVivo(true), refrescarMuro()]);
+  timers.push(setInterval(refrescarMuro, 5000), setInterval(() => refrescarVivo(false), 5000));
+}
+
+function htmlComentario(c, nuevo) {
+  const hora = new Date(c.creado_en).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const propio = sesion && c.id_usuario === sesion.usuario_id;
+  return `<div class="comentario${nuevo ? " nuevo" : ""}">
+    <div class="cab">${c.equipo_apoyado ? `<span class="tag" style="background:${colorEquipo(c.equipo_apoyado)}">${esc(c.equipo_apoyado)}</span>` : ""}
+      <b>${esc(c.usuario_alias ?? c.id_usuario)}</b>${propio ? '<span class="fuente">vos</span>' : ""}
+      <small>${c.minuto_partido != null ? c.minuto_partido + "' · " : ""}${hora}</small></div>
+    <p>${esc(c.texto)}</p></div>`;
+}
+
+function pintarFormMuro(codigo, eqs) {
+  const cont = $("#muro-form");
+  if (!sesion) {
+    cont.innerHTML = `<p style="margin:0 0 12px"><button class="btn" id="login-muro">Ingresar para comentar</button></p>`;
+    $("#login-muro").onclick = abrirLogin;
+    return;
+  }
+  const pref = eqs.find(e => e.codigo_iso === sesion.equipo_favorito)?.codigo_iso ?? eqs[0].codigo_iso;
+  cont.innerHTML = `<form class="muro-form" id="form-muro">
+    <textarea name="texto" maxlength="280" required placeholder="¿Qué te parece el partido, ${esc(sesion.alias)}?"></textarea>
+    <div class="fila">
+      <label style="font-size:13px;color:var(--muted)">Alentás a
+        <select name="equipo_apoyado">${eqs.map(e => `<option value="${esc(e.codigo_iso)}"${e.codigo_iso === pref ? " selected" : ""}>${esc(e.nombre ?? e.codigo_iso)}</option>`).join("")}</select></label>
+      <label style="font-size:13px;color:var(--muted)">Minuto <input name="minuto" type="number" min="0" max="130" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)"></label>
+      <span class="contador" id="cont-car">0/280</span>
+      <button class="btn" type="submit">Publicar</button>
+    </div></form>`;
+  const form = $("#form-muro");
+  form.texto.oninput = () => $("#cont-car").textContent = `${form.texto.value.length}/280`;
+  form.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const btn = form.querySelector("button"); btn.disabled = true;
+    try {
+      const c = await api(`/portal/api/partidos/${codigo}/comentarios`, { metodo: "POST", cuerpo: {
+        texto: form.texto.value, equipo_apoyado: form.equipo_apoyado.value,
+        minuto_partido: form.minuto.value === "" ? null : Number(form.minuto.value) } });
+      form.texto.value = ""; $("#cont-car").textContent = "0/280";
+      avisar(`Comentario publicado en Cassandra (ventana ${c.ventana}).`);
+      await window.__refrescarMuro?.();
+    } catch (e) { avisarError(e); }
+    finally { btn.disabled = false; }
+  };
+}
+
+async function cargarMuestra(codigo) {
+  try {
+    const m = await api(`/partidos/${codigo}/comentarios?ventana=203006152016&limit=50`);
+    const cont = $("#muro");
+    cont.insertAdjacentHTML("beforeend", `<p class="vacio" style="margin-top:8px">— Muestra del Hito 6, ventana 203006152016 (${m.items.length}) —</p>` +
+      (m.items.map(c => htmlComentario(c, false)).join("") || '<p class="vacio">Sin comentarios en esa ventana.</p>'));
+  } catch (e) { avisarError(e); }
+}
+
+function pintarCronologia(eventos, acta) {
+  const items = [
+    ...eventos.map(e => ({ min: e.minuto, txt: `${esc(e.tipo)}${e.jugador ? ` · ${esc(e.jugador.nombre)}` : ""}`, iso: e.jugador?.id_jugador.split("-")[0], src: "neo4j" })),
+    ...(acta?.eventos ?? []).map(e => ({ min: e.minuto, txt: `${esc(e.tipo)}${e.descripcion ? ` · ${esc(e.descripcion)}` : ""}`, src: "iris" })),
+  ].sort((a, b) => a.min - b.min);
+  $("#cronologia").innerHTML = items.length ? `<ul class="linea">${items.map(i => `<li><span class="min">${i.min}'</span>
+    <span>${i.iso ? `<span class="tag" style="background:${colorEquipo(i.iso)}">${esc(i.iso)}</span> ` : ""}${i.txt}</span>${fuente(i.src)}</li>`).join("")}</ul>`
+    : '<p class="vacio">Sin eventos registrados.</p>';
+}
+
+function pintarEncuesta(codigo, v, jugadores, planteles) {
+  const cont = $("#encuesta");
+  if (!cont) return;
+  const total = v.encuesta.reduce((s, x) => s + x.votos, 0) || 1;
+  const nombre = (id) => jugadores.get(id)?.nombre ?? id;
+  const ranking = v.encuesta.length ? `<div class="ranking">${v.encuesta.map(x => `<div class="barra"><i style="width:${(x.votos / total * 100).toFixed(1)}%"></i>
+      <span><span class="tag" style="background:${colorEquipo(x.id_jugador.split("-")[0])}">${esc(x.id_jugador)}</span> ${esc(nombre(x.id_jugador))}</span><span><b>${x.votos}</b></span></div>`).join("")}</div>`
+    : '<p class="vacio">Todavía no hay votos.</p>';
+  let accion;
+  if (!sesion) accion = `<button class="btn sec" id="login-voto">Ingresá para votar</button>`;
+  else if (v.ya_voto) accion = `<p class="vacio" style="margin:0">Ya votaste en este partido (un voto por usuario, set de votantes en Redis).</p>`;
+  else accion = `<form class="fila" id="form-voto"><select name="id_jugador" required><option value="">Elegí un jugador…</option>
+      ${planteles.filter(Boolean).map(pl => `<optgroup label="${esc(pl.equipo.nombre)}">${pl.jugadores.map(j => `<option value="${esc(j.id_jugador)}">${j.dorsal ?? ""} · ${esc(j.nombre)} (${esc(j.posicion ?? "")})</option>`).join("")}</optgroup>`).join("")}
+    </select><button class="btn" type="submit">Votar</button></form>`;
+  // No repintar el formulario mientras el usuario está eligiendo.
+  if (cont.contains(document.activeElement) || $("#form-voto select")?.value) return;
+  cont.innerHTML = accion + ranking;
+  $("#login-voto")?.addEventListener("click", abrirLogin);
+  $("#form-voto")?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    try {
+      await api(`/portal/api/partidos/${codigo}/encuesta`, { metodo: "POST", cuerpo: { id_jugador: ev.target.id_jugador.value } });
+      avisar("Voto registrado (ZINCRBY en Redis).");
+      ev.target.id_jugador.value = ""; document.activeElement?.blur(); // libera el repintado
+      await window.__refrescarVivo?.();
+    } catch (e) { avisarError(e); }
+  });
+}
+
+async function pintarEstadisticas(codigo, p, eqs) {
+  const cont = $("#stats");
+  if (!p.fecha) { cont.innerHTML = '<p class="vacio">Partido sin fecha.</p>'; return; }
+  const desde = `${p.fecha}T20:00:00Z`, hasta = `${p.fecha}T22:00:00Z`;
+  let r;
+  try { r = await api(`/partidos/${codigo}/estadisticas?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&resolucion=5m`); }
+  catch (e) { cont.innerHTML = `<p class="vacio">${esc(e.message)}</p>`; return; }
+  if (!r.series.length) { cont.innerHTML = '<p class="vacio">Sin mediciones para este partido.</p>'; return; }
+  const serie = (iso) => r.series.find(s => s.equipo === iso)?.puntos ?? [];
+  const [a, b] = eqs.map(e => e.codigo_iso);
+  // Gráfico de posesión (%) en el tiempo
+  const W = 480, H = 170, PL = 30, PR = 8, PT = 10, PB = 22;
+  const todos = r.series.flatMap(s => s.puntos.map(x => new Date(x.instante).getTime()));
+  const t0 = Math.min(...todos), t1 = Math.max(...todos) || t0 + 1;
+  const X = (t) => PL + (W - PL - PR) * ((t - t0) / ((t1 - t0) || 1));
+  const Y = (v) => PT + (H - PT - PB) * (1 - v / 100);
+  const linea = (iso) => serie(iso).map((x, i) => `${i ? "L" : "M"}${X(new Date(x.instante).getTime()).toFixed(1)},${Y(x.posesion_pct_prom).toFixed(1)}`).join(" ");
+  const ejeY = [0, 50, 100].map(v => `<line x1="${PL}" x2="${W - PR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" ${v === 50 ? 'stroke-dasharray="4 4"' : ""}/><text x="${PL - 4}" y="${Y(v) + 4}" text-anchor="end">${v}%</text>`).join("");
+  const mins = (t) => Math.round((t - t0) / 60000);
+  const ejeX = [0, 0.5, 1].map(f => { const t = t0 + (t1 - t0) * f; return `<text x="${X(t)}" y="${H - 6}" text-anchor="${f === 0 ? "start" : f === 1 ? "end" : "middle"}">${mins(t)}'</text>`; }).join("");
+  const ultimo = (iso) => serie(iso).at(-1) ?? {};
+  const ua = ultimo(a), ub = ultimo(b);
+  const fila = (lbl, va, vb, fmt = (v) => v ?? "—") => `<tr><td style="color:${colorEquipo(a)}">${fmt(va)}</td><td>${lbl}</td><td style="color:${colorEquipo(b)}">${fmt(vb)}</td></tr>`;
+  cont.innerHTML = `
+    <div style="display:flex;gap:14px;font-size:13px;margin-bottom:4px">
+      <span><span class="tag" style="background:${colorEquipo(a)}">${esc(a)}</span> posesión</span>
+      <span><span class="tag" style="background:${colorEquipo(b)}">${esc(b)}</span> posesión</span>
+      <span style="margin-left:auto;color:var(--muted)">promedio cada 5 min</span></div>
+    <svg class="grafico" viewBox="0 0 ${W} ${H}" role="img" aria-label="Posesión por equipo a lo largo del partido">
+      ${ejeY}${ejeX}
+      <path d="${linea(a)}" fill="none" stroke="${colorEquipo(a)}" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="${linea(b)}" fill="none" stroke="${colorEquipo(b)}" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="6 3"/>
+    </svg>
+    <table class="stats-tabla">
+      ${fila("Posesión", ua.posesion_pct_prom, ub.posesion_pct_prom, (v) => v == null ? "—" : v.toFixed(1) + "%")}
+      ${fila("Pases completados", ua.pases_completados_max, ub.pases_completados_max)}
+      ${fila("Tiros", ua.tiros_max, ub.tiros_max)}
+      ${fila("Hinchas siguiendo", ua.usuarios_activos_max, ub.usuarios_activos_max, (v) => v == null ? "—" : v.toLocaleString("es-AR"))}
+    </table>`;
+}
+
+// ===================================================================== inicio
+restaurarSesion().then(ruta);
+</script>
+</body>
+</html>

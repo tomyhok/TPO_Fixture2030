@@ -17,6 +17,7 @@ from app.services.comentarios_service import ComentariosService
 from app.services.equipos_service import EquiposService
 from app.services.estadisticas_service import EstadisticasService
 from app.services.partidos_service import PartidosService
+from app.services.portal_service import PortalService
 from app.services.salud_service import SaludService
 from app.services.sesiones_service import SesionesService
 
@@ -50,6 +51,7 @@ class Servicios:
     estadisticas: EstadisticasService
     actas: ActasService
     salud: SaludService
+    portal: PortalService
 
 
 def crear_adaptadores(settings: Settings) -> Adaptadores:
@@ -86,6 +88,7 @@ def crear_servicios(a: Adaptadores, settings: Settings) -> Servicios:
             umbral_lento_ms=settings.health_umbral_lento_ms,
             version=VERSION,
         ),
+        portal=PortalService(a.mongodb, a.neo4j, a.cassandra, a.redis),
     )
 
 

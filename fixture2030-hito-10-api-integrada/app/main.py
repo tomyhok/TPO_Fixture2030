@@ -17,12 +17,13 @@ from app.config.settings import Settings, obtener_settings
 from app.core.http import instalar_manejadores, instalar_middleware, instalar_openapi
 from app.core.observabilidad import configurar_logs, logger
 from app.dependencias import Adaptadores, crear_adaptadores, crear_servicios
-from app.routes import actas, comentarios, equipos, estadisticas, partidos, salud, sesiones
+from app.routes import actas, comentarios, equipos, estadisticas, partidos, portal, salud, sesiones
 
 
 DESCRIPCION = """Seis lecturas representativas, una por motor: MongoDB, Neo4j,
 Cassandra, Redis, InfluxDB e IRIS. Contratos, validación y errores uniformes.
-La API no escribe datos de dominio. Los endpoints de salud corresponden al Hito 11.
+Estas rutas no escriben datos de dominio; el portal de demostración (/portal, fuera
+de este contrato) agrega escrituras acotadas en Redis y Cassandra. Los endpoints de salud corresponden al Hito 11.
 Todas las respuestas incluyen X-Request-ID. Laboratorio local sin autenticación HTTP."""
 
 TAGS = []
@@ -55,8 +56,12 @@ def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None 
     instalar_manejadores(app)
     for modulo in (equipos, partidos, comentarios, sesiones, estadisticas, actas, salud):
         app.include_router(modulo.router)
-    # Front de demostración (solo lectura): consume las mismas rutas públicas desde el navegador.
-    app.mount("/demo", StaticFiles(directory=DIR_FRONT, html=True), name="demo")
+    # Portal del Fixture (/portal) y diagrama de integración (/demo): páginas estáticas
+    # que consumen la API desde el navegador. Las rutas /portal/api quedan fuera de OpenAPI.
+    app.include_router(portal.router)
+    app.include_router(portal.raiz)
+    app.mount("/portal", StaticFiles(directory=DIR_FRONT / "portal", html=True), name="portal")
+    app.mount("/demo", StaticFiles(directory=DIR_FRONT / "demo", html=True), name="demo")
     instalar_openapi(app)
     return app
 

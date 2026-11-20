@@ -75,7 +75,21 @@ class MongoAdapter:
             self._verificar_contexto()
             return self._db.equipos.find_one({"_id": codigo_iso}, PROYECCION_EQUIPO_DETALLE)
 
+    # ----------------------------------------------------------------- portal
+    def listar_equipos(self) -> list[dict[str, Any]]:
+        with operacion(DEPENDENCIA, "equipos.find", _traducir):
+            self._verificar_contexto()
+            cursor = self._db.equipos.find({}, PROYECCION_EQUIPO_DETALLE).sort(
+                [("grupo", 1), ("ranking_fifa", 1)]
+            ).limit(100)
+            return list(cursor)
 
+    def jugadores_equipo(self, codigo_iso: str) -> list[dict[str, Any]]:
+        proyeccion = {"_id": 1, "nombre": 1, "dorsal": 1, "posicion": 1, "edad": 1, "club_actual": 1}
+        with operacion(DEPENDENCIA, "jugadores.find", _traducir):
+            self._verificar_contexto()
+            filas = list(self._db.jugadores.find({"codigo_equipo": codigo_iso}, proyeccion).sort("dorsal", 1).limit(60))
+        return [{"id_jugador": f.pop("_id"), **f} for f in filas]
 
 
     # ------------------------------------------------------------------ salud

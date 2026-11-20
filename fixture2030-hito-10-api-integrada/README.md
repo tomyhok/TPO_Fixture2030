@@ -42,21 +42,32 @@ Salud: `/health` verifica las seis fuentes; `/health/live` no consulta bases;
 el chequeo durante un TTL configurable. Esta reutilización es del diagnóstico en memoria,
 no una caché Redis de datos del negocio.
 
-## Front de integración (demo)
+## Portal del Fixture y front de integración
 
-Con la API levantada, abrir `http://localhost:8000/demo/`. Es una página estática
-(`app/front/index.html`, sin dependencias) servida por la misma API, que solo usa las
-rutas GET públicas. Muestra:
+Con la API levantada, `http://localhost:8000/` redirige al **portal** (`/portal/`). Son
+páginas estáticas sin dependencias (`app/front/portal/` y `app/front/demo/`) servidas por la
+misma API.
 
-- **Estado de las fuentes**: `/health/dependencias?refrescar=true`.
-- **Recorrido de un partido**: encadena Redis (sesión → `usuario_id`), IRIS (acta →
-  `codigo_partido`), Neo4j (eventos → `id_jugador` → `codigo_iso`), Cassandra (comentarios →
-  `equipo_apoyado`, `id_usuario`), InfluxDB (series → tag `equipo`) y finalmente MongoDB con
-  cada `codigo_iso` descubierto. Cada paso indica estado HTTP, latencia, `X-Request-ID` y qué
-  clave lleva a la siguiente base.
-- **Mapa de integración**: las bases no se comunican entre sí; la API las une por claves de
-  negocio compartidas, que se resaltan en el diagrama cuando el dato aparece.
-- **Vista integrada**: ficha del partido combinando las seis lecturas.
+**Portal (`/portal/`)**: simula la página pública del Mundial 2030.
+
+| Pantalla / acción | Fuente |
+|---|---|
+| Fixture de partidos y marcador | Neo4j (`Partido`, `DISPUTA`, `SE_JUEGA_EN`, goles de `Evento`) + estado del acta en IRIS |
+| Grupos, selecciones (con buscador) y planteles | MongoDB (`equipos`, `jugadores`) |
+| Ingresar / salir | Redis: crea y borra `sesion:S-5xxx` (hash + TTL 30 min) |
+| Muro en vivo: leer y publicar | Cassandra: escritura doble `comentarios_por_partido` + `comentarios_por_usuario`; lee las últimas 15 ventanas de 1 minuto |
+| Visitas, conectados y figura del partido | Redis: `contador:partido:<p>:visitas`, set `conectados:partido:<p>`, sorted set `encuesta:partido:<p>:figura` (un voto por usuario) |
+| Estadísticas y gráfico de posesión | InfluxDB (ruta `/partidos/{p}/estadisticas`) |
+| Cronología | Neo4j + acta de IRIS |
+
+Las rutas que usa el portal están bajo `/portal/api` y quedan **fuera del contrato OpenAPI**
+del Hito 10, que sigue teniendo solo las seis lecturas. Las escrituras exigen una sesión
+vigente en el header `X-Sesion-ID` (401 `SESION_REQUERIDA` si falta o venció). Errores:
+400 si el equipo o jugador no juega el partido, 409 `CONFLICTO` al votar dos veces.
+
+**Integración (`/demo/`)**: recorre las seis bases para un partido y muestra qué clave de
+negocio (`codigo_partido`, `codigo_iso`, `id_usuario`) lleva de una base a la siguiente, con
+estado HTTP, latencia y `X-Request-ID` de cada consulta.
 
 ## Contratos, validación y pruebas
 

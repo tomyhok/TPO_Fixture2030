@@ -52,6 +52,14 @@ class MongoDoble(Doble):
         self._usar("obtener_equipo")
         return dict(self.EQUIPOS[codigo_iso]) if codigo_iso in self.EQUIPOS else None
 
+    def listar_equipos(self) -> list[dict[str, Any]]:
+        self._usar("listar_equipos")
+        return [dict(e) for e in self.EQUIPOS.values()]
+
+    def jugadores_equipo(self, codigo_iso: str) -> list[dict[str, Any]]:
+        self._usar("jugadores_equipo")
+        return [{"id_jugador": f"{codigo_iso}-10", "nombre": "Diez", "dorsal": 10, "posicion": "DEL"}]
+
 
 class Neo4jDoble(Doble):
     NOMBRE = "neo4j"
@@ -68,6 +76,13 @@ class Neo4jDoble(Doble):
             return None
         return {"codigo_partido": codigo, "eventos": self.EVENTOS[codigo][:limit]}
 
+    def listar_partidos(self):
+        self._usar("listar_partidos")
+        return [{"codigo_partido": "P-001", "fecha": "2030-06-10", "fase": "Grupos",
+                 "sede": {"nombre": "Estadio Monumental", "ciudad": "Buenos Aires"},
+                 "equipos": [{"codigo_iso": "ARG", "nombre": "Argentina", "condicion": "local"},
+                             {"codigo_iso": "ESP", "nombre": "Espana", "condicion": "visitante"}]}]
+
 
 class CassandraDoble(Doble):
     NOMBRE = "cassandra"
@@ -83,6 +98,21 @@ class CassandraDoble(Doble):
         ] if ventana == "203006152016" and cursor is None else []
         return filas[:limit], len(filas) > limit
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.publicados: list[dict[str, Any]] = []
+
+    def leer_muro_ventanas(self, codigo, ventanas, limit):
+        self._usar("leer_muro_ventanas")
+        return [c for c in self.publicados if c["codigo_partido"] == codigo][:limit]
+
+    def publicar_comentario(self, c):
+        self._usar("publicar_comentario")
+        fila = {**c, "id_comentario": "d116f974-e53a-11f1-b402-ea5fba123d87", "ventana": "203006102030",
+                "idioma": "es", "estado_moderacion": "publicado", "creado_en": datetime(2030, 6, 10, 20, 30, tzinfo=UTC)}
+        self.publicados = [fila, *self.publicados]
+        return fila
+
 
 class RedisDoble(Doble):
     NOMBRE = "redis"
@@ -90,10 +120,54 @@ class RedisDoble(Doble):
     def __init__(self) -> None:
         super().__init__()
         self.sesiones = {"S-0001": {"usuario_id": "U-0001", "rol": "fan", "estado": "activa", "ttl_restante_s": 1700}}
+        self.visitas: dict[str, int] = {}
+        self.votos: dict[str, dict[str, int]] = {}
+        self.votantes: dict[str, set[str]] = {}
 
     def leer_sesion(self, id_sesion):
         self._usar("leer_sesion")
         return dict(self.sesiones[id_sesion]) if id_sesion in self.sesiones else None
+
+    def crear_sesion(self, alias, equipo_favorito, ttl_s):
+        self._usar("crear_sesion")
+        n = 5001 + sum(1 for k in self.sesiones if k.startswith("S-5"))
+        self.sesiones[f"S-{n}"] = {"usuario_id": f"U-{n}", "rol": "fan", "estado": "activa",
+                                   "ttl_restante_s": ttl_s, "alias": alias, "equipo_favorito": equipo_favorito}
+        return {"id_sesion": f"S-{n}", "usuario_id": f"U-{n}", "ttl_restante_s": ttl_s}
+
+    def leer_sesion_portal(self, id_sesion):
+        self._usar("leer_sesion_portal")
+        d = self.sesiones.get(id_sesion)
+        if d is None:
+            return None
+        return {"id_sesion": id_sesion, "alias": d.get("alias") or d["usuario_id"],
+                "equipo_favorito": d.get("equipo_favorito"),
+                **{k: d[k] for k in ("usuario_id", "rol", "estado", "ttl_restante_s")}}
+
+    def cerrar_sesion(self, id_sesion):
+        self._usar("cerrar_sesion")
+        return self.sesiones.pop(id_sesion, None) is not None
+
+    def registrar_visita(self, codigo, usuario_id, id_sesion):
+        self._usar("registrar_visita")
+        self.visitas = {**self.visitas, codigo: self.visitas.get(codigo, 0) + 1}
+
+    def estado_vivo(self, codigo, usuario_id):
+        self._usar("estado_vivo")
+        ranking = sorted(self.votos.get(codigo, {}).items(), key=lambda kv: -kv[1])
+        return {"visitas": self.visitas.get(codigo, 0), "conectados": 0,
+                "encuesta": [{"id_jugador": j, "votos": v} for j, v in ranking],
+                "ya_voto": usuario_id in self.votantes.get(codigo, set())}
+
+    def votar_figura(self, codigo, usuario_id, id_jugador):
+        self._usar("votar_figura")
+        votantes = self.votantes.setdefault(codigo, set())
+        if usuario_id in votantes:
+            return False
+        votantes.add(usuario_id)
+        votos = self.votos.setdefault(codigo, {})
+        votos[id_jugador] = votos.get(id_jugador, 0) + 1
+        return True
 
 
 class InfluxDoble(Doble):

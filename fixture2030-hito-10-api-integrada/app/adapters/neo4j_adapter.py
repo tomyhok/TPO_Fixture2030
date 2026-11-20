@@ -38,6 +38,20 @@ RETURN p.codigo_partido AS codigo_partido,
        } END) AS eventos
 """
 
+CYPHER_PARTIDOS = """
+MATCH (p:Partido)
+OPTIONAL MATCH (p)-[:SE_JUEGA_EN]->(s:Sede)
+OPTIONAL MATCH (e:Equipo)-[d:DISPUTA]->(p)
+WITH p, s, collect(CASE WHEN e IS NULL THEN NULL ELSE
+     {codigo_iso: e.codigo_iso, nombre: e.nombre, condicion: d.condicion} END) AS equipos
+RETURN p.codigo_partido AS codigo_partido, toString(p.fecha) AS fecha, p.fase AS fase,
+       CASE WHEN s IS NULL THEN NULL ELSE {nombre: s.nombre, ciudad: s.ciudad} END AS sede,
+       equipos
+ORDER BY fecha, codigo_partido
+LIMIT 200
+"""
+
+
 def _traducir(exc: Exception) -> ErrorAPI | None:
     codigo = getattr(exc, "code", "") or ""
     if "TransactionTimedOut" in codigo:
@@ -85,6 +99,14 @@ class Neo4jAdapter:
     def eventos_partido(self, codigo: str, limit: int) -> dict[str, Any] | None:
         """None = el partido no existe; lista vacía = partido sin eventos."""
         return self._una_fila("partido.eventos", CYPHER_EVENTOS_PARTIDO, {"codigo": codigo, "limit": limit})
+
+    def listar_partidos(self) -> list[dict[str, Any]]:
+        """Portal: el fixture completo con sede y selecciones (relaciones SE_JUEGA_EN y DISPUTA)."""
+        with operacion(DEPENDENCIA, "partido.listar", _traducir):
+            with self._driver.session(
+                database=self._database, default_access_mode=READ_ACCESS
+            ) as sesion:
+                return [r.data() for r in sesion.run(Query(CYPHER_PARTIDOS, timeout=self._timeout))]
 
     def ping(self) -> None:
         self._una_fila("ping", "RETURN 1 AS ok", {})

@@ -66,8 +66,12 @@ If '##class(Security.Roles).Exists("FixtureAPIRead") Do ##class(Security.Roles).
 If '##class(Security.Users).Exists("$IRIS_USER") Do ##class(Security.Users).Create("$IRIS_USER","FixtureAPIRead","$IRIS_PASSWORD","API local de lectura","USER","","",0,1)
 Halt
 EOF
-docker exec -i fixture2030-iris iris session IRIS -U USER <<'EOF'
-Do $SYSTEM.SQL.Execute("GRANT SELECT ON SCHEMA Fixture TO FixtureAPIRead").%Display()
+# El SELECT se otorga al rol y también directamente al usuario: si IRIS_USER ya existía
+# con otro rol (p. ej. FixtureAPI, creado antes de FixtureAPIRead), el GRANT solo al rol
+# no lo alcanza y la API responde 503 en /partidos-oficiales (SQLCODE -99).
+docker exec -i fixture2030-iris iris session IRIS -U USER <<EOF
+Do \$SYSTEM.SQL.Execute("GRANT SELECT ON SCHEMA Fixture TO FixtureAPIRead").%Display()
+Do \$SYSTEM.SQL.Execute("GRANT SELECT ON SCHEMA Fixture TO $IRIS_USER").%Display()
 Halt
 EOF
 

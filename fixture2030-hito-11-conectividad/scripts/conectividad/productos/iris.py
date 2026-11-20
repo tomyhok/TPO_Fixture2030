@@ -39,7 +39,7 @@ def _clasificar(exc: BaseException, capa: str) -> Paso:
             f"identidad sin permiso ({resumen_excepcion(exc, 80)})",
             "El usuario se autenticó pero su rol no permite ejecutar la operación (falta %Native_ClassExecution "
             "o el recurso de la base).",
-            "Revisar el rol de lectura FixtureAPIRead (scripts/preparar_datos.sh del Hito 10).",
+            "Revisar el GRANT SELECT sobre el esquema Fixture para IRIS_USER (scripts/preparar_datos.sh del Hito 10).",
         )
     if "<CLASS DOES NOT EXIST>" in texto:
         return fail(

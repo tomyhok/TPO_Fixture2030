@@ -10,7 +10,7 @@ El archivo [`../prometheus.yml`](../prometheus.yml) se basa en la plantilla entr
 
 - **Intervalo de scraping (`scrape_interval`):** `15s` (frecuencia con la que Prometheus hace *pull* HTTP sobre cada target).
 - **Intervalo de evaluación (`evaluation_interval`):** `15s` (frecuencia con la que Prometheus evalúa las reglas de [`../prometheus/reglas-o-alertas.yml`](../prometheus/reglas-o-alertas.yml)).
-- **Retención:** Por defecto de Prometheus TSDB (`15d` en `/prometheus`, persistido en `${HOME}/docker/data/prometheus`).
+- **Retención:** `7d` (`--storage.tsdb.retention.time=7d` en `docker-compose.yml`), persistida en `${HOME}/docker/data/prometheus`. Alcanza para comparar corridas de una semana de laboratorio sin acumular datos.
 
 ### Relación entre cada `job_name` y el componente observado
 

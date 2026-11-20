@@ -50,7 +50,7 @@ Finalmente, la **API REST Integrada (Hito 10)** desacopla a los clientes de los 
 - **Respuesta:**
   - **En la capa de aplicación (API Integrada, Hitos 10–13):** Cada ruta depende exclusivamente de su adaptador. Si cae un motor completo (ej. Redis o MongoDB), `GET /health/ready` sigue respondiendo `200 OK` (`estado="degraded"`), la ruta afectada devuelve `503 DEPENDENCIA_NO_DISPONIBLE` en `< 2s`, `fixture_db_up` baja a `0` en Prometheus disparando la alerta `BaseDatosNoSQLNoDisponible`, y **los otros 5 módulos continúan operando normalmente**.
   - **En producción multi-región:** Los sistemas **AP** (Cassandra con `NetworkTopologyStrategy` `RF=3` por DC) siguen aceptando lecturas y escrituras locales con `LOCAL_QUORUM`; los sistemas **CP** (MongoDB, Neo4j, IRIS) eligen un nuevo primario en la región con mayoría de votos.
-- **Cómo demostrarlo en el repo:** [`evidencia/prueba_de_falla.md`](../evidencia/prueba_de_falla.md) y `bash scripts/ejecutar_prueba_controlada.sh`.
+- **Cómo demostrarlo en el repo:** `bash scripts/ejecutar_prueba_controlada.sh`, que escribe `evidencia/prueba_de_falla.md` con lo observado (ver [`evidencia/README.md`](../evidencia/README.md)).
 
 ### 5. ¿Qué garantía de consistencia necesita este módulo?
 - **Respuesta:**
@@ -69,7 +69,7 @@ Finalmente, la **API REST Integrada (Hito 10)** desacopla a los clientes de los 
 ### 8. ¿Cómo distinguen que el problema está en la API y no en la base?
 - **Respuesta:** Mediante tres mecanismos complementarios implementados en los Hitos 10, 11 y 13:
   1. **En Prometheus y Grafana (Hito 13):** Comparamos el histograma HTTP total (`fixture_api_http_request_duration_seconds`) contra el histograma del adaptador (`fixture_db_operation_duration_seconds`) y contra el endpoint `/health/live` (que no toca ninguna base).
-  2. **Por código de estado y error semántico:** Un `400 VALIDACION_ERROR` se rechaza en la API sin tocar la base (`fixture_db_operations_total` no sube); un `503 DEPENDENCIA_NO_DISPONIBLE` o `504 DEPENDENCIA_TIMEOUT` identifica en `detalles: [{"dependencia": "<motor>"}]` y en `fixture_db_operations_total{status!="ok"}` qué base falló.
+  2. **Por código de estado y error semántico:** Un `400 VALIDACION` se rechaza en la API sin tocar la base (`fixture_db_operations_total` no sube); un `503 DEPENDENCIA_NO_DISPONIBLE` o `504 DEPENDENCIA_TIMEOUT` identifica en `detalles: [{"dependencia": "<motor>"}]` y en `fixture_db_operations_total{status!="ok"}` qué base falló.
   3. **Con el evaluador de 9 capas del Hito 11 (`evaluar_conectividad.sh`):** Verifica Configuración → DNS → TCP → Protocolo → Autenticación → Autorización → Contexto → Lectura nativa → Endpoint API.
 
 ### 9. ¿Qué métrica observarían primero ante aumento de latencia?

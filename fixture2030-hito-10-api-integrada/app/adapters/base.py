@@ -47,7 +47,10 @@ def operacion(dependencia: str, nombre: str, traducir: Traductor) -> Iterator[No
 def _registrar(dependencia: str, nombre: str, inicio: float, resultado: str) -> None:
     duracion_s = time.perf_counter() - inicio
     duracion_ms = duracion_s * 1000
-    metricas.registrar_operacion_db(dependencia, nombre, resultado, duracion_s)
+    # Los pings de salud no son tráfico de negocio: su latencia ya se publica en
+    # fixture_db_ping_latency_seconds, así que no inflan fixture_db_operations_total.
+    if nombre != "ping":
+        metricas.registrar_operacion_db(dependencia, nombre, resultado, duracion_s)
     nivel = 20 if resultado == "ok" else 30  # INFO / WARNING
     _log.log(
         nivel,

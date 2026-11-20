@@ -4,10 +4,12 @@ Esta carpeta contiene la referencia visual y trazable del dashboard **Fixture Mu
 
 1. **Definición exportable y reproducible de Grafana (JSON):**
    - [`../../grafana/dashboards/fixture2030_war_room.json`](../../grafana/dashboards/fixture2030_war_room.json)
-2. **Vista previa versionada de los paneles (SVG):**
+2. **Maqueta de la disposición de los paneles (SVG, dibujada a mano — NO es una captura de Grafana ni contiene datos observados):**
    - [`vista_dashboard_war_room.svg`](vista_dashboard_war_room.svg)
 
-![Vista previa del Dashboard War Room](vista_dashboard_war_room.svg)
+![Maqueta del Dashboard War Room (no es captura)](vista_dashboard_war_room.svg)
+
+> Las capturas reales del dashboard durante la prueba de falla se guardan en esta carpeta como `*.png` (ver [`../README.md`](../README.md)). Los valores que aparecen en la maqueta son ilustrativos.
 
 ## Qué muestra cada sección del Dashboard (RF5, RF6, RF7, RNF4)
 
@@ -19,7 +21,7 @@ Esta carpeta contiene la referencia visual y trazable del dashboard **Fixture Mu
   - `Volumen de Operaciones / Throughput HTTP`: tasa de requests por segundo (`req/s`) separada por ruta y código de estado (`200`, `400`, `404`, `503`).
 - **Fila 3 — Comparación entre los 6 Motores NoSQL y Errores:**
   - `Comparación de Latencia por Base de Datos NoSQL`: permite contrastar tiempos en memoria (`redis ~1,2 ms`), lecturas puntuales indexadas (`iris ~3,3 ms`, `mongodb ~3,5 ms`, `neo4j ~5,9 ms`) y lecturas de series temporales o particiones múltiples (`influxdb ~34,2 ms`, `cassandra ~77,2 ms`).
-  - `Errores de Aplicación y Dependencias`: distingue rechazos de validación (`VALIDACION_ERROR`) de caídas reales (`DEPENDENCIA_NO_DISPONIBLE`).
+  - `Errores de Aplicación y Dependencias` (cantidad en los últimos 5 min, `increase[5m]`): distingue rechazos de validación (`VALIDACION`) de caídas reales (`DEPENDENCIA_NO_DISPONIBLE`).
 - **Fila 4 — Operaciones por Subsistema e Infraestructura (`node-exporter`):**
-  - `Operaciones Totales por Base de Datos` (`fixture_db_operations_total`).
+  - `Throughput por Base de Datos` (`rate(fixture_db_operations_total[1m])`, sin pings de salud).
   - `Infraestructura del Nodo: CPU y Memoria` (`node_cpu_seconds_total` y `node_memory_MemAvailable_bytes`).

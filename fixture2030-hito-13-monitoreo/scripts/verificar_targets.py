@@ -113,7 +113,7 @@ def verificar_en_vivo(prom_url: str, api_url: str) -> dict[str, Any]:
         lineas = [
             ln
             for ln in texto_m.splitlines()
-            if ln and not ln.startswith("#") and ("fixture_api_up" in ln or "fixture_db_up" in ln or "fixture_api_http_requests_total" in ln)
+            if ln and not ln.startswith("#") and ("fixture_db_up" in ln or "fixture_db_ping_latency_seconds" in ln or "fixture_api_http_requests_total" in ln)
         ]
         resultado["muestra_endpoint_metrics"] = lineas[:20]
     except Exception as exc:  # noqa: BLE001

@@ -1,9 +1,7 @@
-# HELP fixture_api_up Disponibilidad del proceso de la API integrada (1 = UP).
-# TYPE fixture_api_up gauge
-fixture_api_up 1
+# SIMULACIÓN SIN DOCKER (RNF8): valores sintéticos fijos procesados por el colector real app/core/metricas.py. NO fueron observados en Prometheus ni en Grafana y no deben presentarse como medición.
 # HELP fixture_api_uptime_seconds Tiempo transcurrido desde el inicio del proceso de la API.
 # TYPE fixture_api_uptime_seconds gauge
-fixture_api_uptime_seconds 0.000
+fixture_api_uptime_seconds 0.002
 # HELP fixture_api_in_flight_requests Cantidad de solicitudes HTTP actualmente en curso.
 # TYPE fixture_api_in_flight_requests gauge
 fixture_api_in_flight_requests 0
@@ -47,7 +45,7 @@ fixture_db_status_info{db="iris",state="degraded"} 0
 fixture_db_status_info{db="iris",state="down"} 0
 fixture_db_status_info{db="iris",state="not_configured"} 0
 fixture_db_status_info{db="iris",state="unknown"} 0
-# HELP fixture_db_ping_latency_seconds Latencia del chequeo de salud (ping) hacia cada base de datos en segundos.
+# HELP fixture_db_ping_latency_seconds Latencia del chequeo de salud (ping) hacia cada base de datos en segundos (solo bases up/degraded).
 # TYPE fixture_db_ping_latency_seconds gauge
 fixture_db_ping_latency_seconds{db="mongodb"} 0.003500
 fixture_db_ping_latency_seconds{db="neo4j"} 0.005900
@@ -57,7 +55,7 @@ fixture_db_ping_latency_seconds{db="influxdb"} 0.034200
 fixture_db_ping_latency_seconds{db="iris"} 0.003300
 # HELP fixture_api_http_requests_total Total de solicitudes HTTP procesadas por la API.
 # TYPE fixture_api_http_requests_total counter
-fixture_api_http_requests_total{method="GET",route="/equipos/{codigo_iso}",status="200"} 5
+fixture_api_http_requests_total{method="GET",route="/equipos/{codigo_iso}",status="200"} 8
 fixture_api_http_requests_total{method="GET",route="/equipos/{codigo_iso}",status="400"} 1
 fixture_api_http_requests_total{method="GET",route="/equipos/{codigo_iso}",status="404"} 1
 fixture_api_http_requests_total{method="GET",route="/partidos-oficiales/{codigo_partido}",status="200"} 5
@@ -65,25 +63,27 @@ fixture_api_http_requests_total{method="GET",route="/partidos/{codigo_partido}/c
 fixture_api_http_requests_total{method="GET",route="/partidos/{codigo_partido}/estadisticas",status="200"} 5
 fixture_api_http_requests_total{method="GET",route="/partidos/{codigo_partido}/eventos",status="200"} 5
 fixture_api_http_requests_total{method="GET",route="/sesiones/{id_sesion}",status="200"} 5
+fixture_api_http_requests_total{method="GET",route="/sesiones/{id_sesion}",status="503"} 3
 # HELP fixture_api_http_errors_total Total de respuestas de error devueltas por la API según código de error.
 # TYPE fixture_api_http_errors_total counter
 fixture_api_http_errors_total{method="GET",route="/equipos/{codigo_iso}",codigo="RECURSO_NO_ENCONTRADO"} 1
-fixture_api_http_errors_total{method="GET",route="/equipos/{codigo_iso}",codigo="VALIDACION_ERROR"} 1
+fixture_api_http_errors_total{method="GET",route="/equipos/{codigo_iso}",codigo="VALIDACION"} 1
+fixture_api_http_errors_total{method="GET",route="/sesiones/{id_sesion}",codigo="DEPENDENCIA_NO_DISPONIBLE"} 3
 # HELP fixture_api_http_request_duration_seconds Duración de las solicitudes HTTP en segundos.
 # TYPE fixture_api_http_request_duration_seconds histogram
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.005"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.01"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.025"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.05"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.1"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.25"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.5"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="1"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="2.5"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="5"} 7
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="+Inf"} 7
-fixture_api_http_request_duration_seconds_sum{method="GET",route="/equipos/{codigo_iso}"} 0.025100
-fixture_api_http_request_duration_seconds_count{method="GET",route="/equipos/{codigo_iso}"} 7
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.005"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.01"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.025"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.05"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.1"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.25"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="0.5"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="1"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="2.5"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="5"} 10
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/equipos/{codigo_iso}",le="+Inf"} 10
+fixture_api_http_request_duration_seconds_sum{method="GET",route="/equipos/{codigo_iso}"} 0.037800
+fixture_api_http_request_duration_seconds_count{method="GET",route="/equipos/{codigo_iso}"} 10
 fixture_api_http_request_duration_seconds_bucket{method="GET",route="/partidos-oficiales/{codigo_partido}",le="0.005"} 5
 fixture_api_http_request_duration_seconds_bucket{method="GET",route="/partidos-oficiales/{codigo_partido}",le="0.01"} 5
 fixture_api_http_request_duration_seconds_bucket{method="GET",route="/partidos-oficiales/{codigo_partido}",le="0.025"} 5
@@ -138,24 +138,25 @@ fixture_api_http_request_duration_seconds_sum{method="GET",route="/partidos/{cod
 fixture_api_http_request_duration_seconds_count{method="GET",route="/partidos/{codigo_partido}/eventos"} 5
 fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.005"} 5
 fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.01"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.025"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.05"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.1"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.25"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.5"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="1"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="2.5"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="5"} 5
-fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="+Inf"} 5
-fixture_api_http_request_duration_seconds_sum{method="GET",route="/sesiones/{id_sesion}"} 0.010000
-fixture_api_http_request_duration_seconds_count{method="GET",route="/sesiones/{id_sesion}"} 5
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.025"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.05"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.1"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.25"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="0.5"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="1"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="2.5"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="5"} 8
+fixture_api_http_request_duration_seconds_bucket{method="GET",route="/sesiones/{id_sesion}",le="+Inf"} 8
+fixture_api_http_request_duration_seconds_sum{method="GET",route="/sesiones/{id_sesion}"} 0.058000
+fixture_api_http_request_duration_seconds_count{method="GET",route="/sesiones/{id_sesion}"} 8
 # HELP fixture_db_operations_total Total de operaciones ejecutadas por los adaptadores hacia cada base de datos.
 # TYPE fixture_db_operations_total counter
 fixture_db_operations_total{db="cassandra",operation="leer_muro",status="ok"} 5
 fixture_db_operations_total{db="influxdb",operation="serie_partido",status="ok"} 5
 fixture_db_operations_total{db="iris",operation="obtener_acta",status="ok"} 5
-fixture_db_operations_total{db="mongodb",operation="obtener_equipo",status="ok"} 5
+fixture_db_operations_total{db="mongodb",operation="obtener_equipo",status="ok"} 8
 fixture_db_operations_total{db="neo4j",operation="eventos_partido",status="ok"} 5
+fixture_db_operations_total{db="redis",operation="leer_sesion",status="DEPENDENCIA_NO_DISPONIBLE"} 3
 fixture_db_operations_total{db="redis",operation="leer_sesion",status="ok"} 5
 # HELP fixture_db_operation_duration_seconds Duración de las operaciones contra cada base de datos en segundos.
 # TYPE fixture_db_operation_duration_seconds histogram
@@ -202,19 +203,19 @@ fixture_db_operation_duration_seconds_bucket{db="iris",operation="obtener_acta",
 fixture_db_operation_duration_seconds_sum{db="iris",operation="obtener_acta"} 0.016500
 fixture_db_operation_duration_seconds_count{db="iris",operation="obtener_acta"} 5
 fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.001"} 0
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.005"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.01"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.025"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.05"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.1"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.25"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.5"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="1"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="2.5"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="5"} 5
-fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="+Inf"} 5
-fixture_db_operation_duration_seconds_sum{db="mongodb",operation="obtener_equipo"} 0.017500
-fixture_db_operation_duration_seconds_count{db="mongodb",operation="obtener_equipo"} 5
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.005"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.01"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.025"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.05"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.1"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.25"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="0.5"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="1"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="2.5"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="5"} 8
+fixture_db_operation_duration_seconds_bucket{db="mongodb",operation="obtener_equipo",le="+Inf"} 8
+fixture_db_operation_duration_seconds_sum{db="mongodb",operation="obtener_equipo"} 0.027700
+fixture_db_operation_duration_seconds_count{db="mongodb",operation="obtener_equipo"} 8
 fixture_db_operation_duration_seconds_bucket{db="neo4j",operation="eventos_partido",le="0.001"} 0
 fixture_db_operation_duration_seconds_bucket{db="neo4j",operation="eventos_partido",le="0.005"} 0
 fixture_db_operation_duration_seconds_bucket{db="neo4j",operation="eventos_partido",le="0.01"} 5
@@ -232,14 +233,14 @@ fixture_db_operation_duration_seconds_count{db="neo4j",operation="eventos_partid
 fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.001"} 0
 fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.005"} 5
 fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.01"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.025"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.05"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.1"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.25"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.5"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="1"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="2.5"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="5"} 5
-fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="+Inf"} 5
-fixture_db_operation_duration_seconds_sum{db="redis",operation="leer_sesion"} 0.006000
-fixture_db_operation_duration_seconds_count{db="redis",operation="leer_sesion"} 5
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.025"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.05"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.1"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.25"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="0.5"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="1"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="2.5"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="5"} 8
+fixture_db_operation_duration_seconds_bucket{db="redis",operation="leer_sesion",le="+Inf"} 8
+fixture_db_operation_duration_seconds_sum{db="redis",operation="leer_sesion"} 0.051000
+fixture_db_operation_duration_seconds_count{db="redis",operation="leer_sesion"} 8

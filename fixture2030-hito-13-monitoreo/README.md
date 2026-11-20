@@ -20,7 +20,7 @@ Capa de observabilidad transversal de la plataforma **Fixture Mundial 2030** con
 | [`defensa/guion_de_20_minutos.md`](defensa/guion_de_20_minutos.md) | Distribución minuto a minuto y por integrante para cumplir estrictamente los 20 minutos máximos. | RF13, RNF12, §6.2 |
 | [`defensa/demo.md`](defensa/demo.md) | Secuencia paso a paso de demostración en vivo (Swagger, Postman, Grafana, falla controlada) y Plan B de contingencia. | RNF7, §6.3 |
 | [`grafana/README.md`](grafana/README.md) | Detalle del provisioning automático y de los 8 paneles del dashboard [`fixture2030_war_room.json`](grafana/dashboards/fixture2030_war_room.json). | RF5, RF6, RF7, §5.3 |
-| [`evidencia/`](evidencia/) | Salidas de targets (`prometheus_targets.*`), prueba controlada de 3 fases (`prueba_de_falla.*`), vista del dashboard y escaneo de secretos. | RF10, RNF2, RNF6, RNF11 |
+| [`evidencia/`](evidencia/) | Ver [`evidencia/README.md`](evidencia/README.md): separa evidencia observada (targets y prueba de falla, generadas por los scripts con Docker), simulación sin Docker y la maqueta del dashboard. | RF10, RNF2, RNF6, RNF11 |
 
 ---
 
@@ -66,7 +66,7 @@ Servicios disponibles:
 | Servicio | Contenedor | URL de Acceso | Credenciales de Laboratorio |
 |---|---|---|---|
 | **Prometheus** | `fixture2030-prometheus` | `http://localhost:9090` (`/targets`, `/alerts`, `/graph`) | Sin autenticación (local) |
-| **Grafana** | `fixture2030-grafana` | `http://localhost:3000/d/fixture2030-war-room` | `admin` / `fixture2030` |
+| **Grafana** | `fixture2030-grafana` | `http://localhost:3000/d/fixture2030-war-room` | Usuario `admin`; contraseña en `.env` (`GRAFANA_ADMIN_PASSWORD`, no versionado; el script de inicio lo crea con un valor aleatorio, ver `.env.example`) |
 | **Node Exporter** | `fixture2030-node-exporter` | `http://localhost:9100/metrics` | Sin autenticación (local) |
 | **API `/metrics`** | Host (`:8000`) | `http://localhost:8000/metrics` | Sin autenticación (local) |
 
@@ -91,6 +91,7 @@ Ejecuta las 3 fases (1: tráfico normal en las 6 bases; 2: `docker stop fixture2
 ```bash
 python scripts/generar_evidencia_y_validar.py
 ```
+Valida la configuración (jobs, reglas, paneles, imágenes con versión fija), ejecuta el colector `metricas.py` con un diagnóstico **sintético** y escanea secretos. Lo que escribe va a `evidencia/simulacion_sin_docker/` y está rotulado como simulación: **no reemplaza** la evidencia de los pasos 3 y 4.
 
 ### Paso 6: Limpieza Segura del Entorno (RNF11)
 
@@ -108,6 +109,7 @@ Detiene únicamente los contenedores de monitoreo (`prometheus`, `grafana`, `nod
 fixture2030-hito-13-monitoreo/
 ├── README.md
 ├── docker-compose.yml
+├── .env.example
 ├── prometheus.yml
 ├── .gitignore
 ├── prometheus/
@@ -135,14 +137,14 @@ fixture2030-hito-13-monitoreo/
 │   ├── limitaciones_y_evidencia.md
 │   └── defensa_final.md
 ├── evidencia/
-│   ├── prometheus_targets.json / .txt
+│   ├── README.md                       # qué es observado, simulado o maqueta
+│   ├── prometheus_targets.json / .txt  # observado (verificar_targets --guardar)
+│   ├── prueba_de_falla.json / .md      # observado (ejecutar_prueba_controlada)
 │   ├── dashboards/
 │   │   ├── README.md
-│   │   └── vista_dashboard_war_room.svg
-│   ├── prueba_de_falla.json / .md
+│   │   └── vista_dashboard_war_room.svg  # maqueta, no captura
+│   ├── simulacion_sin_docker/          # simulación rotulada (sin Docker)
 │   └── resultados_sin_secretos/
-│       ├── muestra_endpoint_metrics.prom
-│       ├── muestra_metrics_durante_falla.prom
 │       └── verificacion_secretos.txt
 └── defensa/
     ├── presentacion.html

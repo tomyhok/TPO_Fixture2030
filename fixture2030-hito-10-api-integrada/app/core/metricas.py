@@ -121,12 +121,11 @@ class RegistroMetricas:
 
         lineas: list[str] = []
 
-        # 1. Salud y estado de la API
+        # 1. Estado del proceso de la API. La disponibilidad de la API NO se publica
+        # aquí: si el proceso cae no puede responder "0". Se usa up{job="fixture-api"},
+        # que Prometheus calcula según el resultado de cada scrape.
         lineas.extend(
             [
-                "# HELP fixture_api_up Disponibilidad del proceso de la API integrada (1 = UP).",
-                "# TYPE fixture_api_up gauge",
-                "fixture_api_up 1",
                 "# HELP fixture_api_uptime_seconds Tiempo transcurrido desde el inicio del proceso de la API.",
                 "# TYPE fixture_api_uptime_seconds gauge",
                 f"fixture_api_uptime_seconds {uptime_s:.3f}",
@@ -166,15 +165,20 @@ class RegistroMetricas:
 
         lineas.extend(
             [
-                "# HELP fixture_db_ping_latency_seconds Latencia del chequeo de salud (ping) hacia cada base de datos en segundos.",
+                "# HELP fixture_db_ping_latency_seconds Latencia del chequeo de salud (ping) hacia cada base de datos en segundos (solo bases up/degraded).",
                 "# TYPE fixture_db_ping_latency_seconds gauge",
             ]
         )
         for motor in MOTORES:
             dep = por_motor.get(motor)
-            lat_ms = getattr(dep, "latencia_ms", None) if dep is not None else None
-            latencia_s = (float(lat_ms) / 1000.0) if lat_ms is not None else 0.0
-            lineas.append(f'fixture_db_ping_latency_seconds{{db="{motor}"}} {latencia_s:.6f}')
+            if dep is None or _estado_str(dep.estado) not in ESTADOS_DISPONIBLES:
+                # Sin ping exitoso no hay latencia que informar: omitir la serie evita
+                # graficar un 0 engañoso ("latencia perfecta") cuando la base está caída.
+                continue
+            lat_ms = getattr(dep, "latencia_ms", None)
+            if lat_ms is None:
+                continue
+            lineas.append(f'fixture_db_ping_latency_seconds{{db="{motor}"}} {float(lat_ms) / 1000.0:.6f}')
 
         # 3. Contadores HTTP de la API
         lineas.extend(

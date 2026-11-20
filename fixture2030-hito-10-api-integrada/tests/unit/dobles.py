@@ -23,11 +23,15 @@ class Doble:
 
     def _usar(self, operacion: str) -> None:
         self.llamadas.append(operacion)
+        # Igual que adapters/base.py: el ping de salud no cuenta como operación de negocio.
+        registrar = operacion != "ping"
         if self.falla is not None:
             codigo = self.falla.codigo if isinstance(self.falla, ErrorAPI) else f"error_inesperado:{type(self.falla).__name__}"
-            metricas.registrar_operacion_db(self.NOMBRE, operacion, codigo, 0.002)
+            if registrar:
+                metricas.registrar_operacion_db(self.NOMBRE, operacion, codigo, 0.002)
             raise self.falla
-        metricas.registrar_operacion_db(self.NOMBRE, operacion, "ok", 0.001)
+        if registrar:
+            metricas.registrar_operacion_db(self.NOMBRE, operacion, "ok", 0.001)
 
     def ping(self) -> None:
         self._usar("ping")

@@ -31,7 +31,7 @@ cd c:/Projects/TPO_Fixture2030/fixture2030-hito-10-api-integrada
 2. **Swagger UI (Contrato OpenAPI):** `http://localhost:8000/docs`
 3. **Métricas crudas de la API:** `http://localhost:8000/metrics`
 4. **Targets y Alertas de Prometheus:** `http://localhost:9090/targets` y `http://localhost:9090/alerts`
-5. **Dashboard Grafana War Room:** `http://localhost:3000/d/fixture2030-war-room` (`admin` / `fixture2030`)
+5. **Dashboard Grafana War Room:** `http://localhost:3000/d/fixture2030-war-room` (usuario `admin`; contraseña en `.env`, no proyectarla)
 
 ---
 
@@ -92,10 +92,11 @@ curl -i http://localhost:8000/partidos-oficiales/P-009
 
 Para cumplir con **RNF7 (Disponibilidad durante la defensa)**, si durante la exposición ocurre algún inconveniente con Docker Desktop, un puerto local ocupado o la red de la notebook, el equipo cuenta con tres niveles de respaldo inmediatos dentro del propio repositorio:
 
-1. **Nivel 1 — Evidencia estructurada del Hito 13 lista para abrir:**
-   - [`evidencia/prometheus_targets.txt`](../evidencia/prometheus_targets.txt) y [`evidencia/prometheus_targets.json`](../evidencia/prometheus_targets.json): estado de los 3 targets, las 4 reglas de alerta y las series `fixture_db_up` y `/metrics`.
-   - [`evidencia/prueba_de_falla.md`](../evidencia/prueba_de_falla.md) y [`evidencia/prueba_de_falla.json`](../evidencia/prueba_de_falla.json): tabla comparativa completa de las 3 fases (antes, durante `docker stop` y después de `docker start`).
-   - [`evidencia/dashboards/`](../evidencia/dashboards/): vistas y capturas de los paneles de Grafana y Prometheus.
+1. **Nivel 1 — Evidencia observada del Hito 13 (generada antes de la defensa con Docker levantado):**
+   - `evidencia/prometheus_targets.txt` / `.json` (`verificar_targets --guardar`): estado real de los 3 targets, las 4 reglas y las series `fixture_db_up`.
+   - `evidencia/prueba_de_falla.md` / `.json` (`ejecutar_prueba_controlada`): las 3 fases con timestamps distintos y la tabla de verificaciones calculada.
+   - `evidencia/dashboards/*.png`: capturas reales de Grafana durante la falla.
+   - Ver [`evidencia/README.md`](../evidencia/README.md). Si se muestra `evidencia/simulacion_sin_docker/` o la maqueta SVG, aclarar en voz alta que **no son mediciones**.
 2. **Nivel 2 — Ejecución instantánea sin Docker (en memoria con dobles y TestClient):**
    - Si Docker Desktop no responde, se puede demostrar en vivo la instrumentación de `/metrics`, el aislamiento de fallas `503`/`504` y las pruebas de salud corriendo en `2 segundos`:
      ```bash

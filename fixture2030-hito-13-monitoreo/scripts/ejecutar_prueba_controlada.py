@@ -124,6 +124,12 @@ def _capturar_instantanea(prom_url: str, api_url: str, etiqueta: str) -> dict[st
 
 def ejecutar_en_vivo(prom_url: str, api_url: str, contenedor: str, espera_scrape_s: int) -> dict[str, Any]:
     motor_afectado = contenedor.replace("fixture2030-", "")
+    rutas = dict(RUTAS_MUESTRA)
+    if motor_afectado not in rutas:
+        raise ValueError(f"Contenedor no soportado: {contenedor} (motores: {', '.join(rutas)})")
+    ruta_afectada = (motor_afectado, rutas[motor_afectado])
+    motor_sano = "mongodb" if motor_afectado != "mongodb" else "redis"
+    ruta_sana = (motor_sano, rutas[motor_sano])
     registro: dict[str, Any] = {
         "ejecutado_en_utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "modo": "docker_y_prometheus_en_vivo",
@@ -149,13 +155,14 @@ def ejecutar_en_vivo(prom_url: str, api_url: str, contenedor: str, espera_scrape
         respuestas_f2 = []
         # Solicitudes repetidas a la ruta afectada y a una ruta sana para demostrar aislamiento
         for _ in range(3):
-            st_r, _, lat_r = _http_get(f"{api_url.rstrip('/')}/sesiones/S-0001")
-            respuestas_f2.append({"motor": "redis", "ruta": "/sesiones/S-0001", "status_http": st_r, "latencia_ms": lat_r})
-            st_m, _, lat_m = _http_get(f"{api_url.rstrip('/')}/equipos/ARG")
-            respuestas_f2.append({"motor": "mongodb", "ruta": "/equipos/ARG", "status_http": st_m, "latencia_ms": lat_m})
+            for motor, ruta in (ruta_afectada, ruta_sana):
+                st, _, lat = _http_get(f"{api_url.rstrip('/')}{ruta}")
+                respuestas_f2.append({"motor": motor, "ruta": ruta, "status_http": st, "latencia_ms": lat})
 
         _, _, _ = _http_get(f"{api_url.rstrip('/')}/health/dependencias?refrescar=true")
-        time.sleep(espera_scrape_s)
+        # Dos ciclos: uno para que Prometheus recolecte fixture_db_up=0 y otro para superar
+        # el `for: 15s` de BaseDatosNoSQLNoDisponible (pending -> firing).
+        time.sleep(espera_scrape_s * 2)
         snap_f2 = _capturar_instantanea(prom_url, api_url, "2_durante_falla_controlada")
         snap_f2["solicitudes_ejecutadas"] = respuestas_f2
         registro["fases"]["2_durante_falla_controlada"] = snap_f2
@@ -166,7 +173,7 @@ def ejecutar_en_vivo(prom_url: str, api_url: str, contenedor: str, espera_scrape
     time.sleep(3)
     _, _, _ = _http_get(f"{api_url.rstrip('/')}/health/dependencias?refrescar=true")
     respuestas_f3 = []
-    for motor, ruta in [("redis", "/sesiones/S-0001"), ("mongodb", "/equipos/ARG")]:
+    for motor, ruta in (ruta_afectada, ruta_sana):
         st, _, lat = _http_get(f"{api_url.rstrip('/')}{ruta}")
         respuestas_f3.append({"motor": motor, "ruta": ruta, "status_http": st, "latencia_ms": lat})
     time.sleep(espera_scrape_s)
@@ -207,14 +214,42 @@ def formatear_markdown(datos: dict[str, Any]) -> str:
     for s in f2.get("solicitudes_ejecutadas", []):
         lineas.append(f"| `{s['motor']}` | `{s['ruta']}` | `{s['status_http']}` | `{s['latencia_ms']}` |")
 
+    lineas.extend(["", "## 3. Alertas en Prometheus por fase", "", "| Fase | Alertas no inactivas |", "|---|---|"])
+    for nombre_fase, fase in (("1", f1), ("2", f2), ("3", f3)):
+        activas = [
+            f"{r['name']} ({r['state']})" for r in fase.get("prometheus_alertas", []) if r.get("state") != "inactive"
+        ]
+        lineas.append(f"| {nombre_fase} | {', '.join(activas) or 'ninguna'} |")
+
+    # Verificaciones calculadas sobre lo observado (RNF8): no se afirma nada que no se haya visto.
+    up_antes = f1["prometheus_fixture_db_up"].get(motor)
+    up_durante = f2["prometheus_fixture_db_up"].get(motor)
+    up_despues = f3["prometheus_fixture_db_up"].get(motor)
+    alerta_f2 = next(
+        (r["state"] for r in f2.get("prometheus_alertas", []) if r.get("name") == "BaseDatosNoSQLNoDisponible"),
+        "no encontrada",
+    )
+    afectadas = [x["status_http"] for x in f2.get("solicitudes_ejecutadas", []) if x["motor"] == motor]
+    sanas = [x["status_http"] for x in f2.get("solicitudes_ejecutadas", []) if x["motor"] != motor]
+
+    def _ok(cond: bool) -> str:
+        return "Sí" if cond else "**No**"
+
     lineas.extend(
         [
             "",
-            "## 3. Interpretación Técnica",
+            "## 4. Verificaciones (calculadas sobre los datos observados)",
             "",
-            "1. **Detección del cambio de estado:** Al detener temporalmente el contenedor de Redis, el diagnóstico de la API actualiza `fixture_db_up{db=\"redis\"}` de `1` a `0` y la regla `BaseDatosNoSQLNoDisponible` pasa a estado activo en Prometheus.",
-            "2. **Aislamiento de fallas entre motores:** Las solicitudes a `/sesiones/S-0001` devuelven `503 Service Unavailable` con código `DEPENDENCIA_NO_DISPONIBLE` (incrementando `fixture_api_http_errors_total`), mientras que `/equipos/ARG` (MongoDB) continúa respondiendo `200 OK` sin degradación.",
-            "3. **Recuperación no destructiva (RNF11):** Al ejecutar `docker start`, el contenedor recupera su estado con su volumen intacto y `fixture_db_up{db=\"redis\"}` vuelve a `1` en el siguiente ciclo de scraping.",
+            "| Verificación | Resultado | Observado |",
+            "|---|---|---|",
+            f"| Detección: `fixture_db_up{{db=\"{motor}\"}}` pasa de 1 a 0 | {_ok(up_antes == 1 and up_durante == 0)} | `{up_antes}` → `{up_durante}` |",
+            f"| Alerta `BaseDatosNoSQLNoDisponible` en `firing` durante la falla | {_ok(alerta_f2 == 'firing')} | `{alerta_f2}` |",
+            f"| Ruta de `{motor}` responde 503 | {_ok(bool(afectadas) and all(c == 503 for c in afectadas))} | `{afectadas}` |",
+            f"| Aislamiento: ruta de otra base sigue en 200 | {_ok(bool(sanas) and all(c == 200 for c in sanas))} | `{sanas}` |",
+            f"| Recuperación: `fixture_db_up` vuelve a 1 tras `docker start` | {_ok(up_despues == 1)} | `{up_despues}` |",
+            "",
+            "La prueba solo usa `docker stop`/`docker start` sobre un contenedor de laboratorio: "
+            "no borra volúmenes ni modifica datos (RNF11).",
         ]
     )
     return "\n".join(lineas) + "\n"

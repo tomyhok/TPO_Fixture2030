@@ -2,7 +2,7 @@ name: dash
 
 services:
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.55.1
     container_name: fixture2030-prometheus
     restart: unless-stopped
     ports:
@@ -16,17 +16,20 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
       - '--web.enable-lifecycle'
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.3.1
     container_name: fixture2030-grafana
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: fixture2030
+      # La contraseña se lee de .env (ignorado por git). scripts/iniciar_monitoreo.* lo genera
+      # con un valor aleatorio si no existe; ver .env.example.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Definir GRAFANA_ADMIN_PASSWORD en .env (ver .env.example)}
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ${HOME:-.}/docker/data/grafana:/var/lib/grafana
@@ -36,7 +39,7 @@ services:
       - prometheus
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.8.2
     container_name: fixture2030-node-exporter
     restart: unless-stopped
     ports:

@@ -219,7 +219,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Comparación directa entre las 6 bases de datos NoSQL: latencia del último chequeo de salud (ping) y tiempo promedio de operación por adaptador.",
+      "description": "Comparación directa entre las 6 bases de datos NoSQL: latencia del último chequeo de salud (ping) y tiempo promedio de operación por adaptador. La serie de ping solo existe mientras la base está up/degraded: un hueco en la línea indica base caída, no latencia 0.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -267,7 +267,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Errores acumulados y tasa de respuestas no exitosas por código de error semántico (DEPENDENCIA_NO_DISPONIBLE, DEPENDENCIA_TIMEOUT, VALIDACION_ERROR, RECURSO_NO_ENCONTRADO).",
+      "description": "Cantidad de errores en la ventana móvil de 5 minutos (increase[5m]) por código semántico. Muestra el antes/durante/después de una falla: sube durante la falla y vuelve a 0 tras la recuperación. VALIDACION y RECURSO_NO_ENCONTRADO son errores de cliente; DEPENDENCIA_NO_DISPONIBLE, DEPENDENCIA_TIMEOUT y ERROR_INTERNO son fallas del sistema.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -289,18 +289,18 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (route, codigo) (fixture_api_http_errors_total)",
+          "expr": "sum by (route, codigo) (increase(fixture_api_http_errors_total[5m]))",
           "legendFormat": "{{codigo}} ({{route}})",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (db, operation, status) (fixture_db_operations_total{status!=\"ok\"})",
+          "expr": "sum by (db, operation, status) (increase(fixture_db_operations_total{status!=\"ok\"}[5m]))",
           "legendFormat": "DB Error: {{db}}.{{operation}} [{{status}}]",
           "refId": "B"
         }
       ],
-      "title": "Errores de Aplicación y de Dependencias NoSQL (Acumulado)",
+      "title": "Errores de Aplicación y de Dependencias NoSQL (errores en los últimos 5 min)",
       "type": "timeseries"
     },
     {
@@ -313,7 +313,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Cantidad de operaciones ejecutadas sobre cada motor NoSQL (MongoDB, Neo4j, Cassandra, Redis, InfluxDB, IRIS), permitiendo comparar volumen por subsistema.",
+      "description": "Operaciones de negocio por segundo (rate[1m]) que la API ejecuta contra cada motor NoSQL, separadas por resultado. Los pings de salud no se cuentan: su latencia se publica en fixture_db_ping_latency_seconds.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -322,7 +322,7 @@
             "fillOpacity": 20,
             "lineWidth": 2
           },
-          "unit": "short"
+          "unit": "ops"
         },
         "overrides": []
       },
@@ -335,12 +335,12 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (db, status) (fixture_db_operations_total)",
+          "expr": "sum by (db, status) (rate(fixture_db_operations_total[1m]))",
           "legendFormat": "{{db}} [{{status}}]",
           "refId": "A"
         }
       ],
-      "title": "Operaciones Totales por Base de Datos NoSQL (fixture_db_operations_total)",
+      "title": "Throughput por Base de Datos NoSQL (ops/s, sin pings de salud)",
       "type": "timeseries"
     },
     {

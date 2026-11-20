@@ -5,6 +5,14 @@ $ErrorActionPreference = "Stop"
 $dirHito = Split-Path -Parent $PSScriptRoot
 Set-Location $dirHito
 
+if (-not (Test-Path ".env")) {
+    # RNF6: la contraseña de Grafana no se versiona; se genera una aleatoria local.
+    $chars = [char[]]'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+    $pass = -join (1..20 | ForEach-Object { $chars | Get-Random })
+    Set-Content -Path ".env" -Value "GRAFANA_ADMIN_PASSWORD=$pass" -Encoding ascii
+    Write-Host "  -> Se creo .env con una contrasena aleatoria para Grafana (no se versiona)."
+}
+
 Write-Host "=== [1/3] Levantando stack de monitoreo (compose: dash) ==="
 docker compose up -d
 
@@ -37,5 +45,5 @@ Write-Host ""
 Write-Host "Accesos:"
 Write-Host "  - Prometheus:     http://localhost:9090/targets"
 Write-Host "  - Reglas/Alertas: http://localhost:9090/alerts"
-Write-Host "  - Grafana:        http://localhost:3000 (admin / fixture2030)"
+Write-Host "  - Grafana:        http://localhost:3000 (usuario admin; contrasena en .env -> GRAFANA_ADMIN_PASSWORD)"
 Write-Host "  - API /metrics:   http://localhost:8000/metrics"

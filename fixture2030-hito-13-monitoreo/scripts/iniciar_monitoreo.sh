@@ -7,6 +7,12 @@ set -euo pipefail
 DIR_HITO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$DIR_HITO"
 
+if [ ! -f .env ]; then
+  # RNF6: la contraseña de Grafana no se versiona; se genera una aleatoria local.
+  echo "GRAFANA_ADMIN_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)" > .env
+  echo "  -> Se creó .env con una contraseña aleatoria para Grafana (no se versiona)."
+fi
+
 echo "=== [1/3] Levantando stack de monitoreo (compose: dash) ==="
 docker compose up -d
 
@@ -35,5 +41,5 @@ echo ""
 echo "Accesos:"
 echo "  - Prometheus:    http://localhost:9090/targets"
 echo "  - Reglas/Alertas: http://localhost:9090/alerts"
-echo "  - Grafana:       http://localhost:3000 (admin / fixture2030)"
+echo "  - Grafana:       http://localhost:3000 (usuario admin; contraseña en .env -> GRAFANA_ADMIN_PASSWORD)"
 echo "  - API /metrics:  http://localhost:8000/metrics"

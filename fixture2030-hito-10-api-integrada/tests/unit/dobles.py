@@ -10,16 +10,28 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
+from app.core.errores import ErrorAPI
+from app.core.metricas import metricas
+
 
 class Doble:
+    NOMBRE = "doble"
+
     def __init__(self) -> None:
         self.llamadas: list[str] = []
         self.falla: Exception | None = None
 
     def _usar(self, operacion: str) -> None:
         self.llamadas.append(operacion)
+        # Igual que adapters/base.py: el ping de salud no cuenta como operación de negocio.
+        registrar = operacion != "ping"
         if self.falla is not None:
+            codigo = self.falla.codigo if isinstance(self.falla, ErrorAPI) else f"error_inesperado:{type(self.falla).__name__}"
+            if registrar:
+                metricas.registrar_operacion_db(self.NOMBRE, operacion, codigo, 0.002)
             raise self.falla
+        if registrar:
+            metricas.registrar_operacion_db(self.NOMBRE, operacion, "ok", 0.001)
 
     def ping(self) -> None:
         self._usar("ping")
@@ -29,6 +41,7 @@ class Doble:
 
 
 class MongoDoble(Doble):
+    NOMBRE = "mongodb"
     EQUIPOS = {
         "ARG": {"codigo_iso": "ARG", "nombre": "Argentina", "confederacion": "CONMEBOL", "grupo": "A",
                 "ranking_fifa": 1, "director_tecnico": "Martinez", "pais_anfitrion": True},
@@ -41,6 +54,7 @@ class MongoDoble(Doble):
 
 
 class Neo4jDoble(Doble):
+    NOMBRE = "neo4j"
     EVENTOS = {
         "P-001": [{"id_evento": "EV-001", "tipo": "Gol", "minuto": 23,
                    "jugador": {"id_jugador": "ARG-10", "nombre": "Andrés Fuentes"}}],
@@ -56,6 +70,7 @@ class Neo4jDoble(Doble):
 
 
 class CassandraDoble(Doble):
+    NOMBRE = "cassandra"
 
     def leer_muro(self, codigo, ventana, limit, cursor):
         self._usar("leer_muro")
@@ -70,6 +85,8 @@ class CassandraDoble(Doble):
 
 
 class RedisDoble(Doble):
+    NOMBRE = "redis"
+
     def __init__(self) -> None:
         super().__init__()
         self.sesiones = {"S-0001": {"usuario_id": "U-0001", "rol": "fan", "estado": "activa", "ttl_restante_s": 1700}}
@@ -80,6 +97,8 @@ class RedisDoble(Doble):
 
 
 class InfluxDoble(Doble):
+    NOMBRE = "influxdb"
+
     def __init__(self) -> None:
         super().__init__()
         self.ultimo_tope: int | None = None
@@ -97,6 +116,7 @@ class InfluxDoble(Doble):
 
 
 class IrisDoble(Doble):
+    NOMBRE = "iris"
 
     def __init__(self) -> None:
         super().__init__()

@@ -1,9 +1,10 @@
-"""Rutas de salud: chequeo del Hito 10 (CU16) y liveness/readiness/diagnóstico del Hito 11."""
+"""Rutas de salud: chequeo del Hito 10 (CU16), liveness/readiness/diagnóstico del Hito 11 y /metrics del Hito 13."""
 
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response, status
 
+from app.core.metricas import metricas
 from app.dependencias import Servicios, servicios
 from app.schemas.salud import Diagnostico, Preparacion, Salud, Vida
 
@@ -79,3 +80,18 @@ def dependencias(
 ) -> Diagnostico:
     response.headers["Cache-Control"] = "no-store"
     return svc.salud.diagnostico(refrescar)
+
+
+@router.get(
+    "/metrics",
+    include_in_schema=False,
+    summary="Métricas Prometheus (Hito 13)",
+)
+def prometheus_metrics(svc: Svc) -> Response:
+    diag = svc.salud.diagnostico()
+    contenido = metricas.exportar_prometheus(diag)
+    return Response(
+        content=contenido,
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+        headers={"Cache-Control": "no-store"},
+    )

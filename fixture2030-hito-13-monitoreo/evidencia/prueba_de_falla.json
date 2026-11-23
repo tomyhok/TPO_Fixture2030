@@ -1,0 +1,475 @@
+{
+  "ejecutado_en_utc": "2026-11-23T20:44:46Z",
+  "modo": "docker_y_prometheus_en_vivo",
+  "componente_probado": "redis",
+  "contenedor_docker": "fixture2030-redis",
+  "espera_scrape_s": 30,
+  "fases": {
+    "1_antes_de_falla": {
+      "etapa": "1_antes_de_falla",
+      "timestamp_utc": "2026-11-23T20:45:31Z",
+      "diagnostico_api_estado": "up",
+      "prometheus_fixture_db_up": {
+        "mongodb": 1,
+        "neo4j": 1,
+        "cassandra": 1,
+        "redis": 1,
+        "influxdb": 1,
+        "iris": 1
+      },
+      "prometheus_http_requests_total": [
+        {
+          "route": "/health",
+          "status": "200",
+          "total": 2
+        },
+        {
+          "route": "/equipos/{codigo_iso}",
+          "status": "200",
+          "total": 3304
+        },
+        {
+          "route": "/partidos-oficiales/{codigo_partido}",
+          "status": "200",
+          "total": 3304
+        },
+        {
+          "route": "/partidos/{codigo_partido}/comentarios",
+          "status": "200",
+          "total": 3304
+        },
+        {
+          "route": "/partidos/{codigo_partido}/estadisticas",
+          "status": "200",
+          "total": 3304
+        },
+        {
+          "route": "/partidos/{codigo_partido}/eventos",
+          "status": "200",
+          "total": 3304
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "404",
+          "total": 38
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "200",
+          "total": 3268
+        }
+      ],
+      "prometheus_http_errors_total": [
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "SESION_NO_VIGENTE",
+          "total": 38
+        }
+      ],
+      "prometheus_alertas": [
+        {
+          "name": "TargetMonitoreoCaido",
+          "state": "inactive",
+          "alerts": []
+        },
+        {
+          "name": "BaseDatosNoSQLNoDisponible",
+          "state": "inactive",
+          "alerts": []
+        },
+        {
+          "name": "LatenciaAPISuperaSLA100ms",
+          "state": "inactive",
+          "alerts": []
+        },
+        {
+          "name": "ErroresDependenciaSostenidos",
+          "state": "inactive",
+          "alerts": []
+        }
+      ],
+      "solicitudes_ejecutadas": [
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 2066.4
+        },
+        {
+          "motor": "neo4j",
+          "ruta": "/partidos/P-001/eventos",
+          "status_http": 200,
+          "latencia_ms": 2071.0
+        },
+        {
+          "motor": "cassandra",
+          "ruta": "/partidos/P-001/comentarios?ventana=203006152016",
+          "status_http": 200,
+          "latencia_ms": 2026.8
+        },
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 200,
+          "latencia_ms": 2045.1
+        },
+        {
+          "motor": "influxdb",
+          "ruta": "/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T20:15:00Z",
+          "status_http": 200,
+          "latencia_ms": 2077.9
+        },
+        {
+          "motor": "iris",
+          "ruta": "/partidos-oficiales/P-009",
+          "status_http": 200,
+          "latencia_ms": 2034.9
+        }
+      ]
+    },
+    "2_durante_falla_controlada": {
+      "etapa": "2_durante_falla_controlada",
+      "timestamp_utc": "2026-11-23T20:46:58Z",
+      "diagnostico_api_estado": "degraded",
+      "prometheus_fixture_db_up": {
+        "mongodb": 1,
+        "neo4j": 1,
+        "cassandra": 1,
+        "redis": 0,
+        "influxdb": 1,
+        "iris": 1
+      },
+      "prometheus_http_requests_total": [
+        {
+          "route": "/health",
+          "status": "200",
+          "total": 2
+        },
+        {
+          "route": "/equipos/{codigo_iso}",
+          "status": "200",
+          "total": 3342
+        },
+        {
+          "route": "/partidos-oficiales/{codigo_partido}",
+          "status": "200",
+          "total": 3338
+        },
+        {
+          "route": "/partidos/{codigo_partido}/comentarios",
+          "status": "200",
+          "total": 3339
+        },
+        {
+          "route": "/partidos/{codigo_partido}/estadisticas",
+          "status": "200",
+          "total": 3338
+        },
+        {
+          "route": "/partidos/{codigo_partido}/eventos",
+          "status": "200",
+          "total": 3339
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "404",
+          "total": 38
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "200",
+          "total": 3271
+        },
+        {
+          "route": "/health/dependencias",
+          "status": "200",
+          "total": 2
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "503",
+          "total": 1
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "504",
+          "total": 33
+        }
+      ],
+      "prometheus_http_errors_total": [
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "SESION_NO_VIGENTE",
+          "total": 38
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "DEPENDENCIA_NO_DISPONIBLE",
+          "total": 1
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "DEPENDENCIA_TIMEOUT",
+          "total": 33
+        }
+      ],
+      "prometheus_alertas": [
+        {
+          "name": "TargetMonitoreoCaido",
+          "state": "inactive",
+          "alerts": []
+        },
+        {
+          "name": "BaseDatosNoSQLNoDisponible",
+          "state": "firing",
+          "alerts": [
+            {
+              "labels": {
+                "alertname": "BaseDatosNoSQLNoDisponible",
+                "capa": "aplicacion",
+                "componente": "api-integrada",
+                "db": "redis",
+                "equipo_responsable": "ingenieria-datos-nosql",
+                "instance": "host.docker.internal:8000",
+                "job": "fixture-api",
+                "severity": "critical"
+              },
+              "state": "firing"
+            }
+          ]
+        },
+        {
+          "name": "LatenciaAPISuperaSLA100ms",
+          "state": "pending",
+          "alerts": [
+            {
+              "labels": {
+                "alertname": "LatenciaAPISuperaSLA100ms",
+                "equipo_responsable": "backend-api",
+                "route": "/sesiones/{id_sesion}",
+                "severity": "warning"
+              },
+              "state": "pending"
+            },
+            {
+              "labels": {
+                "alertname": "LatenciaAPISuperaSLA100ms",
+                "equipo_responsable": "backend-api",
+                "route": "/health/dependencias",
+                "severity": "warning"
+              },
+              "state": "pending"
+            }
+          ]
+        },
+        {
+          "name": "ErroresDependenciaSostenidos",
+          "state": "firing",
+          "alerts": [
+            {
+              "labels": {
+                "alertname": "ErroresDependenciaSostenidos",
+                "codigo": "DEPENDENCIA_TIMEOUT",
+                "equipo_responsable": "ingenieria-datos-nosql",
+                "route": "/sesiones/{id_sesion}",
+                "severity": "critical"
+              },
+              "state": "firing"
+            }
+          ]
+        }
+      ],
+      "solicitudes_ejecutadas": [
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 504,
+          "latencia_ms": 4042.2
+        },
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 2031.2
+        },
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 504,
+          "latencia_ms": 4047.2
+        },
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 2037.4
+        },
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 504,
+          "latencia_ms": 4022.3
+        },
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 2066.2
+        }
+      ]
+    },
+    "3_despues_de_recuperacion": {
+      "etapa": "3_despues_de_recuperacion",
+      "timestamp_utc": "2026-11-23T20:47:40Z",
+      "diagnostico_api_estado": "up",
+      "prometheus_fixture_db_up": {
+        "mongodb": 1,
+        "neo4j": 1,
+        "cassandra": 1,
+        "redis": 1,
+        "influxdb": 1,
+        "iris": 1
+      },
+      "prometheus_http_requests_total": [
+        {
+          "route": "/health",
+          "status": "200",
+          "total": 2
+        },
+        {
+          "route": "/equipos/{codigo_iso}",
+          "status": "200",
+          "total": 3412
+        },
+        {
+          "route": "/partidos-oficiales/{codigo_partido}",
+          "status": "200",
+          "total": 3407
+        },
+        {
+          "route": "/partidos/{codigo_partido}/comentarios",
+          "status": "200",
+          "total": 3407
+        },
+        {
+          "route": "/partidos/{codigo_partido}/estadisticas",
+          "status": "200",
+          "total": 3407
+        },
+        {
+          "route": "/partidos/{codigo_partido}/eventos",
+          "status": "200",
+          "total": 3407
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "404",
+          "total": 38
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "200",
+          "total": 3336
+        },
+        {
+          "route": "/health/dependencias",
+          "status": "200",
+          "total": 4
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "503",
+          "total": 1
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "status": "504",
+          "total": 38
+        }
+      ],
+      "prometheus_http_errors_total": [
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "SESION_NO_VIGENTE",
+          "total": 38
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "DEPENDENCIA_NO_DISPONIBLE",
+          "total": 1
+        },
+        {
+          "route": "/sesiones/{id_sesion}",
+          "codigo": "DEPENDENCIA_TIMEOUT",
+          "total": 38
+        }
+      ],
+      "prometheus_alertas": [
+        {
+          "name": "TargetMonitoreoCaido",
+          "state": "inactive",
+          "alerts": []
+        },
+        {
+          "name": "BaseDatosNoSQLNoDisponible",
+          "state": "inactive",
+          "alerts": []
+        },
+        {
+          "name": "LatenciaAPISuperaSLA100ms",
+          "state": "firing",
+          "alerts": [
+            {
+              "labels": {
+                "alertname": "LatenciaAPISuperaSLA100ms",
+                "equipo_responsable": "backend-api",
+                "route": "/sesiones/{id_sesion}",
+                "severity": "warning"
+              },
+              "state": "firing"
+            },
+            {
+              "labels": {
+                "alertname": "LatenciaAPISuperaSLA100ms",
+                "equipo_responsable": "backend-api",
+                "route": "/health/dependencias",
+                "severity": "warning"
+              },
+              "state": "pending"
+            }
+          ]
+        },
+        {
+          "name": "ErroresDependenciaSostenidos",
+          "state": "firing",
+          "alerts": [
+            {
+              "labels": {
+                "alertname": "ErroresDependenciaSostenidos",
+                "codigo": "DEPENDENCIA_TIMEOUT",
+                "equipo_responsable": "ingenieria-datos-nosql",
+                "route": "/sesiones/{id_sesion}",
+                "severity": "critical"
+              },
+              "state": "firing"
+            }
+          ]
+        }
+      ],
+      "solicitudes_ejecutadas": [
+        {
+          "motor": "redis",
+          "ruta": "/sesiones/S-0001",
+          "status_http": 200,
+          "latencia_ms": 2042.2
+        },
+        {
+          "motor": "mongodb",
+          "ruta": "/equipos/ARG",
+          "status_http": 200,
+          "latencia_ms": 2066.3
+        }
+      ]
+    }
+  }
+}

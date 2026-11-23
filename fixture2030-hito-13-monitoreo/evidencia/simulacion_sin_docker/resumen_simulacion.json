@@ -1,0 +1,24 @@
+{
+  "generado_en_utc": "2026-11-20T16:38:19Z",
+  "tipo": "simulacion_sin_docker",
+  "aviso_rnf8": "SIMULACIÓN SIN DOCKER (RNF8): valores sintéticos fijos procesados por el colector real app/core/metricas.py. NO fueron observados en Prometheus ni en Grafana y no deben presentarse como medición.",
+  "validacion_configuracion": [
+    "prometheus.yml: jobs ['prometheus', 'node-exporter', 'fixture-api'], scrape_interval 15s",
+    "reglas-o-alertas.yml: 4 alertas ['TargetMonitoreoCaido', 'BaseDatosNoSQLNoDisponible', 'LatenciaAPISuperaSLA100ms', 'ErroresDependenciaSostenidos']",
+    "fixture2030_war_room.json: 8 paneles con título y unidad",
+    "docker-compose.yml: imágenes con versión fija"
+  ],
+  "simulacion": {
+    "entrada": "diagnóstico sintético; Redis marcado como down en la fase 2",
+    "comprobado": [
+      "fase 1: fixture_db_up == 1 para las 6 bases",
+      "fase 2: fixture_db_up{db=\"redis\"} == 0, mongodb sigue en 1, sin latencia de ping para redis, 3 errores DEPENDENCIA_NO_DISPONIBLE en /sesiones/{id_sesion}",
+      "fase 3: fixture_db_up{db=\"redis\"} vuelve a 1"
+    ],
+    "no_comprobado": [
+      "scraping real de Prometheus (targets, lastScrape, duración)",
+      "estado de las alertas en Prometheus",
+      "comportamiento real de la API y de los contenedores ante docker stop/start"
+    ]
+  }
+}

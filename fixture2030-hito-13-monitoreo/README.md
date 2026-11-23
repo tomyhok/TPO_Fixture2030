@@ -84,7 +84,12 @@ Consulta `/api/v1/targets`, `/api/v1/rules`, `up` y `fixture_db_up`, y actualiza
 bash scripts/ejecutar_prueba_controlada.sh
 # O desde PowerShell: .\scripts\ejecutar_prueba_controlada.ps1
 ```
-Ejecuta las 3 fases (1: tráfico normal en las 6 bases; 2: `docker stop fixture2030-redis`, comprobando `503` en `/sesiones/S-0001`, `200 OK` en `/equipos/ARG` y caída de `fixture_db_up{db="redis"}` a `0`; 3: `docker start fixture2030-redis` y recuperación a `1`) sin borrar volúmenes ni alterar datos funcionales. Guarda los resultados en [`evidencia/prueba_de_falla.json`](evidencia/prueba_de_falla.json) y [`evidencia/prueba_de_falla.md`](evidencia/prueba_de_falla.md).
+Ejecuta las 3 fases (1: tráfico normal en las 6 bases; 2: `docker stop fixture2030-redis`, comprobando `503` en `/sesiones/S-0001`, `200 OK` en `/equipos/ARG` y caída de `fixture_db_up{db="redis"}` a `0`; 3: `docker start fixture2030-redis` y recuperación a `1`) sin borrar volúmenes ni alterar datos funcionales. Guarda los resultados en [`evidencia/prueba_de_falla.json`](evidencia/prueba_de_falla.json) y [`evidencia/prueba_de_falla.md`](evidencia/prueba_de_falla.md). Con `--espera-scrape 30` Redis queda caído ~75 s, lo que da tiempo a que la alerta pase a `firing` y a observar el dashboard.
+
+Para exportar los datos de los 8 paneles del dashboard (todas las series, valores numéricos, UTC) sobre la ventana de la prueba:
+```bash
+python scripts/exportar_datos_dashboard.py --desde 2026-11-23T20:38:00Z --hasta 2026-11-23T20:49:00Z
+```
 
 ### Paso 5: Validación sin Docker y Escaneo de Secretos (RNF6)
 
@@ -127,6 +132,7 @@ fixture2030-hito-13-monitoreo/
 │   ├── iniciar_monitoreo.sh / .ps1
 │   ├── verificar_targets.py / .sh / .ps1
 │   ├── ejecutar_prueba_controlada.py / .sh / .ps1
+│   ├── exportar_datos_dashboard.py
 │   ├── generar_evidencia_y_validar.py
 │   └── limpiar_entorno.sh / .ps1
 ├── docs/
@@ -141,7 +147,10 @@ fixture2030-hito-13-monitoreo/
 │   ├── prometheus_targets.json / .txt  # observado (verificar_targets --guardar)
 │   ├── prueba_de_falla.json / .md      # observado (ejecutar_prueba_controlada)
 │   ├── dashboards/
-│   │   ├── README.md
+│   │   ├── README.md                     # línea de tiempo e interpretación
+│   │   ├── capturas/                     # observado: capturas de Grafana (2026-11-23)
+│   │   ├── grafana_csv/                  # observado: Inspect → Data de los 8 paneles
+│   │   ├── datos_paneles_<inicio>.json / .csv  # observado: export de Prometheus
 │   │   └── vista_dashboard_war_room.svg  # maqueta, no captura
 │   ├── simulacion_sin_docker/          # simulación rotulada (sin Docker)
 │   └── resultados_sin_secretos/

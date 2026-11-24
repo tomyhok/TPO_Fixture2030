@@ -108,6 +108,24 @@ class InfluxAdapter:
             fila["posesion_pct_prom"] = round(fila["posesion_pct_prom"], 2)
         return filas
 
+    def escribir_estadisticas(self, lineas: list[str]) -> None:
+        """Simulación: escribe puntos en line protocol (misma tabla y tags del Hito 8).
+
+        `no_sync`: InfluxDB confirma sin esperar a que el WAL se grabe en disco (se graba cada
+        1 s). Sin esto cada escritura tarda ~1 s y el reloj del partido se atrasa. Para métricas
+        en vivo se acepta perder, ante una caída, el último segundo."""
+        with operacion(DEPENDENCIA, "estadisticas_partido.write", _traducir):
+            if not self._token:
+                raise DependenciaNoDisponible(DEPENDENCIA)
+            r = self._cliente.post(
+                "/api/v3/write_lp",
+                params={"db": self._database, "precision": "second", "no_sync": "true"},
+                content="\n".join(lineas),
+                headers={"Authorization": f"Bearer {self._token}"},
+            )
+            if r.status_code not in (200, 204):
+                raise _RespuestaInvalida(f"HTTP {r.status_code}: {r.text[:120]}")
+
     def ping(self) -> None:
         self._consultar("ping", "SELECT 1 AS ok", {})
 

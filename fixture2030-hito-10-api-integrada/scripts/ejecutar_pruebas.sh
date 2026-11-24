@@ -6,7 +6,7 @@
 #   bash scripts/ejecutar_pruebas.sh unit     solo unitarias (sin bases)
 #
 # Las unitarias usan dobles en memoria y no necesitan Docker. Las de
-# integración usan la API real contra las seis fuentes: antes se verifica
+# integración usan la API real contra las cinco fuentes: antes se verifica
 # la conectividad y, si falta alguna, se informa cuál y se detiene.
 # Ninguna prueba imprime ni registra credenciales.
 # =====================================================================

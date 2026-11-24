@@ -8,7 +8,7 @@
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #dde1e8;
     --accent: #2457d6; --ok: #1e8a4c; --warn: #b7791f; --err: #c0392b; --idle: #9aa3b2;
-    --mongodb: #3f9142; --neo4j: #018bff; --cassandra: #1287b1; --redis: #d82c20; --influxdb: #9b4dca; --iris: #e06c00;
+    --mongodb: #3f9142; --neo4j: #018bff; --cassandra: #1287b1; --redis: #d82c20; --influxdb: #9b4dca;
     --code-bg: #f0f2f5;
   }
   @media (prefers-color-scheme: dark) {
@@ -79,7 +79,7 @@
 </head>
 <body>
 <header>
-  <h1>Fixture 2030 · Cómo se comunican las seis bases</h1>
+  <h1>Fixture 2030 · Cómo se comunican las cinco bases</h1>
   <p>Las bases no se hablan directamente: la API las integra mediante <b>claves de negocio compartidas</b>
      (<span class="mono">codigo_partido</span>, <span class="mono">codigo_iso</span>, <span class="mono">id_usuario</span>).
      Este front ejecuta un recorrido que encadena las lecturas y muestra qué clave lleva de una base a otra.
@@ -109,7 +109,7 @@
   <div class="grid2">
     <section>
       <h2>Mapa de integración</h2>
-      <svg id="mapa" viewBox="0 0 560 420" role="img" aria-label="Diagrama de la API conectada a las seis bases"></svg>
+      <svg id="mapa" viewBox="0 0 560 420" role="img" aria-label="Diagrama de la API conectada a las cinco bases"></svg>
       <p class="etq" style="color:var(--muted);font-size:13px;margin:6px 0 0">
         Líneas sólidas: consulta API → base. Líneas punteadas naranjas: dato de una base que se usa como clave para consultar otra.
       </p>
@@ -128,8 +128,7 @@
 
 <script>
 const BASES = {
-  iris:      { nombre: "IRIS",      modelo: "objetos",      x: 150, y: 50 },
-  neo4j:     { nombre: "Neo4j",     modelo: "grafos",       x: 410, y: 50 },
+  neo4j:     { nombre: "Neo4j",     modelo: "grafos",       x: 280, y: 50 },
   redis:     { nombre: "Redis",     modelo: "clave/valor",  x: 70,  y: 210 },
   mongodb:   { nombre: "MongoDB",   modelo: "documental",   x: 490, y: 210 },
   cassandra: { nombre: "Cassandra", modelo: "col. anchas",  x: 150, y: 370 },
@@ -142,7 +141,6 @@ const CRUCES = [
   { id: "cassandra-mongodb", de: "cassandra", a: "mongodb",   etq: "equipo_apoyado" },
   { id: "influxdb-mongodb",  de: "influxdb",  a: "mongodb",   etq: "tag equipo" },
   { id: "redis-cassandra",   de: "redis",     a: "cassandra", etq: "usuario_id = id_usuario" },
-  { id: "iris-neo4j",        de: "iris",      a: "neo4j",     etq: "codigo_partido" },
 ];
 const $ = (s) => document.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -250,22 +248,22 @@ async function recorrido(p) {
   agregarPaso(rRedis, rRedis.ok ? `Sesión <b>${esc(rRedis.cuerpo.estado)}</b> del usuario <b>${esc(usuario)}</b> (rol ${esc(rRedis.cuerpo.rol)}), expira en ${rRedis.cuerpo.ttl_restante_s}s.` : "",
     usuario ? `<b>usuario_id=${esc(usuario)}</b> → se busca en los comentarios de Cassandra` : null);
 
-  // 2. IRIS: acta oficial del partido (objeto persistente).
-  const rIris = await llamar("iris", `/partidos-oficiales/${enc(p.partido)}`);
-  const acta = rIris.ok ? rIris.cuerpo : null;
-  agregarPaso(rIris, acta ? `Acta: <b>${esc(acta.sede)}</b>, ${esc(acta.fecha)}, estado <b>${esc(acta.estado)}</b>, árbitro ${esc(acta.arbitro.nombre)} ${esc(acta.arbitro.apellido)}, ${acta.eventos.length} eventos oficiales.` : "",
-    `<b>codigo_partido=${esc(p.partido)}</b> → mismo identificador en Neo4j, Cassandra e InfluxDB`);
+  // 2. Neo4j: el partido en el grafo (estado, sede, árbitro) y sus eventos.
+  const rPar = await llamar("neo4j", "/portal/api/partidos");
+  const partido = rPar.ok ? rPar.cuerpo.find(x => x.codigo_partido === p.partido) ?? null : null;
+  agregarPaso(rPar, partido ? `Partido <b>${esc(partido.codigo_partido)}</b>: ${esc(partido.sede?.nombre ?? "")}, ${esc(partido.fecha)}, estado <b>${esc(partido.estado)}</b>` +
+      `${partido.arbitro ? `, árbitro ${esc(partido.arbitro.nombre)} ${esc(partido.arbitro.apellido)}` : ""} ((Arbitro)-[:DIRIGE]->(Partido)-[:SE_JUEGA_EN]->(Sede)).`
+      : (rPar.ok ? `No existe el partido ${esc(p.partido)} en el grafo.` : ""),
+    `<b>codigo_partido=${esc(p.partido)}</b> → mismo identificador en Cassandra e InfluxDB`);
 
-  // 3. Neo4j: eventos del grafo y sus protagonistas.
   const rNeo = await llamar("neo4j", `/partidos/${enc(p.partido)}/eventos?limit=50`);
   const eventos = rNeo.ok ? rNeo.cuerpo.eventos : [];
   for (const ev of eventos) sumarIso(ev.jugador?.id_jugador?.split("-")[0], "neo4j");
-  if (rNeo.ok && acta) encenderCruce("iris-neo4j");
   const isoNeo = [...isoDesde.keys()];
   agregarPaso(rNeo, rNeo.ok ? `${eventos.length} eventos en el grafo (Jugador)-[:PROTAGONIZA]->(Evento)-[:CORRESPONDE_A]->(Partido).` : "",
     isoNeo.length ? `<b>id_jugador</b> (${eventos.filter(e => e.jugador).map(e => esc(e.jugador.id_jugador)).join(", ")}) → prefijo <b>codigo_iso</b> ${isoNeo.join(", ")} → MongoDB` : null);
 
-  // 4. Cassandra: muro de comentarios de la ventana.
+  // 3. Cassandra: muro de comentarios de la ventana.
   const rCas = await llamar("cassandra", `/partidos/${enc(p.partido)}/comentarios?ventana=${enc(p.ventana)}&limit=50`);
   const comentarios = rCas.ok ? rCas.cuerpo.items : [];
   for (const c of comentarios) sumarIso(c.equipo_apoyado, "cassandra");
@@ -276,14 +274,14 @@ async function recorrido(p) {
       (usuario ? ` ${delUsuario.length} son del usuario de la sesión (${esc(usuario)}).` : "") : "",
     isoCas.length ? `<b>equipo_apoyado</b> ${isoCas.map(esc).join(", ")} → MongoDB` : null);
 
-  // 5. InfluxDB: estadísticas temporales.
+  // 4. InfluxDB: estadísticas temporales.
   const rInf = await llamar("influxdb", `/partidos/${enc(p.partido)}/estadisticas?desde=${enc(p.desde)}&hasta=${enc(p.hasta)}&resolucion=1m`);
   const series = rInf.ok ? rInf.cuerpo.series : [];
   for (const s of series) sumarIso(s.equipo, "influxdb");
   agregarPaso(rInf, rInf.ok ? `${series.length} series (${series.map(s => `${esc(s.equipo)}: ${s.puntos.length} puntos`).join(", ") || "sin puntos"}) agregadas con date_bin a 1 minuto.` : "",
     series.length ? `<b>tag equipo</b> ${series.map(s => esc(s.equipo)).join(", ")} → MongoDB` : null);
 
-  // 6. MongoDB: ficha de cada selección descubierta en las otras bases.
+  // 5. MongoDB: ficha de cada selección descubierta en las otras bases.
   const fichas = [];
   if (!isoDesde.size) {
     agregarPaso({ base: "mongodb", ruta: "/equipos/{codigo_iso}", status: 0, ok: false, ms: 0, requestId: null,
@@ -300,25 +298,25 @@ async function recorrido(p) {
   const okMongo = resMongo.filter(r => r.ok).length;
   if (resMongo.length) { marcarArista("mongodb", okMongo ? "ok" : "err"); marcarNodoTexto("mongodb", `${okMongo}/${resMongo.length} fichas`); }
 
-  pintarVista({ p, sesion: rRedis.ok ? rRedis.cuerpo : null, acta, eventos, comentarios, delUsuario, series, fichas });
+  pintarVista({ p, sesion: rRedis.ok ? rRedis.cuerpo : null, partido, eventos, comentarios, delUsuario, series, fichas });
 }
 
 function pintarVista(d) {
   const t = (titulo, fuente, cuerpo) => `<div class="tarjeta"><h3>${titulo}</h3><div class="fuente">${fuente}</div>${cuerpo}</div>`;
   const vacio = (m) => `<p class="vacio">${m}</p>`;
   let html = "";
-  html += t(`Partido ${esc(d.p.partido)}`, "IRIS · acta oficial", d.acta
-    ? `<p>${esc(d.acta.sede)} · ${esc(d.acta.fecha)} · <b>${esc(d.acta.estado)}</b><br>Árbitro: ${esc(d.acta.arbitro.nombre)} ${esc(d.acta.arbitro.apellido)} (${esc(d.acta.arbitro.rango)})</p>`
-    : vacio("Sin acta en IRIS para este partido."));
+  html += t(`Partido ${esc(d.p.partido)}`, "Neo4j · nodo Partido", d.partido
+    ? `<p>${esc(d.partido.sede?.nombre ?? "")} · ${esc(d.partido.fecha)} · <b>${esc(d.partido.estado)}</b>` +
+      `${d.partido.arbitro ? `<br>Árbitro: ${esc(d.partido.arbitro.nombre)} ${esc(d.partido.arbitro.apellido)} (${esc(d.partido.arbitro.rango ?? "")})` : ""}</p>`
+    : vacio("El partido no está en el grafo."));
   html += t("Selecciones involucradas", "MongoDB · claves de Neo4j, Cassandra e InfluxDB", d.fichas.length
     ? `<table><tr><th>ISO</th><th>Nombre</th><th>DT</th><th>Rank</th><th>Origen</th></tr>${d.fichas.map(f =>
         `<tr><td>${esc(f.codigo_iso)}</td><td>${esc(f.nombre)}${f.pais_anfitrion ? " 🏟" : ""}</td><td>${esc(f.director_tecnico ?? "—")}</td><td>${f.ranking_fifa}</td><td>${f.origen.map(b => BASES[b].nombre).join(", ")}</td></tr>`).join("")}</table>`
     : vacio("No se pudo resolver ninguna selección."));
   const cron = [
     ...d.eventos.map(e => ({ min: e.minuto, txt: `${esc(e.tipo)}${e.jugador ? ` · ${esc(e.jugador.nombre)} (${esc(e.jugador.id_jugador)})` : ""}`, src: "Neo4j" })),
-    ...(d.acta?.eventos ?? []).map(e => ({ min: e.minuto, txt: `${esc(e.tipo)}${e.descripcion ? ` · ${esc(e.descripcion)}` : ""}`, src: "IRIS" })),
   ].sort((a, b) => a.min - b.min);
-  html += t("Cronología combinada", "Neo4j (grafo) + IRIS (acta)", cron.length
+  html += t("Cronología", "Neo4j (grafo)", cron.length
     ? `<ul>${cron.map(c => `<li><b>${c.min}'</b> ${c.txt} <span class="badge">${c.src}</span></li>`).join("")}</ul>`
     : vacio("Sin eventos."));
   const porEquipo = {};

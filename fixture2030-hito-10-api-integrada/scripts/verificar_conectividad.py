@@ -1,11 +1,11 @@
-"""Verifica la conectividad con las seis fuentes usando los mismos adaptadores que la API.
+"""Verifica la conectividad con las cinco fuentes usando los mismos adaptadores que la API.
 
 No necesita la API levantada: lee el .env, crea cada adaptador y ejecuta su
 operación de ping con los timeouts configurados. Nunca imprime credenciales.
 
 Uso (desde fixture2030-hito-10-api-integrada/):
     .venv/Scripts/python scripts/verificar_conectividad.py
-Código de salida: 0 si las seis fuentes responden; 1 si alguna falla.
+Código de salida: 0 si las cinco fuentes responden; 1 si alguna falla.
 """
 
 import sys
@@ -25,7 +25,6 @@ DESTINOS = {
     "cassandra": lambda s: f"{s.cassandra_hosts}:{s.cassandra_port} keyspace={s.cassandra_keyspace}",
     "redis": lambda s: f"{s.redis_host}:{s.redis_port} db={s.redis_db}",
     "influxdb": lambda s: f"{s.influx_url} database={s.influx_database}",
-    "iris": lambda s: f"{s.iris_host}:{s.iris_port} namespace={s.iris_namespace}",
 }
 
 

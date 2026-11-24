@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Seis lecturas por HTTP; no reinicia datos ni detiene motores.
+# Cinco lecturas por HTTP; no reinicia datos ni detiene motores.
 set -euo pipefail
 HITO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$HITO"

@@ -17,7 +17,6 @@ from redis import exceptions as redis_errors
 from app.adapters import (
     cassandra_adapter,
     influx_adapter,
-    iris_adapter,
     mongo_adapter,
     neo4j_adapter,
     redis_adapter,
@@ -33,7 +32,6 @@ from app.core.errores import DependenciaNoDisponible, DependenciaTimeout
         (cassandra_adapter._traducir, NoHostAvailable("x", {}), DependenciaNoDisponible),
         (redis_adapter._traducir, redis_errors.TimeoutError("x"), DependenciaTimeout),
         (influx_adapter._traducir, httpx.ReadTimeout("x"), DependenciaTimeout),
-        (iris_adapter._traducir, iris_adapter._TimeoutIris(), DependenciaTimeout),
     ],
 )
 def test_traduccion_de_errores_del_driver(traducir, excepcion, esperado):

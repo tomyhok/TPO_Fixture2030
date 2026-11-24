@@ -1,10 +1,10 @@
-"""Métricas Prometheus de la API integrada y de los seis motores NoSQL (Hito 13).
+"""Métricas Prometheus de la API integrada y de los cinco motores NoSQL (Hito 13).
 
 Expone en formato de texto Prometheus (0.0.4) los tipos de métricas vistos en la
 Clase 14 (Counter, Gauge, Histogram), diferenciando:
   * métricas de aplicación HTTP (tráfico, latencia, requests en curso y errores);
   * métricas por base de datos / subsistema obtenidas de los adaptadores y del
-    diagnóstico de salud (`mongodb`, `neo4j`, `cassandra`, `redis`, `influxdb`, `iris`).
+    diagnóstico de salud (`mongodb`, `neo4j`, `cassandra`, `redis`, `influxdb`).
 """
 
 import threading
@@ -14,7 +14,7 @@ from typing import Any
 BUCKETS_HTTP_S: tuple[float, ...] = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0)
 BUCKETS_DB_S: tuple[float, ...] = (0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0)
 
-MOTORES: tuple[str, ...] = ("mongodb", "neo4j", "cassandra", "redis", "influxdb", "iris")
+MOTORES: tuple[str, ...] = ("mongodb", "neo4j", "cassandra", "redis", "influxdb")
 ESTADOS_MOTOR: tuple[str, ...] = ("up", "degraded", "down", "not_configured", "unknown")
 ESTADOS_DISPONIBLES: frozenset[str] = frozenset({"up", "degraded"})
 

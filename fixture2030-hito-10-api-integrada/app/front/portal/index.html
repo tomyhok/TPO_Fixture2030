@@ -5,147 +5,215 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fixture 2030</title>
 <style>
+  /* Estética limpia con la paleta del Mundial 2030: rojo, verde y dorado de los anfitriones
+     (Marruecos, Portugal, España), celeste del Centenario (Uruguay, Argentina) y azul marino
+     para texto y acciones. Tema claro: el logo oficial tiene fondo blanco. */
   :root {
-    --bg: #f3f5f8; --panel: #ffffff; --panel-2: #f7f9fb; --text: #18202c; --muted: #5b6575; --line: #dfe3ea;
-    --brand: #0b2a4a; --brand-text: #ffffff; --accent: #12805c; --accent-text: #ffffff; --link: #1a5fb4;
-    --ok: #12805c; --warn: #a86400; --err: #c0392b; --chip: #e8eef6;
-    --mongodb: #3f9142; --neo4j: #0d7fd8; --cassandra: #1287b1; --redis: #d82c20; --influxdb: #9b4dca; --iris: #d06400;
-    --sombra: 0 1px 2px rgba(16, 24, 40, .06);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f1319; --panel: #171c24; --panel-2: #1c222c; --text: #e7eaf0; --muted: #9aa3b2; --line: #2a313d;
-      --brand: #0a1c30; --accent: #2fb47f; --accent-text: #08130e; --link: #7fb0ff;
-      --ok: #3ccf8e; --warn: #f0b04a; --err: #ff6b5c; --chip: #222a36; --sombra: none;
-    }
+    color-scheme: light;
+    --bg: #f5f6f8; --panel: #ffffff; --panel-2: #f6f7f9; --text: #0e1525; --muted: #667085; --line: #e4e7ec;
+    --navy: #0a1f44; --rojo: #c8102e; --verde: #00843d; --oro: #f2b705; --celeste: #6cace4;
+    --brand: var(--navy); --brand-text: #ffffff; --accent: var(--navy); --accent-text: #ffffff; --link: var(--navy);
+    --ok: var(--verde); --warn: #b7791f; --err: var(--rojo); --chip: #eef0f4;
+    --mongodb: #3f9142; --neo4j: #0d7fd8; --cassandra: #1287b1; --redis: #d82c20; --influxdb: #9b4dca;
+    --franja: linear-gradient(90deg, var(--rojo) 0 25%, var(--verde) 25% 50%, var(--oro) 50% 75%, var(--celeste) 75%);
+    --radio: 14px;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--link); text-decoration: none; font-weight: 600; } a:hover { text-decoration: underline; text-underline-offset: 3px; }
   button, input, select { font: inherit; }
   .cont { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 
   /* cabecera */
-  .top { background: var(--brand); color: var(--brand-text); position: sticky; top: 0; z-index: 10; }
-  .top .cont { display: flex; align-items: center; gap: 18px; height: 58px; }
-  .marca { font-weight: 800; font-size: 19px; letter-spacing: .3px; color: #fff; display: flex; align-items: center; gap: 8px; }
-  .marca span { background: var(--accent); color: var(--accent-text); border-radius: 6px; padding: 1px 7px; font-size: 13px; }
-  nav { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
-  nav a { color: #c9d6e6; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
-  nav a.activo, nav a:hover { color: #fff; background: rgba(255,255,255,.1); text-decoration: none; }
-  .usuario { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-  .usuario small { color: #c9d6e6; }
-  .btn { border: 1px solid transparent; border-radius: 8px; padding: 7px 14px; cursor: pointer; background: var(--accent); color: var(--accent-text); font-weight: 600; }
-  .btn.sec { background: transparent; border-color: var(--line); color: var(--text); font-weight: 500; }
-  .top .btn.sec { color: #fff; border-color: rgba(255,255,255,.35); }
-  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .top { background: #fff; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); }
+  .top::before { content: ""; display: block; height: 4px; background: var(--franja); }
+  .top .cont { display: flex; align-items: center; gap: 24px; height: 78px; }
+  .marca { display: flex; align-items: center; gap: 12px; color: var(--navy); }
+  .marca:hover { text-decoration: none; }
+  .marca img { height: 68px; width: auto; display: block; }
+  .marca span { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; line-height: 1.2; border-left: 1px solid var(--line); padding-left: 12px; }
+  nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+  nav a { color: var(--muted); padding: 8px 12px; white-space: nowrap; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-bottom: 2px solid transparent; }
+  nav a:hover { color: var(--navy); text-decoration: none; }
+  nav a.activo { color: var(--navy); border-bottom-color: var(--rojo); }
+  .usuario { display: flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 14px; }
+  .usuario small { color: var(--muted); }
+  .btn { border: 1px solid transparent; border-radius: 999px; padding: 8px 18px; cursor: pointer; background: var(--accent); color: var(--accent-text); font-weight: 700; font-size: 14px; transition: opacity .15s; }
+  .btn:hover { opacity: .88; }
+  .btn.sec { background: transparent; border-color: var(--line); color: var(--text); font-weight: 600; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
 
-  main { padding: 20px 0 48px; }
-  h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 17px; margin: 0 0 12px; }
-  .sub { color: var(--muted); margin: 0 0 18px; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--sombra); }
-  .cabpanel { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+  main.cont { padding-top: 32px; padding-bottom: 56px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 6px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
+  h2 { font-size: 16px; margin: 0 0 12px; font-weight: 800; color: var(--navy); }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radio); padding: 20px; }
+  .cabpanel { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; }
   .cabpanel h2 { margin: 0; }
-  .fuente { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--chip); white-space: nowrap; }
-  .grid { display: grid; gap: 16px; }
+  .fuente { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .fuente i { width: 7px; height: 7px; border-radius: 50%; }
+  .grid { display: grid; gap: 18px; }
   .g2 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
-  @media (max-width: 860px) { .g2 { grid-template-columns: 1fr; } .usuario small { display: none; } }
-  .vacio { color: var(--muted); font-style: italic; margin: 4px 0; }
+  @media (max-width: 860px) { .g2 { grid-template-columns: 1fr; } .usuario small, .marca span { display: none; } .top .cont { gap: 12px; } }
+  .vacio { color: var(--muted); margin: 4px 0; }
+
+  /* portada del fixture */
+  .portada { display: flex; align-items: center; gap: 24px; margin-bottom: 26px; }
+  .portada::after { content: ""; flex: 0 0 120px; height: 6px; border-radius: 3px; background: var(--franja); align-self: center; margin-left: auto; }
+  @media (max-width: 700px) { .portada::after { display: none; } }
+  .portada h1 { margin: 0; }
+  .portada p { margin: 4px 0 0; color: var(--muted); }
 
   /* fixture */
   .partidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-  .partido { display: block; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; box-shadow: var(--sombra); transition: border-color .15s, transform .15s; }
-  .partido:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-1px); }
-  .partido .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .partido { display: block; color: inherit; font-weight: 400; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radio); padding: 16px; transition: border-color .15s, box-shadow .15s; }
+  .partido:hover { border-color: var(--navy); text-decoration: none; box-shadow: 0 6px 20px rgba(10, 31, 68, .08); }
+  .partido .meta { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; margin-bottom: 12px; }
   .versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
-  .eq { display: flex; align-items: center; gap: 8px; font-weight: 600; min-width: 0; }
+  .eq { display: flex; align-items: center; gap: 9px; font-weight: 700; min-width: 0; color: var(--text); }
   .eq.der { flex-direction: row-reverse; text-align: right; }
   .eq b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .escudo { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; letter-spacing: .3px; }
-  .escudo.g { width: 56px; height: 56px; font-size: 15px; }
-  .marcador { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 0 6px; }
-  .estado { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
-  .estado.vivo { color: var(--err); border-color: var(--err); }
-  .estado.fin { color: var(--muted); }
-  .grupos { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-  .grupo h3 { margin: 0 0 8px; font-size: 14px; }
-  .fila-eq { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 6px; color: inherit; }
+  .escudo { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; letter-spacing: .4px; }
+  .escudo.g { width: 60px; height: 60px; font-size: 15px; box-shadow: 0 0 0 3px rgba(255,255,255,.18); }
+  .escudo.bandera { display: block; object-fit: cover; background: #fff; box-shadow: 0 0 0 1px rgba(10, 31, 68, .14); }
+  .escudo.bandera.g { box-shadow: 0 0 0 3px rgba(255, 255, 255, .28); }
+  .banderita { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; vertical-align: -4px; box-shadow: 0 0 0 1px rgba(10, 31, 68, .14); }
+  .usuario .escudo { width: 28px; height: 28px; font-size: 9px; }
+  .muestra-linea { display: inline-block; width: 18px; border-top: 3px solid; vertical-align: middle; margin-right: 2px; }
+  .marcador { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 0 6px; color: var(--navy); letter-spacing: -.01em; }
+  .estado { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--chip); color: var(--muted); display: inline-flex; align-items: center; }
+  .estado.vivo { color: var(--rojo); background: #fdecee; }
+  .estado.fin { color: var(--navy); background: #e8edf6; }
+  .grupos { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .grupo h3 { margin: 0 0 8px; font-size: 15px; font-weight: 800; color: var(--navy); }
+  .fila-eq { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 8px; color: inherit; font-weight: 500; }
   .fila-eq:hover { background: var(--panel-2); text-decoration: none; }
   .fila-eq .escudo { width: 24px; height: 24px; font-size: 9px; }
   .fila-eq small { margin-left: auto; color: var(--muted); }
-  .buscador { width: 100%; max-width: 320px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); }
+  .filtros { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+  .filtros select { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-weight: 600; }
+  .filtro { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 999px; padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .filtro:hover { border-color: var(--navy); }
+  .filtro.activo { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .dia { margin: 26px 0 10px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .grupos-pos { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  table.tabla-grupo { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  table.tabla-grupo th { color: var(--muted); font-weight: 700; font-size: 11px; text-align: right; padding: 4px; letter-spacing: .04em; }
+  table.tabla-grupo th:nth-child(2) { text-align: left; }
+  table.tabla-grupo td { padding: 6px 4px; text-align: right; border-top: 1px solid var(--line); }
+  table.tabla-grupo td:nth-child(2) { text-align: left; }
+  table.tabla-grupo tr.clasifica td:first-child { box-shadow: inset 3px 0 var(--verde); }
+  table.tabla-grupo a { color: inherit; display: flex; align-items: center; gap: 7px; font-weight: 600; }
+  table.tabla-grupo .escudo { width: 22px; height: 22px; font-size: 8px; }
+  .buscador { width: 100%; max-width: 360px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--text); }
+  .buscador:focus, .filtros select:focus { outline: 2px solid var(--navy); outline-offset: 1px; }
 
   /* partido */
-  .hero { background: linear-gradient(135deg, var(--brand), #14466f); color: #fff; border-radius: 14px; padding: 22px 18px; margin-bottom: 16px; }
-  .hero .versus { gap: 14px; }
-  .hero .eq { font-size: 18px; color: #fff; }
-  .hero .marcador { font-size: 40px; }
-  .hero .info { text-align: center; color: #c9d6e6; font-size: 13px; margin-top: 12px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
-  .hero .estado { color: #fff; border-color: rgba(255,255,255,.4); }
-  .vivo-strip { display: flex; gap: 18px; justify-content: center; margin-top: 12px; font-size: 13px; color: #c9d6e6; flex-wrap: wrap; }
+  .hero { position: relative; overflow: hidden; background: var(--navy); color: #fff; border-radius: 18px; padding: 28px 22px 26px; margin-bottom: 18px; }
+  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--franja); }
+  .hero .versus { gap: 16px; }
+  .hero .eq { font-size: 19px; color: #fff; }
+  .hero a.eq:hover { text-decoration: none; opacity: .9; }
+  .hero .marcador { font-size: 46px; color: #fff; }
+  .hero .info { text-align: center; color: #b9c4d8; font-size: 13px; margin-top: 14px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .hero .estado { color: #fff; background: rgba(255,255,255,.12); }
+  .vivo-strip { display: flex; gap: 20px; justify-content: center; margin-top: 12px; font-size: 13px; color: #b9c4d8; flex-wrap: wrap; }
   .vivo-strip b { color: #fff; font-variant-numeric: tabular-nums; }
-  .punto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff5a4f; margin-right: 6px; animation: latir 1.4s infinite; }
+  .demo-estado { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: #b9c4d8; }
+  .demo-estado .btn { padding: 6px 14px; font-size: 13px; color: #fff; border-color: rgba(255,255,255,.35); }
+  .centro { display: grid; justify-items: center; gap: 2px; }
+  .reloj { font-size: 14px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; min-height: 20px; display: flex; align-items: center; }
+  .reloj.fin { color: #b9c4d8; font-weight: 600; }
+  .hero .marcador.gol { animation: golazo 1.2s ease-out; }
+  @keyframes golazo { 25% { transform: scale(1.3); color: var(--oro); } }
+  .linea li.nuevo { animation: entrar .5s ease-out; outline: 1px solid var(--navy); }
+  .punto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff4d5e; margin-right: 6px; animation: latir 1.4s infinite; }
   @keyframes latir { 50% { opacity: .3; } }
-  .muro-form { display: grid; gap: 8px; margin-bottom: 12px; }
-  .muro-form textarea { width: 100%; min-height: 64px; resize: vertical; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; }
+  .muro-form { display: grid; gap: 8px; margin-bottom: 14px; }
+  .muro-form textarea { width: 100%; min-height: 70px; resize: vertical; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; }
+  .muro-form textarea:focus { outline: 2px solid var(--navy); outline-offset: 1px; background: #fff; }
   .muro-form .fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .muro-form select, .encuesta select { padding: 7px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
+  .muro-form select { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
   .contador { margin-left: auto; color: var(--muted); font-size: 12px; }
-  .comentarios { display: grid; gap: 8px; max-height: 540px; overflow: auto; }
-  .comentario { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--panel-2); }
-  .comentario.nuevo { animation: entrar .5s ease-out; border-color: var(--accent); }
+  .comentarios { display: grid; gap: 8px; max-height: 560px; overflow: auto; }
+  .comentario { border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px; background: var(--panel); }
+  .comentario.nuevo { animation: entrar .5s ease-out; border-color: var(--navy); }
+  .comentario.relator { border-left: 4px solid var(--oro); background: #fffbeb; }
   @keyframes entrar { from { opacity: 0; transform: translateY(-4px); } }
   .comentario .cab { display: flex; gap: 8px; align-items: center; font-size: 13px; }
   .comentario .cab small { color: var(--muted); margin-left: auto; }
   .comentario p { margin: 4px 0 0; overflow-wrap: anywhere; }
-  .tag { font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 4px; color: #fff; }
-  .linea { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  .linea li { display: grid; grid-template-columns: 42px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; background: var(--panel-2); }
-  .linea .min { font-weight: 800; font-variant-numeric: tabular-nums; }
-  .stats-tabla { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
-  .stats-tabla td { padding: 5px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-  .stats-tabla td:first-child, .stats-tabla td:last-child { width: 25%; font-weight: 700; }
+  .tag { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; color: #fff; letter-spacing: .04em; }
+  .linea { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .linea li { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--panel-2); }
+  .linea .min { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--navy); }
+  .stats-tabla { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+  .stats-tabla td { padding: 7px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .stats-tabla td:first-child, .stats-tabla td:last-child { width: 25%; font-weight: 800; }
   .stats-tabla td:last-child { text-align: right; }
-  .stats-tabla td:nth-child(2) { text-align: center; color: var(--muted); }
+  .stats-tabla td:nth-child(2) { text-align: center; color: var(--muted); font-size: 13px; }
   svg.grafico { width: 100%; height: auto; display: block; }
   svg.grafico text { fill: var(--muted); font: 11px system-ui, sans-serif; }
-  .ranking { display: grid; gap: 6px; margin-top: 10px; }
-  .barra { position: relative; border-radius: 6px; background: var(--panel-2); overflow: hidden; padding: 5px 9px; font-size: 13px; display: flex; justify-content: space-between; }
-  .barra i { position: absolute; inset: 0 auto 0 0; background: var(--accent); opacity: .18; }
-  .barra span { position: relative; }
-  .encuesta .fila { display: flex; gap: 8px; flex-wrap: wrap; }
-  .encuesta select { flex: 1; min-width: 0; }
+
+  /* prode */
+  .prode-form { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .prode-form .eq { font-size: 14px; }
+  .goles { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .goles input { width: 54px; padding: 8px 4px; text-align: center; font-size: 22px; font-weight: 800; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); color: var(--navy); font-variant-numeric: tabular-nums; }
+  .goles input:focus { outline: 2px solid var(--navy); outline-offset: 1px; background: #fff; }
+  .prode-acc { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .reparto { display: flex; height: 28px; border-radius: 999px; overflow: hidden; font-size: 12px; font-weight: 800; color: #fff; margin: 8px 0 6px; background: var(--panel-2); }
+  .reparto div { display: grid; place-items: center; min-width: 0; white-space: nowrap; overflow: hidden; }
+  .reparto .e { background: #98a2b3; }
+  .leyenda { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); gap: 8px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--chip); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .pts { font-size: 12px; font-weight: 800; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .pts.exacto { background: var(--verde); color: #fff; }
+  .pts.resultado { background: #e6f4ec; color: var(--verde); }
+  .pts.ninguno, .pts.pend { background: var(--chip); color: var(--muted); }
+  table.posiciones td, table.posiciones th { font-variant-numeric: tabular-nums; }
+  table.posiciones td.n, table.posiciones th.n { text-align: right; }
+  table.posiciones tr.yo td { background: #eef2f9; font-weight: 800; }
+  table.posiciones .alias { display: flex; align-items: center; gap: 8px; }
+  table.posiciones .escudo { width: 22px; height: 22px; font-size: 8px; }
+  .abierto { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: inherit; font-weight: 400; background: var(--panel); }
+  .abierto:hover { border-color: var(--navy); text-decoration: none; }
+  .abierto .vs { flex: 1; min-width: 0; font-weight: 700; }
+  .abierto small { color: var(--muted); display: block; font-weight: 400; }
 
   /* selección */
-  .ficha { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-  .datos { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 6px; color: var(--muted); font-size: 14px; }
-  .datos b { color: var(--text); display: block; font-size: 17px; }
+  .ficha { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .datos { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 8px; color: var(--muted); font-size: 13px; }
+  .datos b { color: var(--navy); display: block; font-size: 18px; }
   table.plantel { width: 100%; border-collapse: collapse; font-size: 14px; }
-  table.plantel th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; padding: 6px; border-bottom: 1px solid var(--line); }
-  table.plantel td { padding: 6px; border-bottom: 1px solid var(--line); }
+  table.plantel th { text-align: left; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  table.plantel td { padding: 8px 6px; border-bottom: 1px solid var(--line); }
   .tabla-scroll { overflow-x: auto; }
 
   /* modal y avisos */
-  dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); padding: 20px; width: min(420px, calc(100vw - 32px)); }
-  dialog::backdrop { background: rgba(5, 10, 20, .55); }
-  dialog form { display: grid; gap: 12px; }
-  dialog label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
-  dialog input, dialog select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
+  dialog { border: 0; border-radius: 18px; background: var(--panel); color: var(--text); padding: 24px; width: min(420px, calc(100vw - 32px)); box-shadow: 0 24px 60px rgba(10, 31, 68, .25); }
+  dialog::backdrop { background: rgba(10, 31, 68, .45); }
+  dialog form { display: grid; gap: 14px; }
+  dialog label { display: grid; gap: 5px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  dialog input, dialog select { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
   .acciones { display: flex; gap: 8px; justify-content: flex-end; }
   #avisos { position: fixed; right: 16px; bottom: 16px; display: grid; gap: 8px; z-index: 20; max-width: calc(100vw - 32px); }
-  .aviso { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 8px; padding: 10px 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15); font-size: 14px; max-width: 360px; }
-  .aviso.err { border-left-color: var(--err); }
+  .aviso { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--verde); border-radius: 12px; padding: 11px 14px; box-shadow: 0 10px 30px rgba(10, 31, 68, .12); font-size: 14px; max-width: 360px; }
+  .aviso.err { border-left-color: var(--rojo); }
   .aviso small { display: block; color: var(--muted); font-size: 11px; }
-  .pie { color: var(--muted); font-size: 13px; text-align: center; padding: 8px 0 24px; }
+  .pie { color: var(--muted); font-size: 12px; text-align: center; padding: 18px 0 30px; border-top: 1px solid var(--line); }
 </style>
 </head>
 <body>
 <header class="top">
   <div class="cont">
-    <a class="marca" href="#/">FIXTURE <span>2030</span></a>
+    <a class="marca" href="#/" aria-label="Inicio"><img src="img/logo-mundial-2030.webp" alt="FIFA World Cup 2030"><span>Fixture<br>2030</span></a>
     <nav>
       <a href="#/" data-nav="fixture">Fixture</a>
+      <a href="#/grupos" data-nav="grupos">Grupos</a>
       <a href="#/selecciones" data-nav="selecciones">Selecciones</a>
+      <a href="#/prode" data-nav="prode">Prode</a>
       <a href="../demo/">Integración</a>
       <a href="../docs" target="_blank" rel="noopener">API</a>
     </nav>
@@ -154,7 +222,7 @@
 </header>
 
 <main class="cont" id="app"></main>
-<div class="pie cont">Portal de demostración del TPO · Datos servidos por MongoDB, Neo4j, Cassandra, Redis, InfluxDB e IRIS a través de la API.</div>
+<div class="pie cont">Portal de demostración del TPO · Datos servidos por MongoDB, Neo4j, Cassandra, Redis e InfluxDB a través de la API.</div>
 
 <dialog id="dlg-login">
   <form id="form-login">
@@ -174,15 +242,34 @@
 // ===================================================================== utilidades
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const FUENTES = { mongodb: "MongoDB", neo4j: "Neo4j", cassandra: "Cassandra", redis: "Redis", influxdb: "InfluxDB", iris: "IRIS" };
-const fuente = (...bs) => `<span style="display:inline-flex;gap:4px;flex-wrap:wrap">${bs.map(b => `<span class="fuente" style="color:var(--${b})">${FUENTES[b]}</span>`).join("")}</span>`;
+const FUENTES = { mongodb: "MongoDB", neo4j: "Neo4j", cassandra: "Cassandra", redis: "Redis", influxdb: "InfluxDB" };
+// Base de datos de la que sale cada bloque: un punto con el color de la base y su nombre.
+const fuente = (...bs) => `<span style="display:inline-flex;gap:10px;flex-wrap:wrap">${bs.map(b => `<span class="fuente"><i style="background:var(--${b})"></i>${FUENTES[b]}</span>`).join("")}</span>`;
 const COLORES = { ARG: "#4a90c8", ESP: "#c60b1e", URU: "#1e4fa8", BRA: "#139a43", POR: "#8a1538", MAR: "#c1272d", PAR: "#d52b1e", FRA: "#21468b", ALE: "#3d3d3d", ENG: "#9b1c2c" };
 function colorEquipo(iso) {
   if (COLORES[iso]) return COLORES[iso];
   let h = 0; for (const c of iso) h = (h * 31 + c.charCodeAt(0)) % 360;
   return `hsl(${h} 55% 40%)`;
 }
-const escudo = (iso, grande) => `<span class="escudo${grande ? " g" : ""}" style="background:${colorEquipo(iso)}">${esc(iso)}</span>`;
+// Código FIFA -> ISO 3166 de los íconos de img/banderas (flag-icons 7.2.3, licencia MIT en LICENSE.txt).
+// Una selección sin bandera conserva el círculo de color con su sigla.
+const BANDERAS = {
+  ARG: "ar", NED: "nl", ROU: "ro", IRN: "ir", BRA: "br", BEL: "be", GRE: "gr", AUS: "au",
+  URU: "uy", CRO: "hr", MAR: "ma", KSA: "sa", COL: "co", DEN: "dk", SEN: "sn", QAT: "qa",
+  ECU: "ec", SUI: "ch", EGY: "eg", IRQ: "iq", CHI: "cl", AUT: "at", ALG: "dz", UZB: "uz",
+  PAR: "py", POL: "pl", NGA: "ng", JOR: "jo", PER: "pe", UKR: "ua", TUN: "tn", CHN: "cn",
+  BOL: "bo", SWE: "se", CMR: "cm", USA: "us", VEN: "ve", NOR: "no", CIV: "ci", MEX: "mx",
+  ESP: "es", SRB: "rs", GHA: "gh", CAN: "ca", POR: "pt", TUR: "tr", MLI: "ml", CRC: "cr",
+  FRA: "fr", SCO: "gb-sct", RSA: "za", JAM: "jm", ENG: "gb-eng", CZE: "cz", COD: "cd", PAN: "pa",
+  GER: "de", HUN: "hu", JPN: "jp", NZL: "nz", ITA: "it", WAL: "gb-wls", KOR: "kr", NCL: "nc",
+};
+const urlBandera = (iso) => BANDERAS[iso] ? `img/banderas/${BANDERAS[iso]}.svg` : null;
+const escudo = (iso, grande) => urlBandera(iso)
+  ? `<img class="escudo bandera${grande ? " g" : ""}" src="${urlBandera(iso)}" alt="${esc(iso)}" title="${esc(iso)}" loading="lazy">`
+  : `<span class="escudo${grande ? " g" : ""}" style="background:${colorEquipo(iso)}">${esc(iso)}</span>`;
+const banderita = (iso) => urlBandera(iso)
+  ? `<img class="banderita" src="${urlBandera(iso)}" alt="${esc(iso)}" title="${esc(iso)}">`
+  : `<span class="tag" style="background:${colorEquipo(iso)}">${esc(iso)}</span>`;
 const fechaLarga = (f) => f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "long", year: "numeric" }) : "Fecha a definir";
 
 function avisar(texto, error = false, detalle = "") {
@@ -233,7 +320,7 @@ function pintarUsuario() {
   }
   const min = sesion.ttl_restante_s != null ? Math.max(0, Math.round(sesion.ttl_restante_s / 60)) : "∞";
   const fav = sesion.equipo_favorito;
-  u.innerHTML = `${fav ? `<span class="escudo" style="width:26px;height:26px;font-size:9px;background:${colorEquipo(fav)}">${esc(fav)}</span>` : ""}
+  u.innerHTML = `${fav ? escudo(fav) : ""}
     <span><b>${esc(sesion.alias)}</b> <small>${esc(sesion.id_sesion)} · ${min} min</small></span>
     <button class="btn sec" id="btn-salir">Salir</button>`;
   $("#btn-salir").onclick = async () => {
@@ -285,13 +372,15 @@ async function ruta() {
   limpiarTimers();
   const [_, seccion, id] = (location.hash || "#/").split("/");
   document.querySelectorAll("nav a[data-nav]").forEach(a => a.classList.toggle("activo",
-    a.dataset.nav === (seccion === "selecciones" || seccion === "seleccion" ? "selecciones" : seccion === "" || seccion === "partido" ? "fixture" : "")));
+    a.dataset.nav === (seccion === "selecciones" || seccion === "seleccion" ? "selecciones" : seccion === "prode" ? "prode" : seccion === "grupos" ? "grupos" : seccion === "" || seccion === "partido" ? "fixture" : "")));
   const app = $("#app");
   app.innerHTML = `<p class="vacio">Cargando…</p>`;
   try {
     if (seccion === "partido" && id) await vistaPartido(app, decodeURIComponent(id));
     else if (seccion === "seleccion" && id) await vistaSeleccion(app, decodeURIComponent(id));
     else if (seccion === "selecciones") await vistaSelecciones(app);
+    else if (seccion === "prode") await vistaProde(app);
+    else if (seccion === "grupos") await vistaGrupos(app);
     else await vistaFixture(app);
   } catch (e) {
     app.innerHTML = `<div class="panel"><h2>No se pudo cargar la página</h2><p>${esc(e.message)}</p><p class="vacio">${esc(e.codigo ?? "")}</p></div>`;
@@ -301,12 +390,15 @@ async function ruta() {
 window.addEventListener("hashchange", ruta);
 
 // ===================================================================== vistas
-function tarjetaPartido(p, acta, goles) {
+const claseEstado = (est) => est === "En Juego" ? "vivo" : est === "Finalizado" ? "fin" : "";
+const etiquetaFase = (p) => p.grupo ? `Grupo ${p.grupo} · Fecha ${p.jornada}` : (p.fase ?? "");
+function tarjetaPartido(p) {
   const [loc, vis] = ordenEquipos(p);
-  const est = acta ? acta.estado : null;
-  const claseEst = est === "En Juego" ? "vivo" : est === "Finalizado" ? "fin" : "";
+  const goles = p.estado === "Programado" ? null : p.goles;
+  const est = p.estado ?? "Programado";
+  const claseEst = claseEstado(est);
   return `<a class="partido" href="#/partido/${esc(p.codigo_partido)}">
-    <div class="meta"><span>${esc(p.fase ?? "")} · ${esc(p.codigo_partido)}</span>${est ? `<span class="estado ${claseEst}">${claseEst === "vivo" ? '<span class="punto"></span>' : ""}${esc(est)}</span>` : `<span class="estado">Programado</span>`}</div>
+    <div class="meta"><span>${esc(etiquetaFase(p))} · ${esc(p.codigo_partido)}</span><span class="estado ${claseEst}">${claseEst === "vivo" ? '<span class="punto"></span>' : ""}${esc(est)}</span></div>
     <div class="versus">
       <div class="eq">${escudo(loc.codigo_iso)}<b>${esc(loc.nombre ?? loc.codigo_iso)}</b></div>
       <div class="marcador">${goles ? `${goles[loc.codigo_iso] ?? 0} - ${goles[vis.codigo_iso] ?? 0}` : "vs"}</div>
@@ -327,22 +419,83 @@ async function golesPartido(codigo) {
   return { goles: g, eventos: r.eventos };
 }
 
+// Posiciones de un grupo con los partidos finalizados (goles de Neo4j, selecciones de MongoDB).
+// Orden: puntos, diferencia de gol, goles a favor y, sin partidos jugados, ranking FIFA.
+function posicionesGrupo(letra, eqs, lista) {
+  const filas = new Map(eqs.filter(e => e.grupo === letra).map(e => [e.codigo_iso, { e, pj: 0, g: 0, em: 0, p: 0, gf: 0, gc: 0, pts: 0 }]));
+  for (const pa of lista) {
+    if (pa.grupo !== letra || pa.estado !== "Finalizado") continue;
+    const [l, v] = ordenEquipos(pa);
+    const gl = pa.goles[l.codigo_iso] ?? 0, gv = pa.goles[v.codigo_iso] ?? 0;
+    for (const [iso, a, b] of [[l.codigo_iso, gl, gv], [v.codigo_iso, gv, gl]]) {
+      const f = filas.get(iso);
+      if (!f) continue;
+      f.pj++; f.gf += a; f.gc += b;
+      if (a > b) { f.g++; f.pts += 3; } else if (a === b) { f.em++; f.pts += 1; } else f.p++;
+    }
+  }
+  return [...filas.values()].sort((x, y) => y.pts - x.pts || (y.gf - y.gc) - (x.gf - x.gc) || y.gf - x.gf || x.e.ranking_fifa - y.e.ranking_fifa);
+}
+
+const filtroFixture = { grupo: "", estado: "" }; // se conserva al volver al fixture
 async function vistaFixture(app) {
   const [lista, eqs] = await Promise.all([partidos(), equipos().catch(() => [])]);
-  const extra = await Promise.all(lista.map(p => Promise.all([
-    api(`/partidos-oficiales/${p.codigo_partido}`).catch(() => null),
-    golesPartido(p.codigo_partido),
-  ])));
-  const grupos = {};
-  for (const e of eqs) (grupos[e.grupo] ??= []).push(e);
+  const letras = [...new Set(eqs.map(e => e.grupo))].sort();
+  const ESTADOS = [["", "Todos"], ["En Juego", "En juego"], ["Programado", "Programados"], ["Finalizado", "Finalizados"]];
   app.innerHTML = `
-    <h1>Copa Mundial 2030</h1>
-    <p class="sub">Argentina · Uruguay · Paraguay · España · Portugal · Marruecos. Elegí un partido para seguirlo en vivo.</p>
-    <div class="cabpanel"><h2>Partidos</h2>${fuente("neo4j", "iris")}</div>
-    <div class="partidos">${lista.map((p, i) => tarjetaPartido(p, extra[i][0], extra[i][1]?.goles)).join("") || '<p class="vacio">No hay partidos cargados en Neo4j.</p>'}</div>
-    <div class="cabpanel" style="margin-top:28px"><h2>Grupos</h2>${fuente("mongodb")}</div>
-    <div class="grupos">${Object.keys(grupos).sort().map(g => `<div class="panel grupo"><h3>Grupo ${esc(g)}</h3>
-      ${grupos[g].map(e => `<a class="fila-eq" href="#/seleccion/${esc(e.codigo_iso)}">${escudo(e.codigo_iso)}<span>${esc(e.nombre)}</span><small>#${e.ranking_fifa}</small></a>`).join("")}</div>`).join("")}</div>`;
+    <div class="portada"><div><h1>Copa Mundial de la FIFA 2030</h1>
+      <p>Marruecos · Portugal · España, con el Centenario en Uruguay, Argentina y Paraguay. Elegí un partido para seguirlo en vivo o <a href="#/prode">jugá al prode</a>.</p></div></div>
+    <div class="cabpanel"><h2>Partidos</h2>${fuente("neo4j")}</div>
+    <div class="filtros">
+      <select id="f-grupo" aria-label="Grupo">
+        <option value="">Todos los grupos</option>${letras.map(l => `<option value="${esc(l)}">Grupo ${esc(l)}</option>`).join("")}
+        <option value="-">Partidos de muestra (hitos 5–8)</option>
+      </select>
+      ${ESTADOS.map(([v, t]) => `<button class="filtro" data-estado="${esc(v)}">${t}</button>`).join("")}
+      <small style="color:var(--muted)" id="f-cuenta"></small>
+    </div>
+    <div id="lista-partidos"></div>`;
+
+  const pintar = () => {
+    const visibles = lista.filter(p => (!filtroFixture.grupo || (filtroFixture.grupo === "-" ? !p.grupo : p.grupo === filtroFixture.grupo))
+      && (!filtroFixture.estado || p.estado === filtroFixture.estado));
+    const porDia = new Map();
+    for (const p of visibles) { if (!porDia.has(p.fecha)) porDia.set(p.fecha, []); porDia.get(p.fecha).push(p); }
+    $("#lista-partidos").innerHTML = visibles.length
+      ? [...porDia].map(([dia, ps]) => `<div class="dia">${esc(fechaLarga(dia))}</div><div class="partidos">${ps.map(tarjetaPartido).join("")}</div>`).join("")
+      : '<p class="vacio">No hay partidos con ese filtro.</p>';
+    $("#f-cuenta").textContent = `${visibles.length} partido${visibles.length === 1 ? "" : "s"}`;
+    document.querySelectorAll(".filtro").forEach(b => b.classList.toggle("activo", b.dataset.estado === filtroFixture.estado));
+  };
+  $("#f-grupo").value = filtroFixture.grupo;
+  $("#f-grupo").onchange = (e) => { filtroFixture.grupo = e.target.value; pintar(); };
+  document.querySelectorAll(".filtro").forEach(b => b.onclick = () => { filtroFixture.estado = b.dataset.estado; pintar(); });
+  pintar();
+}
+
+async function vistaGrupos(app) {
+  const [lista, eqs] = await Promise.all([partidos(), equipos().catch(() => [])]);
+  const letras = [...new Set(eqs.map(e => e.grupo))].sort();
+  const deGrupo = lista.filter(p => p.grupo);
+  const jugados = deGrupo.filter(p => p.estado === "Finalizado").length;
+  const enJuego = deGrupo.filter(p => p.estado === "En Juego").length;
+  const dg = (f) => `${f.gf - f.gc > 0 ? "+" : ""}${f.gf - f.gc}`;
+  app.innerHTML = `
+    <h1>Fase de grupos</h1>
+    <p class="sub">${jugados} de ${deGrupo.length} partidos jugados${enJuego ? ` · ${enJuego} en juego` : ""}. Clasifican los dos primeros de cada grupo.
+      Cuentan solo los partidos finalizados. ${fuente("neo4j", "mongodb")}</p>
+    <div class="grupos grupos-pos">${letras.map(g => `<div class="panel grupo">
+      <div class="cabpanel" style="margin-bottom:8px"><h3 style="margin:0">Grupo ${esc(g)}</h3><a href="#/" data-grupo="${esc(g)}" style="font-size:13px">Ver partidos</a></div>
+      <div class="tabla-scroll"><table class="tabla-grupo"><thead><tr><th>#</th><th>Selección</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>
+      ${posicionesGrupo(g, eqs, lista).map((f, i) => `<tr class="${i < 2 && f.pj ? "clasifica" : ""}"><td>${i + 1}</td>
+        <td><a href="#/seleccion/${esc(f.e.codigo_iso)}">${escudo(f.e.codigo_iso)}${esc(f.e.nombre)}</a></td>
+        <td>${f.pj}</td><td>${f.g}</td><td>${f.em}</td><td>${f.p}</td><td>${f.gf}</td><td>${f.gc}</td><td>${dg(f)}</td><td><b>${f.pts}</b></td></tr>`).join("")}
+      </tbody></table></div></div>`).join("")}</div>`;
+  // "Ver partidos" abre el fixture ya filtrado por ese grupo.
+  document.querySelectorAll("[data-grupo]").forEach(a => a.addEventListener("click", () => {
+    filtroFixture.grupo = a.dataset.grupo;
+    filtroFixture.estado = "";
+  }));
 }
 
 async function vistaSelecciones(app) {
@@ -379,7 +532,7 @@ async function vistaSeleccion(app, iso) {
         <div class="tabla-scroll"><table class="plantel"><thead><tr><th>#</th><th>Jugador</th><th>Pos.</th><th>Edad</th><th>Club</th></tr></thead>
         <tbody>${jug.map(j => `<tr><td>${j.dorsal ?? ""}</td><td>${esc(j.nombre)}</td><td>${esc(j.posicion ?? "")}</td><td>${j.edad ?? ""}</td><td>${esc(j.club_actual ?? "")}</td></tr>`).join("")}</tbody></table></div></div>
       <div class="panel"><div class="cabpanel"><h2>Partidos</h2>${fuente("neo4j")}</div>
-        ${suyos.length ? `<div class="grid">${suyos.map(p => tarjetaPartido(p, null, null)).join("")}</div>` : '<p class="vacio">Todavía no tiene partidos cargados en el fixture.</p>'}</div>
+        ${suyos.length ? `<div class="grid">${suyos.map(tarjetaPartido).join("")}</div>` : '<p class="vacio">Todavía no tiene partidos cargados en el fixture.</p>'}</div>
     </div>`;
 }
 
@@ -389,26 +542,26 @@ async function vistaPartido(app, codigo) {
   const p = lista.find(x => x.codigo_partido === codigo);
   if (!p) throw new ErrorApi(404, { error: { mensaje: `No existe el partido ${codigo}.`, codigo: "RECURSO_NO_ENCONTRADO" } });
   const [loc, vis] = ordenEquipos(p);
-  const [acta, ev, planteles] = await Promise.all([
-    api(`/partidos-oficiales/${codigo}`).catch(() => null),
-    golesPartido(codigo),
-    Promise.all([loc, vis].map(e => api(`/portal/api/equipos/${e.codigo_iso}/plantel`).catch(() => null))),
-  ]);
+  const ev = await golesPartido(codigo);
   const goles = ev?.goles ?? {};
-  const est = acta?.estado;
+  const est = p.estado ?? "Programado";
+  const siguientes = { "Programado": ["En Juego", "Finalizado"], "En Juego": ["Finalizado"] }[est] ?? [];
   app.innerHTML = `
     <section class="hero">
       <div class="versus">
         <a class="eq" href="#/seleccion/${esc(loc.codigo_iso)}">${escudo(loc.codigo_iso, true)}<b>${esc(loc.nombre ?? loc.codigo_iso)}</b></a>
-        <div class="marcador">${goles[loc.codigo_iso] ?? 0} - ${goles[vis.codigo_iso] ?? 0}</div>
+        <div class="centro"><div class="marcador" id="marcador">${goles[loc.codigo_iso] ?? 0} - ${goles[vis.codigo_iso] ?? 0}</div>
+          <div class="reloj" id="reloj"></div></div>
         <a class="eq der" href="#/seleccion/${esc(vis.codigo_iso)}">${escudo(vis.codigo_iso, true)}<b>${esc(vis.nombre ?? vis.codigo_iso)}</b></a>
       </div>
       <div class="info">
-        <span class="estado">${est === "En Juego" ? '<span class="punto"></span>' : ""}${esc(est ?? "Programado")}</span>
+        <span class="estado">${est === "En Juego" ? '<span class="punto"></span>' : ""}${esc(est)}</span>
         <span>${esc(fechaLarga(p.fecha))}</span><span>${esc(p.sede?.nombre ?? "")}${p.sede?.ciudad ? ", " + esc(p.sede.ciudad) : ""}</span>
-        <span>${esc(p.fase ?? "")}</span>${acta ? `<span>Árbitro: ${esc(acta.arbitro.nombre)} ${esc(acta.arbitro.apellido)}</span>` : ""}
+        <span>${esc(etiquetaFase(p))}</span>${p.arbitro ? `<span>Árbitro: ${esc(p.arbitro.nombre)} ${esc(p.arbitro.apellido)}</span>` : ""}
       </div>
       <div class="vivo-strip" id="vivo"><span>Cargando datos en vivo…</span></div>
+      ${sesion && siguientes.length ? `<div class="demo-estado" id="demo-estado"><span>Control de la demo:</span>
+        ${siguientes.map(e => `<button class="btn sec" data-estado="${esc(e)}" title="${e === "En Juego" ? "Simula los 90 minutos en tiempo real: eventos en Neo4j, estadísticas en InfluxDB, relato en Cassandra y reloj en Redis" : "Cierra el partido en Neo4j"}">${e === "En Juego" ? "▶ Iniciar partido (simulación)" : "Finalizar partido"}</button>`).join("")}</div>` : ""}
     </section>
     <div class="grid g2">
       <div class="grid">
@@ -420,29 +573,72 @@ async function vistaPartido(app, codigo) {
         </div>
       </div>
       <div class="grid">
+        <div class="panel"><div class="cabpanel"><h2>Prode</h2>${fuente("mongodb", "neo4j")}</div><div id="prode"><p class="vacio">Cargando…</p></div></div>
         <div class="panel"><div class="cabpanel"><h2>Estadísticas</h2>${fuente("influxdb")}</div><div id="stats"><p class="vacio">Cargando…</p></div></div>
-        <div class="panel encuesta"><div class="cabpanel"><h2>Figura del partido</h2>${fuente("redis", "mongodb")}</div><div id="encuesta"></div></div>
-        <div class="panel"><div class="cabpanel"><h2>Cronología</h2>${fuente("neo4j", "iris")}</div><div id="cronologia"></div></div>
+        <div class="panel"><div class="cabpanel"><h2>Cronología</h2>${fuente("neo4j")}</div><div id="cronologia"></div></div>
       </div>
     </div>`;
 
-  pintarCronologia(ev?.eventos ?? [], acta);
+  pintarCronologia(ev?.eventos ?? []);
+  document.querySelectorAll("[data-estado]").forEach(b => b.addEventListener("click", async () => {
+    b.disabled = true;
+    try {
+      const nuevo = await api(`/portal/api/partidos/${codigo}/estado`, { metodo: "PUT", cuerpo: { estado: b.dataset.estado } });
+      delete cache.partidos; // el fixture cacheado quedó con el estado anterior
+      avisar(`${codigo} ahora está ${nuevo.estado} (Neo4j).`);
+      ruta();
+    } catch (e) { avisarError(e); b.disabled = false; }
+  }));
   pintarFormMuro(codigo, [loc, vis]);
   pintarEstadisticas(codigo, p, [loc, vis]);
+  pintarProde(codigo, loc, vis);
   $("#ver-muestra").onclick = async (e) => { e.preventDefault(); await cargarMuestra(codigo); };
 
-  const jugadores = new Map();
-  for (const pl of planteles) for (const j of pl?.jugadores ?? []) jugadores.set(j.id_jugador, j);
   let ultimoVivo = null;
   const refrescarVivo = async (visita) => {
     try {
       const v = await api(`/portal/api/partidos/${codigo}/${visita ? "visitas" : "vivo"}`, visita ? { metodo: "POST" } : {});
       ultimoVivo = v;
       $("#vivo").innerHTML = `<span><span class="punto"></span>Visitas <b>${v.visitas.toLocaleString("es-AR")}</b></span>
-        <span>Conectados <b>${v.conectados}</b></span><span>Votos figura <b>${v.encuesta.reduce((s, x) => s + x.votos, 0)}</b></span>
-        <span style="opacity:.8">Redis · contador, set y sorted set</span>`;
-      pintarEncuesta(codigo, v, jugadores, planteles);
+        <span>Conectados <b>${v.conectados}</b></span>
+        <span style="opacity:.8">Redis · contador y set</span>`;
+      await actualizarReloj(v.reloj);
     } catch (e) { $("#vivo").innerHTML = `<span>Datos en vivo no disponibles: ${esc(e.message)}</span>`; }
+  };
+  // Partido simulado: el reloj vive en Redis; con cada minuto nuevo se releen los eventos
+  // (Neo4j) y, cada 3 s, las estadísticas (InfluxDB). Al terminar se recarga la página.
+  let simCorriendo = false, ultimoMinuto = null, ultimasStats = 0, golesVistos = Object.values(goles).reduce((a, b) => a + b, 0);
+  const eventosVistos = new Set((ev?.eventos ?? []).map(e => e.id_evento));
+  const actualizarReloj = async (reloj) => {
+    const el = $("#reloj");
+    if (!el) return;
+    if (!reloj) { el.textContent = ""; return; }
+    if (!reloj.en_curso) {
+      el.className = "reloj fin";
+      el.textContent = est === "Finalizado" ? `Final · ${formatoMinuto(reloj.minuto)}` : formatoMinuto(reloj.minuto);
+      if (simCorriendo) { simCorriendo = false; delete cache.partidos; avisar("¡Terminó el partido! Estado Finalizado en Neo4j."); ruta(); }
+      return;
+    }
+    simCorriendo = true;
+    $("#demo-estado")?.remove();
+    el.className = "reloj";
+    el.innerHTML = `<span class="punto"></span>${formatoMinuto(reloj.minuto)}${reloj.minuto >= 90 ? ` <small style="opacity:.75;margin-left:4px">(+${reloj.adicion})</small>` : ""}`;
+    if (reloj.minuto === ultimoMinuto) return;
+    ultimoMinuto = reloj.minuto;
+    const r = await golesPartido(codigo);
+    if (r) {
+      const total = Object.values(r.goles).reduce((a, b) => a + b, 0);
+      const m = $("#marcador");
+      if (m) m.textContent = `${r.goles[loc.codigo_iso] ?? 0} - ${r.goles[vis.codigo_iso] ?? 0}`;
+      if (total > golesVistos && m) {
+        const gol = r.eventos.filter(e => /^gol/i.test(e.tipo)).at(-1);
+        m.classList.remove("gol"); void m.offsetWidth; m.classList.add("gol");
+        avisar(`⚽ ¡Gol${gol?.jugador ? ` de ${gol.jugador.nombre}` : ""}! (${formatoMinuto(gol?.minuto ?? reloj.minuto)})`);
+      }
+      golesVistos = total;
+      pintarCronologia(r.eventos, eventosVistos);
+    }
+    if (Date.now() - ultimasStats > 3000) { ultimasStats = Date.now(); pintarEstadisticas(codigo, p, [loc, vis]); }
   };
   const vistos = new Set();
   const refrescarMuro = async () => {
@@ -460,16 +656,19 @@ async function vistaPartido(app, codigo) {
   window.__refrescarMuro = refrescarMuro;
   window.__refrescarVivo = () => refrescarVivo(false);
   await Promise.all([refrescarVivo(true), refrescarMuro()]);
-  timers.push(setInterval(refrescarMuro, 5000), setInterval(() => refrescarVivo(false), 5000));
+  // En juego se consulta más seguido para ver avanzar el reloj, el marcador y el muro.
+  const enJuego = est === "En Juego";
+  timers.push(setInterval(refrescarMuro, enJuego ? 2000 : 5000), setInterval(() => refrescarVivo(false), enJuego ? 1000 : 5000));
 }
 
 function htmlComentario(c, nuevo) {
   const hora = new Date(c.creado_en).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const propio = sesion && c.id_usuario === sesion.usuario_id;
-  return `<div class="comentario${nuevo ? " nuevo" : ""}">
-    <div class="cab">${c.equipo_apoyado ? `<span class="tag" style="background:${colorEquipo(c.equipo_apoyado)}">${esc(c.equipo_apoyado)}</span>` : ""}
-      <b>${esc(c.usuario_alias ?? c.id_usuario)}</b>${propio ? '<span class="fuente">vos</span>' : ""}
-      <small>${c.minuto_partido != null ? c.minuto_partido + "' · " : ""}${hora}</small></div>
+  const relator = c.id_usuario === "U-0000"; // mensajes de la simulación del partido
+  return `<div class="comentario${nuevo ? " nuevo" : ""}${relator ? " relator" : ""}">
+    <div class="cab">${c.equipo_apoyado ? banderita(c.equipo_apoyado) : ""}
+      <b>${relator ? "📣 " : ""}${esc(c.usuario_alias ?? c.id_usuario)}</b>${propio ? '<span class="fuente">vos</span>' : ""}
+      <small>${c.minuto_partido != null ? formatoMinuto(c.minuto_partido) + " · " : ""}${hora}</small></div>
     <p>${esc(c.texto)}</p></div>`;
 }
 
@@ -486,7 +685,6 @@ function pintarFormMuro(codigo, eqs) {
     <div class="fila">
       <label style="font-size:13px;color:var(--muted)">Alentás a
         <select name="equipo_apoyado">${eqs.map(e => `<option value="${esc(e.codigo_iso)}"${e.codigo_iso === pref ? " selected" : ""}>${esc(e.nombre ?? e.codigo_iso)}</option>`).join("")}</select></label>
-      <label style="font-size:13px;color:var(--muted)">Minuto <input name="minuto" type="number" min="0" max="130" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)"></label>
       <span class="contador" id="cont-car">0/280</span>
       <button class="btn" type="submit">Publicar</button>
     </div></form>`;
@@ -497,8 +695,7 @@ function pintarFormMuro(codigo, eqs) {
     const btn = form.querySelector("button"); btn.disabled = true;
     try {
       const c = await api(`/portal/api/partidos/${codigo}/comentarios`, { metodo: "POST", cuerpo: {
-        texto: form.texto.value, equipo_apoyado: form.equipo_apoyado.value,
-        minuto_partido: form.minuto.value === "" ? null : Number(form.minuto.value) } });
+        texto: form.texto.value, equipo_apoyado: form.equipo_apoyado.value } });
       form.texto.value = ""; $("#cont-car").textContent = "0/280";
       avisar(`Comentario publicado en Cassandra (ventana ${c.ventana}).`);
       await window.__refrescarMuro?.();
@@ -516,52 +713,32 @@ async function cargarMuestra(codigo) {
   } catch (e) { avisarError(e); }
 }
 
-function pintarCronologia(eventos, acta) {
-  const items = [
-    ...eventos.map(e => ({ min: e.minuto, txt: `${esc(e.tipo)}${e.jugador ? ` · ${esc(e.jugador.nombre)}` : ""}`, iso: e.jugador?.id_jugador.split("-")[0], src: "neo4j" })),
-    ...(acta?.eventos ?? []).map(e => ({ min: e.minuto, txt: `${esc(e.tipo)}${e.descripcion ? ` · ${esc(e.descripcion)}` : ""}`, src: "iris" })),
-  ].sort((a, b) => a.min - b.min);
-  $("#cronologia").innerHTML = items.length ? `<ul class="linea">${items.map(i => `<li><span class="min">${i.min}'</span>
-    <span>${i.iso ? `<span class="tag" style="background:${colorEquipo(i.iso)}">${esc(i.iso)}</span> ` : ""}${i.txt}</span>${fuente(i.src)}</li>`).join("")}</ul>`
+const ICONOS = { "Gol": "⚽", "Tarjeta Amarilla": "🟨", "Tarjeta Roja": "🟥" };
+const formatoMinuto = (m) => m > 90 ? `90+${m - 90}'` : `${m}'`;
+function pintarCronologia(eventos, vistos) {
+  const items = eventos.map(e => ({ min: e.minuto, nuevo: vistos ? !vistos.has(e.id_evento) : false,
+      txt: `${ICONOS[e.tipo] ? ICONOS[e.tipo] + " " : ""}${esc(e.tipo)}${e.jugador ? ` · ${esc(e.jugador.nombre)}` : ""}`, iso: e.jugador?.id_jugador.split("-")[0] }))
+    .sort((a, b) => a.min - b.min);
+  eventos.forEach(e => vistos?.add(e.id_evento));
+  if (!$("#cronologia")) return;
+  $("#cronologia").innerHTML = items.length ? `<ul class="linea">${items.map(i => `<li${i.nuevo ? ' class="nuevo"' : ""}><span class="min">${formatoMinuto(i.min)}</span>
+    <span>${i.iso ? `${banderita(i.iso)} ` : ""}${i.txt}</span><span></span></li>`).join("")}</ul>`
     : '<p class="vacio">Sin eventos registrados.</p>';
 }
 
-function pintarEncuesta(codigo, v, jugadores, planteles) {
-  const cont = $("#encuesta");
-  if (!cont) return;
-  const total = v.encuesta.reduce((s, x) => s + x.votos, 0) || 1;
-  const nombre = (id) => jugadores.get(id)?.nombre ?? id;
-  const ranking = v.encuesta.length ? `<div class="ranking">${v.encuesta.map(x => `<div class="barra"><i style="width:${(x.votos / total * 100).toFixed(1)}%"></i>
-      <span><span class="tag" style="background:${colorEquipo(x.id_jugador.split("-")[0])}">${esc(x.id_jugador)}</span> ${esc(nombre(x.id_jugador))}</span><span><b>${x.votos}</b></span></div>`).join("")}</div>`
-    : '<p class="vacio">Todavía no hay votos.</p>';
-  let accion;
-  if (!sesion) accion = `<button class="btn sec" id="login-voto">Ingresá para votar</button>`;
-  else if (v.ya_voto) accion = `<p class="vacio" style="margin:0">Ya votaste en este partido (un voto por usuario, set de votantes en Redis).</p>`;
-  else accion = `<form class="fila" id="form-voto"><select name="id_jugador" required><option value="">Elegí un jugador…</option>
-      ${planteles.filter(Boolean).map(pl => `<optgroup label="${esc(pl.equipo.nombre)}">${pl.jugadores.map(j => `<option value="${esc(j.id_jugador)}">${j.dorsal ?? ""} · ${esc(j.nombre)} (${esc(j.posicion ?? "")})</option>`).join("")}</optgroup>`).join("")}
-    </select><button class="btn" type="submit">Votar</button></form>`;
-  // No repintar el formulario mientras el usuario está eligiendo.
-  if (cont.contains(document.activeElement) || $("#form-voto select")?.value) return;
-  cont.innerHTML = accion + ranking;
-  $("#login-voto")?.addEventListener("click", abrirLogin);
-  $("#form-voto")?.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    try {
-      await api(`/portal/api/partidos/${codigo}/encuesta`, { metodo: "POST", cuerpo: { id_jugador: ev.target.id_jugador.value } });
-      avisar("Voto registrado (ZINCRBY en Redis).");
-      ev.target.id_jugador.value = ""; document.activeElement?.blur(); // libera el repintado
-      await window.__refrescarVivo?.();
-    } catch (e) { avisarError(e); }
-  });
-}
-
 async function pintarEstadisticas(codigo, p, eqs) {
-  const cont = $("#stats");
+  let cont = $("#stats");
+  if (!cont) return;
   if (!p.fecha) { cont.innerHTML = '<p class="vacio">Partido sin fecha.</p>'; return; }
-  const desde = `${p.fecha}T20:00:00Z`, hasta = `${p.fecha}T22:00:00Z`;
+  // Partido simulado: las mediciones arrancan en la hora real de inicio (un punto por minuto de juego).
+  const desde = p.inicio ?? `${p.fecha}T20:00:00Z`;
+  const hasta = p.inicio ? new Date(Date.parse(p.inicio) + 2 * 3600e3).toISOString() : `${p.fecha}T22:00:00Z`;
+  const resolucion = p.inicio ? "1m" : "5m";
   let r;
-  try { r = await api(`/partidos/${codigo}/estadisticas?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&resolucion=5m`); }
+  try { r = await api(`/partidos/${codigo}/estadisticas?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&resolucion=${resolucion}`); }
   catch (e) { cont.innerHTML = `<p class="vacio">${esc(e.message)}</p>`; return; }
+  cont = $("#stats"); // la consulta es asíncrona: el usuario pudo cambiar de página
+  if (!cont) return;
   if (!r.series.length) { cont.innerHTML = '<p class="vacio">Sin mediciones para este partido.</p>'; return; }
   const serie = (iso) => r.series.find(s => s.equipo === iso)?.puntos ?? [];
   const [a, b] = eqs.map(e => e.codigo_iso);
@@ -580,9 +757,9 @@ async function pintarEstadisticas(codigo, p, eqs) {
   const fila = (lbl, va, vb, fmt = (v) => v ?? "—") => `<tr><td style="color:${colorEquipo(a)}">${fmt(va)}</td><td>${lbl}</td><td style="color:${colorEquipo(b)}">${fmt(vb)}</td></tr>`;
   cont.innerHTML = `
     <div style="display:flex;gap:14px;font-size:13px;margin-bottom:4px">
-      <span><span class="tag" style="background:${colorEquipo(a)}">${esc(a)}</span> posesión</span>
-      <span><span class="tag" style="background:${colorEquipo(b)}">${esc(b)}</span> posesión</span>
-      <span style="margin-left:auto;color:var(--muted)">promedio cada 5 min</span></div>
+      <span><span class="muestra-linea" style="border-top-color:${colorEquipo(a)}"></span> ${banderita(a)} posesión</span>
+      <span><span class="muestra-linea" style="border-top-color:${colorEquipo(b)};border-top-style:dashed"></span> ${banderita(b)} posesión</span>
+      <span style="margin-left:auto;color:var(--muted)">promedio cada ${resolucion === "1m" ? "minuto" : "5 min"}</span></div>
     <svg class="grafico" viewBox="0 0 ${W} ${H}" role="img" aria-label="Posesión por equipo a lo largo del partido">
       ${ejeY}${ejeX}
       <path d="${linea(a)}" fill="none" stroke="${colorEquipo(a)}" stroke-width="2.5" stroke-linejoin="round"/>
@@ -594,6 +771,127 @@ async function pintarEstadisticas(codigo, p, eqs) {
       ${fila("Tiros", ua.tiros_max, ub.tiros_max)}
       ${fila("Hinchas siguiendo", ua.usuarios_activos_max, ub.usuarios_activos_max, (v) => v == null ? "—" : v.toLocaleString("es-AR"))}
     </table>`;
+}
+
+// ===================================================================== prode
+const ACIERTO = { exacto: "pleno", resultado: "acertó el resultado", ninguno: "sin acierto" };
+const chipPuntos = (p) => p.puntos == null ? `<span class="pts pend">Pendiente</span>`
+  : `<span class="pts ${esc(p.acierto)}">+${p.puntos} · ${ACIERTO[p.acierto] ?? ""}</span>`;
+const momento = (f) => new Date(f).toLocaleString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+async function pintarProde(codigo, loc, vis) {
+  const cont = $("#prode");
+  if (!cont) return;
+  let r;
+  try { r = await api(`/portal/api/partidos/${codigo}/predicciones`); }
+  catch (e) { cont.innerHTML = `<p class="vacio">Prode no disponible: ${esc(e.message)}</p>`; return; }
+  if (!$("#prode")) return; // el usuario ya navegó a otra página
+  const mia = r.mi_prediccion;
+  const nombre = (e) => esc(e.nombre ?? e.codigo_iso);
+  let accion;
+  if (r.abierta && sesion) {
+    accion = `<form id="form-prode">
+      <div class="prode-form">
+        <div class="eq">${escudo(loc.codigo_iso)}<b>${nombre(loc)}</b></div>
+        <div class="goles"><input name="gl" type="number" min="0" max="20" required value="${mia?.goles_local ?? ""}" aria-label="Goles de ${nombre(loc)}">
+          –<input name="gv" type="number" min="0" max="20" required value="${mia?.goles_visitante ?? ""}" aria-label="Goles de ${nombre(vis)}"></div>
+        <div class="eq der">${escudo(vis.codigo_iso)}<b>${nombre(vis)}</b></div>
+      </div>
+      <div class="prode-acc"><button class="btn" type="submit">${mia ? "Actualizar pronóstico" : "Guardar pronóstico"}</button>
+        <small style="color:var(--muted)">${mia ? `Guardado el ${esc(momento(mia.actualizada_en))} · ` : ""}Podés cambiarlo hasta que empiece el partido.</small></div>
+    </form>`;
+  } else if (r.abierta) {
+    accion = `<div class="prode-acc"><button class="btn" id="login-prode">Ingresá para pronosticar</button>
+      <small style="color:var(--muted)">3 pts el resultado exacto, 1 pt el ganador o el empate.</small></div>`;
+  } else {
+    const real = r.resultado_real;
+    accion = `<p style="margin:0 0 8px">${real ? `Partido puntuado con el resultado <b>${real.goles_local} - ${real.goles_visitante}</b>.`
+      : `Pronósticos cerrados: el partido está <b>${esc(r.estado)}</b>.`}</p>`
+      + (mia ? `<p style="margin:0 0 12px">Tu pronóstico: <b>${mia.goles_local} - ${mia.goles_visitante}</b> ${chipPuntos(mia)}</p>`
+             : `<p class="vacio" style="margin:0 0 12px">No pronosticaste este partido.</p>`);
+  }
+  const t = r.total;
+  const seg = (n, cls, color, titulo) => n ? `<div class="${cls}" style="width:${(n / t * 100).toFixed(1)}%${color ? `;background:${color}` : ""}" title="${esc(titulo)}: ${n}">${Math.round(n / t * 100)}%</div>` : "";
+  const reparto = t ? `<div style="font-size:13px;color:var(--muted)">${t === 1 ? "Qué pronosticó 1 hincha" : `Qué pronosticaron ${t} hinchas`}</div>
+      <div class="reparto">${seg(r.local, "", colorEquipo(loc.codigo_iso), "Gana " + (loc.nombre ?? loc.codigo_iso))}${seg(r.empate, "e", "", "Empate")}${seg(r.visitante, "", colorEquipo(vis.codigo_iso), "Gana " + (vis.nombre ?? vis.codigo_iso))}</div>
+      <div class="leyenda"><span>Gana ${esc(loc.codigo_iso)} · ${r.local}</span><span>Empate · ${r.empate}</span><span>Gana ${esc(vis.codigo_iso)} · ${r.visitante}</span></div>
+      <div class="chips">${r.marcadores.map(m => `<span class="chip">${m.goles_local}-${m.goles_visitante} · ${m.cantidad} ${m.cantidad === 1 ? "voto" : "votos"}</span>`).join("")}</div>`
+    : `<p class="vacio">Todavía nadie pronosticó este partido.</p>`;
+  cont.innerHTML = accion + reparto;
+  $("#login-prode")?.addEventListener("click", abrirLogin);
+  $("#form-prode")?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = ev.target, btn = f.querySelector("button"); btn.disabled = true;
+    try {
+      const p = await api(`/portal/api/partidos/${codigo}/prediccion`, { metodo: "PUT",
+        cuerpo: { goles_local: Number(f.gl.value), goles_visitante: Number(f.gv.value) } });
+      avisar(`Pronóstico ${p.goles_local} - ${p.goles_visitante} guardado en MongoDB.`);
+      await pintarProde(codigo, loc, vis);
+    } catch (e) { avisarError(e); btn.disabled = false; }
+  });
+}
+
+async function vistaProde(app) {
+  const [lista, eqs] = await Promise.all([partidos(), equipos().catch(() => [])]);
+  const mias = sesion ? await api("/portal/api/predicciones").catch(() => []) : [];
+  const mia = new Map(mias.map(m => [m.codigo_partido, m]));
+  const programados = lista.filter(p => p.estado === "Programado");
+  const abiertos = programados.slice(0, 12); // los más próximos; el resto está en el fixture
+  const nombre = (iso) => eqs.find(e => e.codigo_iso === iso)?.nombre ?? iso;
+  app.innerHTML = `
+    <h1>Prode Mundial 2030</h1>
+    <p class="sub">Pronosticá el marcador de cada partido: <b>3 puntos</b> por el resultado exacto y <b>1 punto</b> por acertar el ganador o el empate.
+      Se puede pronosticar mientras el partido esté <i>Programado</i>; cuando pasa a <i>Finalizado</i> se puntúa con los goles cargados en Neo4j.</p>
+    <div class="grid g2">
+      <div class="panel">
+        <div class="cabpanel"><h2>Tabla de posiciones</h2>${fuente("mongodb")}</div>
+        <select id="hinchada" class="buscador" style="margin-bottom:12px" aria-label="Filtrar por hinchada">
+          <option value="">General: todos los hinchas</option>
+          ${eqs.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(e => `<option value="${esc(e.codigo_iso)}">Hinchas de ${esc(e.nombre)}</option>`).join("")}
+        </select>
+        <div id="tabla"><p class="vacio">Cargando…</p></div>
+      </div>
+      <div class="grid">
+        <div class="panel"><div class="cabpanel"><h2>Para pronosticar</h2>${fuente("neo4j", "mongodb")}</div>
+          ${abiertos.length ? `<div class="grid" style="gap:8px">${abiertos.map(p => {
+            const [l, v] = ordenEquipos(p), m = mia.get(p.codigo_partido);
+            return `<a class="abierto" href="#/partido/${esc(p.codigo_partido)}">${escudo(l.codigo_iso)}
+              <span class="vs">${esc(l.nombre ?? l.codigo_iso)} vs ${esc(v.nombre ?? v.codigo_iso)}<small>${esc(fechaLarga(p.fecha))} · ${esc(etiquetaFase(p))} · <span style="white-space:nowrap">${esc(p.codigo_partido)}</span></small></span>
+              ${escudo(v.codigo_iso)}<span class="pts ${m ? "resultado" : "exacto"}">${m ? `Tu pronóstico ${m.goles_local} - ${m.goles_visitante}` : "Pronosticar"}</span></a>`;
+          }).join("")}</div>
+          ${programados.length > abiertos.length ? `<p class="vacio" style="margin-top:10px">Y ${programados.length - abiertos.length} partidos programados más en el <a href="#/">fixture</a>.</p>` : ""}`
+          : '<p class="vacio">No hay partidos programados.</p>'}</div>
+        <div class="panel"><div class="cabpanel"><h2>Mis pronósticos</h2>${fuente("mongodb")}</div>
+          ${!sesion ? `<button class="btn" id="login-mias">Ingresá para ver tus pronósticos</button>`
+            : mias.length ? `<div class="tabla-scroll"><table class="plantel"><thead><tr><th>Partido</th><th>Pronóstico</th><th>Resultado</th><th>Puntos</th></tr></thead><tbody>
+              ${mias.map(m => `<tr><td><a href="#/partido/${esc(m.codigo_partido)}">${esc(m.codigo_partido)}</a> <small style="color:var(--muted)">${esc(nombre(m.equipo_local))} vs ${esc(nombre(m.equipo_visitante))}</small></td>
+                <td><b>${m.goles_local} - ${m.goles_visitante}</b></td>
+                <td>${m.resultado_real ? `${m.resultado_real.goles_local} - ${m.resultado_real.goles_visitante}` : "—"}</td><td>${chipPuntos(m)}</td></tr>`).join("")}
+              </tbody></table></div>`
+            : '<p class="vacio">Todavía no pronosticaste ningún partido.</p>'}
+        </div>
+      </div>
+    </div>`;
+  $("#login-mias")?.addEventListener("click", abrirLogin);
+  $("#hinchada").onchange = (e) => pintarTabla(e.target.value);
+  await pintarTabla("");
+}
+
+async function pintarTabla(equipo) {
+  const cont = $("#tabla");
+  let t;
+  try { t = await api(`/portal/api/posiciones?limit=50${equipo ? `&equipo=${encodeURIComponent(equipo)}` : ""}`); }
+  catch (e) { cont.innerHTML = `<p class="vacio">Tabla no disponible: ${esc(e.message)}</p>`; return; }
+  const fila = (f) => `<tr class="${sesion && f.usuario_id === sesion.usuario_id ? "yo" : ""}"><td>${f.posicion}</td>
+    <td><span class="alias">${f.equipo_favorito ? escudo(f.equipo_favorito) : ""}${esc(f.alias)}</span></td>
+    <td class="n"><b>${f.puntos}</b></td><td class="n">${f.exactos}</td><td class="n">${f.aciertos}</td><td class="n">${f.pronosticos}</td></tr>`;
+  const fuera = t.mi_fila && !t.filas.some(f => f.usuario_id === t.mi_fila.usuario_id);
+  cont.innerHTML = (t.filas.length ? `<div class="tabla-scroll"><table class="plantel posiciones">
+      <thead><tr><th>#</th><th>Hincha</th><th class="n">Pts</th><th class="n">Plenos</th><th class="n">Aciertos</th><th class="n">Jugados</th></tr></thead>
+      <tbody>${t.filas.map(fila).join("")}${fuera ? `<tr><td colspan="6" style="text-align:center;color:var(--muted)">…</td></tr>${fila(t.mi_fila)}` : ""}</tbody></table></div>
+      <p style="margin:10px 0 0;font-size:13px;color:var(--muted)">${t.total_participantes} participante${t.total_participantes === 1 ? "" : "s"}. A igualdad de puntos, desempata la cantidad de plenos.</p>`
+    : `<p class="vacio">${equipo ? "Ningún hincha de esa selección pronosticó todavía." : "Todavía no hay pronósticos."}</p>`)
+    + (t.pendientes.length ? `<p class="vacio">Sin puntuar por ahora (Neo4j no respondió): ${t.pendientes.map(esc).join(", ")}.</p>` : "");
 }
 
 // ===================================================================== inicio

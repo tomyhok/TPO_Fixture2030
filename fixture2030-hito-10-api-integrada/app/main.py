@@ -5,6 +5,7 @@
 Swagger UI: http://localhost:8000/docs   ·   OpenAPI: http://localhost:8000/openapi.json
 """
 
+import mimetypes
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,17 +18,20 @@ from app.config.settings import Settings, obtener_settings
 from app.core.http import instalar_manejadores, instalar_middleware, instalar_openapi
 from app.core.observabilidad import configurar_logs, logger
 from app.dependencias import Adaptadores, crear_adaptadores, crear_servicios
-from app.routes import actas, comentarios, equipos, estadisticas, partidos, portal, salud, sesiones
+from app.routes import comentarios, equipos, estadisticas, partidos, portal, salud, sesiones
 
 
-DESCRIPCION = """Seis lecturas representativas, una por motor: MongoDB, Neo4j,
-Cassandra, Redis, InfluxDB e IRIS. Contratos, validación y errores uniformes.
+DESCRIPCION = """Cinco lecturas representativas, una por motor: MongoDB, Neo4j,
+Cassandra, Redis e InfluxDB. Contratos, validación y errores uniformes.
 Estas rutas no escriben datos de dominio; el portal de demostración (/portal, fuera
-de este contrato) agrega escrituras acotadas en Redis y Cassandra. Los endpoints de salud corresponden al Hito 11.
+de este contrato) agrega escrituras acotadas en MongoDB, Neo4j, Redis y Cassandra.
+Los endpoints de salud corresponden al Hito 11.
 Todas las respuestas incluyen X-Request-ID. Laboratorio local sin autenticación HTTP."""
 
 TAGS = []
 DIR_FRONT = Path(__file__).parent / "front"
+# Windows no siempre registra .webp (logo del portal): sin esto se sirve como octet-stream.
+mimetypes.add_type("image/webp", ".webp")
 
 
 def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None = None) -> FastAPI:
@@ -41,6 +45,7 @@ def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None 
         app.state.servicios = crear_servicios(propios, settings)
         log.info("api_iniciada version=%s", VERSION)
         yield
+        app.state.servicios.simulador.cerrar()  # detiene las simulaciones antes de cerrar las bases
         propios.cerrar()
         log.info("api_detenida")
 
@@ -54,7 +59,7 @@ def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None 
     )
     instalar_middleware(app)
     instalar_manejadores(app)
-    for modulo in (equipos, partidos, comentarios, sesiones, estadisticas, actas, salud):
+    for modulo in (equipos, partidos, comentarios, sesiones, estadisticas, salud):
         app.include_router(modulo.router)
     # Portal del Fixture (/portal) y diagrama de integración (/demo): páginas estáticas
     # que consumen la API desde el navegador. Las rutas /portal/api quedan fuera de OpenAPI.

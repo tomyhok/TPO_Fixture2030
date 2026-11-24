@@ -46,6 +46,13 @@ class Conflicto(ErrorAPI):
     codigo = "CONFLICTO"
 
 
+class PrediccionCerrada(ErrorAPI):
+    """Prode: el partido ya empezó (estado distinto de 'Programado' en Neo4j) o ya se puntuó."""
+
+    status_http = 409
+    codigo = "PREDICCION_CERRADA"
+
+
 class MetodoNoPermitido(ErrorAPI):
     status_http = 405
     codigo = "METODO_NO_PERMITIDO"

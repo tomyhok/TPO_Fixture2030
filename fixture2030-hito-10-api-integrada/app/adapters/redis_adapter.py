@@ -25,6 +25,13 @@ def _traducir(exc: Exception) -> ErrorAPI | None:
     return None
 
 
+def _reloj(hash_reloj: dict[str, str]) -> dict[str, Any] | None:
+    if not hash_reloj:
+        return None
+    return {"minuto": int(hash_reloj["minuto"]), "adicion": int(hash_reloj.get("adicion", 0)),
+            "en_curso": hash_reloj.get("en_curso") == "1"}
+
+
 class RedisAdapter:
     def __init__(self, settings: Settings):
         self._cliente = redis.Redis(
@@ -57,8 +64,8 @@ class RedisAdapter:
 
     # ----------------------------------------------------------------- portal
     # Escrituras del portal de demostración, con las mismas claves del Hito 7:
-    # sesion:<id> (hash + TTL), contador:partido:<p>:visitas, conectados:partido:<p> (set)
-    # y encuesta:partido:<p>:figura (sorted set). Fuera del contrato de solo lectura del Hito 10.
+    # sesion:<id> (hash + TTL), contador:partido:<p>:visitas y conectados:partido:<p> (set),
+    # más reloj:partido:<p> (hash) de la simulación. Fuera del contrato de solo lectura del Hito 10.
     def crear_sesion(self, alias: str, equipo_favorito: str | None, ttl_s: int) -> dict[str, Any]:
         with operacion(DEPENDENCIA, "sesion.crear", _traducir):
             # Secuencia propia desde 5000 para no pisar las muestras (S-0001.., U-1001..).
@@ -75,6 +82,11 @@ class RedisAdapter:
             pipe.expire(f"sesion:{id_sesion}", ttl_s)
             pipe.execute()
         return {"id_sesion": id_sesion, "usuario_id": usuario_id, "ttl_restante_s": ttl_s}
+
+    def asignar_usuario_sesion(self, id_sesion: str, usuario_id: str) -> None:
+        """El alias ya estaba registrado en MongoDB: la sesión toma su usuario_id original."""
+        with operacion(DEPENDENCIA, "sesion.hset_usuario", _traducir):
+            self._cliente.hset(f"sesion:{id_sesion}", "usuario_id", usuario_id)
 
     def leer_sesion_portal(self, id_sesion: str) -> dict[str, Any] | None:
         clave = f"sesion:{id_sesion}"
@@ -111,23 +123,28 @@ class RedisAdapter:
             pipe = self._cliente.pipeline(transaction=False)
             pipe.get(f"contador:partido:{codigo}:visitas")
             pipe.scard(f"conectados:partido:{codigo}")
-            pipe.zrevrange(f"encuesta:partido:{codigo}:figura", 0, 9, withscores=True)
-            pipe.sismember(f"encuesta:partido:{codigo}:votantes", usuario_id or "")
-            visitas, conectados, ranking, voto = pipe.execute()
+            pipe.hgetall(f"reloj:partido:{codigo}")
+            visitas, conectados, reloj = pipe.execute()
         return {
             "visitas": int(visitas or 0),
             "conectados": conectados,
-            "encuesta": [{"id_jugador": j, "votos": int(v)} for j, v in ranking],
-            "ya_voto": bool(voto),
+            "reloj": _reloj(reloj),
         }
 
-    def votar_figura(self, codigo: str, usuario_id: str, id_jugador: str) -> bool:
-        """False si el usuario ya había votado en este partido (un voto por usuario)."""
-        with operacion(DEPENDENCIA, "encuesta.zincrby", _traducir):
-            if not self._cliente.sadd(f"encuesta:partido:{codigo}:votantes", usuario_id):
-                return False
-            self._cliente.zincrby(f"encuesta:partido:{codigo}:figura", 1, id_jugador)
-            return True
+    def leer_reloj(self, codigo: str) -> dict[str, Any] | None:
+        """Minuto actual del partido simulado (None si no hay simulación)."""
+        with operacion(DEPENDENCIA, "reloj.hgetall", _traducir):
+            return _reloj(self._cliente.hgetall(f"reloj:partido:{codigo}"))
+
+    def actualizar_reloj(self, codigo: str, minuto: int, adicion: int, en_curso: bool, ttl_s: int) -> None:
+        """Reloj del partido simulado. Mientras corre, el TTL es corto (latido): si la API se
+        detiene a mitad de la simulación, la clave vence sola y el portal deja de mostrarla."""
+        clave = f"reloj:partido:{codigo}"
+        with operacion(DEPENDENCIA, "reloj.hset", _traducir):
+            pipe = self._cliente.pipeline(transaction=True)
+            pipe.hset(clave, mapping={"minuto": minuto, "adicion": adicion, "en_curso": int(en_curso)})
+            pipe.expire(clave, ttl_s)
+            pipe.execute()
 
     # ------------------------------------------------------------------ salud
     def ping(self) -> None:

@@ -24,7 +24,6 @@ RUTAS = {
     "cassandra": "/partidos/P-001/comentarios?ventana=203006152015",
     "redis": "/sesiones/S-0001",
     "influxdb": "/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T21:00:00Z",
-    "iris": "/partidos-oficiales/P-001",
 }
 
 
@@ -37,7 +36,6 @@ def _apuntar_a(settings, puerto: int):
             "cassandra_port": puerto,
             "redis_port": puerto,
             "influx_url": f"http://127.0.0.1:{puerto}",
-            "iris_port": puerto,
         }
     )
 

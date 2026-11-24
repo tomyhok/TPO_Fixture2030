@@ -74,18 +74,9 @@ services:
       - ~/docker/data/redis:/data
       - ./fixture2030-redis/scripts:/scripts:ro
 
-  iris:
-    image: intersystems/iris-community:latest-cd
-    container_name: fixture2030-iris
-    restart: unless-stopped
-    ports:
-      - "1972:1972"
-      - "52773:52773"
-    environment:
-      - ISC_DATA_DIRECTORY=/durable/iris
-    volumes:
-      - ~/docker/data/iris:/durable
-      - ./fixture2030-iris/scripts:/scripts:ro
+  # IRIS (Hito 9) no forma parte de la versión final: el estado del partido y el
+  # árbitro pasaron a Neo4j. El módulo se puede levantar solo con
+  # fixture2030-iris/docker-compose.yml.
 
   influxdb:
     image: influxdb:3-core

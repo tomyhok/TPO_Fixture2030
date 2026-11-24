@@ -1,4 +1,4 @@
-"""Captura HTTP de las seis lecturas. No modifica datos ni detiene motores."""
+"""Captura HTTP de las cinco lecturas. No modifica datos ni detiene motores."""
 import json
 import sys
 from datetime import datetime, timezone
@@ -15,7 +15,6 @@ CASOS = [
     ("cassandra", "/partidos/P-001/comentarios?ventana=203006152015&limit=5"),
     ("redis", "/sesiones/S-0001"),
     ("influxdb", "/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T20:15:00Z"),
-    ("iris", "/partidos-oficiales/P-009"),
     ("salud", "/health/dependencias"),
 ]
 

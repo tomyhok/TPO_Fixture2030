@@ -1,11 +1,15 @@
 openapi: 3.1.0
 info:
   title: Fixture 2030 - API REST integrada
-  description: 'Seis lecturas representativas, una por motor: MongoDB, Neo4j,
+  description: 'Cinco lecturas representativas, una por motor: MongoDB, Neo4j,
 
-    Cassandra, Redis, InfluxDB e IRIS. Contratos, validación y errores uniformes.
+    Cassandra, Redis e InfluxDB. Contratos, validación y errores uniformes.
 
-    La API no escribe datos de dominio. Los endpoints de salud corresponden al Hito 11.
+    Estas rutas no escriben datos de dominio; el portal de demostración (/portal, fuera
+
+    de este contrato) agrega escrituras acotadas en MongoDB, Neo4j, Redis y Cassandra.
+
+    Los endpoints de salud corresponden al Hito 11.
 
     Todas las respuestas incluyen X-Request-ID. Laboratorio local sin autenticación HTTP.'
   version: 1.1.0
@@ -529,103 +533,13 @@ paths:
                   detalles: []
               schema:
                 $ref: '#/components/schemas/ErrorRespuesta'
-  /partidos-oficiales/{codigo_partido}:
-    get:
-      tags:
-      - Actas (IRIS)
-      summary: Vista del acta persistente
-      operationId: obtener_acta_partidos_oficiales__codigo_partido__get
-      parameters:
-      - name: codigo_partido
-        in: path
-        required: true
-        schema:
-          type: string
-          pattern: ^P-\d{3}$
-          description: Código de negocio del partido.
-          examples:
-          - P-001
-          title: Codigo Partido
-        description: Código de negocio del partido.
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Acta'
-        '400':
-          description: 'Validación: parámetro de ruta, query o cuerpo inválido. No se consulta ninguna
-            base.'
-          content:
-            application/json:
-              example:
-                error:
-                  codigo: VALIDACION
-                  mensaje: La solicitud tiene parámetros o cuerpo inválidos.
-                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
-                  detalles:
-                  - campo: path.codigo_iso
-                    mensaje: String should match pattern '^[A-Z]{3}$'
-              schema:
-                $ref: '#/components/schemas/ErrorRespuesta'
-        '404':
-          description: Recurso inexistente.
-          content:
-            application/json:
-              example:
-                error:
-                  codigo: RECURSO_NO_ENCONTRADO
-                  mensaje: No existe la selección 'XYZ'.
-                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
-                  detalles: []
-              schema:
-                $ref: '#/components/schemas/ErrorRespuesta'
-        '503':
-          description: Una fuente de datos no está disponible.
-          content:
-            application/json:
-              example:
-                error:
-                  codigo: DEPENDENCIA_NO_DISPONIBLE
-                  mensaje: La fuente de datos 'mongodb' no está disponible.
-                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
-                  detalles:
-                  - dependencia: mongodb
-              schema:
-                $ref: '#/components/schemas/ErrorRespuesta'
-        '504':
-          description: Una fuente de datos no respondió dentro del timeout.
-          content:
-            application/json:
-              example:
-                error:
-                  codigo: DEPENDENCIA_TIMEOUT
-                  mensaje: La fuente de datos 'neo4j' no respondió dentro del tiempo límite.
-                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
-                  detalles:
-                  - dependencia: neo4j
-              schema:
-                $ref: '#/components/schemas/ErrorRespuesta'
-        '500':
-          description: 'Error interno seguro: el detalle técnico queda solo en el log.'
-          content:
-            application/json:
-              example:
-                error:
-                  codigo: ERROR_INTERNO
-                  mensaje: Ocurrió un error inesperado. Informe el request_id.
-                  request_id: 7f3c1a2e-0b4d-4c55-9a51-2f0f3c9e8d10
-                  detalles: []
-              schema:
-                $ref: '#/components/schemas/ErrorRespuesta'
   /health:
     get:
       tags:
       - Salud
-      summary: CU16 - Disponibilidad de las seis fuentes
+      summary: CU16 - Disponibilidad de las cinco fuentes
       description: 'Ejecuta una operación trivial en cada fuente, en paralelo y con el timeout de cada
-        adaptador. 200 si todas responden; 503 si al menos una falla, indicando cuál. Consulta las seis
+        adaptador. 200 si todas responden; 503 si al menos una falla, indicando cuál. Consulta las cinco
         bases en cada llamada: para sondeos frecuentes usar /health/ready.'
       operationId: health_health_get
       responses:
@@ -706,68 +620,6 @@ paths:
                 $ref: '#/components/schemas/Diagnostico'
 components:
   schemas:
-    Acta:
-      properties:
-        codigo_partido:
-          type: string
-          title: Codigo Partido
-        sede:
-          type: string
-          title: Sede
-        fecha:
-          type: string
-          format: date
-          title: Fecha
-        estado:
-          $ref: '#/components/schemas/EstadoPartido'
-        arbitro:
-          $ref: '#/components/schemas/Arbitro'
-        eventos:
-          items:
-            $ref: '#/components/schemas/EventoActa'
-          type: array
-          title: Eventos
-      additionalProperties: false
-      type: object
-      required:
-      - codigo_partido
-      - sede
-      - fecha
-      - estado
-      - arbitro
-      - eventos
-      title: Acta
-      example:
-        arbitro:
-          apellido: Tello
-          nombre: Facundo
-          rango: FIFA
-        codigo_partido: P-001
-        estado: En Juego
-        eventos:
-        - descripcion: Gol de ARG-10
-          minuto: 23
-          tipo: Gol
-        fecha: '2030-06-10'
-        sede: Estadio Monumental
-    Arbitro:
-      properties:
-        nombre:
-          type: string
-          title: Nombre
-        apellido:
-          type: string
-          title: Apellido
-        rango:
-          type: string
-          title: Rango
-      additionalProperties: false
-      type: object
-      required:
-      - nombre
-      - apellido
-      - rango
-      title: Arbitro
     Comentario:
       properties:
         id_comentario:
@@ -1027,32 +879,6 @@ components:
       - caida
       - timeout
       title: EstadoDependencia
-    EstadoPartido:
-      type: string
-      enum:
-      - Programado
-      - En Juego
-      - Finalizado
-      title: EstadoPartido
-    EventoActa:
-      properties:
-        minuto:
-          type: integer
-          title: Minuto
-        tipo:
-          type: string
-          title: Tipo
-        descripcion:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Descripcion
-      additionalProperties: false
-      type: object
-      required:
-      - minuto
-      - tipo
-      title: EventoActa
     EventoGrafo:
       properties:
         id_evento:

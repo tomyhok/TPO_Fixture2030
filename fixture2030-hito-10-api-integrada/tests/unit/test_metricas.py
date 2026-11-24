@@ -14,14 +14,14 @@ from app.main import crear_app
 
 @pytest.fixture
 def cliente(adaptadores: Adaptadores) -> Iterator[TestClient]:
-    """Cliente con las seis fuentes configuradas (sin .env local) y métricas en cero."""
-    settings = Settings(_env_file=None, neo4j_password="x", iris_password="x", influx_token="x")
+    """Cliente con las cinco fuentes configuradas (sin .env local) y métricas en cero."""
+    settings = Settings(_env_file=None, neo4j_password="x", influx_token="x")
     metricas.reiniciar()
     with TestClient(crear_app(adaptadores=adaptadores, settings=settings), raise_server_exceptions=False) as c:
         yield c
 
 
-def test_metrics_expone_formato_prometheus_y_estado_de_seis_bases(cliente, adaptadores):
+def test_metrics_expone_formato_prometheus_y_estado_de_cinco_bases(cliente, adaptadores):
     metricas.reiniciar()
     r = cliente.get("/metrics")
     assert r.status_code == 200
@@ -29,7 +29,7 @@ def test_metrics_expone_formato_prometheus_y_estado_de_seis_bases(cliente, adapt
     texto = r.text
     assert "fixture_api_up " not in texto  # la disponibilidad de la API la da up{job="fixture-api"}
     assert "fixture_api_uptime_seconds" in texto
-    for motor in ("mongodb", "neo4j", "cassandra", "redis", "influxdb", "iris"):
+    for motor in ("mongodb", "neo4j", "cassandra", "redis", "influxdb"):
         assert f'fixture_db_up{{db="{motor}"}} 1' in texto
         assert f'fixture_db_status_info{{db="{motor}",state="up"}} 1' in texto
 

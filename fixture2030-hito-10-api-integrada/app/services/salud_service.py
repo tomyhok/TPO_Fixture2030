@@ -1,12 +1,12 @@
 """Salud de la API y de sus fuentes.
 
-* CU16 `verificar()` (Hito 10, `/health`): ping a las seis fuentes en cada llamada.
+* CU16 `verificar()` (Hito 10, `/health`): ping a las cinco fuentes en cada llamada.
 * Hito 11:
   - `vida()` (`/health/live`): no consulta ninguna base.
   - `diagnostico()` (`/health/dependencias`): chequeo profundo por fuente con
     estados up/down/degraded/unknown/not_configured. El resultado se reutiliza
     durante `ttl_cache_s` para que ni un balanceador ni un usuario insistente
-    consulten las seis bases en cada request (sección 5.6).
+    consulten las cinco bases en cada request (sección 5.6).
   - `preparacion()` (`/health/ready`): decisión de readiness sobre ese diagnóstico.
 """
 

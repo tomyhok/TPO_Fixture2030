@@ -12,13 +12,14 @@ from fastapi import Request
 
 from app import VERSION
 from app.config.settings import Settings
-from app.services.actas_service import ActasService
 from app.services.comentarios_service import ComentariosService
 from app.services.equipos_service import EquiposService
 from app.services.estadisticas_service import EstadisticasService
 from app.services.partidos_service import PartidosService
 from app.services.portal_service import PortalService
+from app.services.prode_service import ProdeService
 from app.services.salud_service import SaludService
+from app.services.simulador_service import SimuladorService
 from app.services.sesiones_service import SesionesService
 
 
@@ -29,7 +30,6 @@ class Adaptadores:
     cassandra: Any
     redis: Any
     influxdb: Any
-    iris: Any
 
     def como_dict(self) -> dict[str, Any]:
         return dict(self.__dict__)
@@ -49,16 +49,16 @@ class Servicios:
     comentarios: ComentariosService
     sesiones: SesionesService
     estadisticas: EstadisticasService
-    actas: ActasService
     salud: SaludService
     portal: PortalService
+    prode: ProdeService
+    simulador: SimuladorService
 
 
 def crear_adaptadores(settings: Settings) -> Adaptadores:
     # Importación diferida: las pruebas unitarias no necesitan los drivers.
     from app.adapters.cassandra_adapter import CassandraAdapter
     from app.adapters.influx_adapter import InfluxAdapter
-    from app.adapters.iris_adapter import IrisAdapter
     from app.adapters.mongo_adapter import MongoAdapter
     from app.adapters.neo4j_adapter import Neo4jAdapter
     from app.adapters.redis_adapter import RedisAdapter
@@ -69,18 +69,19 @@ def crear_adaptadores(settings: Settings) -> Adaptadores:
         cassandra=CassandraAdapter(settings),
         redis=RedisAdapter(settings),
         influxdb=InfluxAdapter(settings),
-        iris=IrisAdapter(settings),
     )
 
 
 def crear_servicios(a: Adaptadores, settings: Settings) -> Servicios:
+    simulador = SimuladorService(a.neo4j, a.influxdb, a.cassandra, a.redis,
+                                 duracion_s=settings.simulacion_duracion_s)
+    portal = PortalService(a.mongodb, a.neo4j, a.cassandra, a.redis, simulador=simulador)
     return Servicios(
         equipos=EquiposService(a.mongodb),
         partidos=PartidosService(a.neo4j),
         comentarios=ComentariosService(a.cassandra),
         sesiones=SesionesService(a.redis),
         estadisticas=EstadisticasService(a.influxdb),
-        actas=ActasService(a.iris),
         salud=SaludService(
             a.como_dict(),
             faltantes=settings.configuracion_faltante(),
@@ -88,7 +89,9 @@ def crear_servicios(a: Adaptadores, settings: Settings) -> Servicios:
             umbral_lento_ms=settings.health_umbral_lento_ms,
             version=VERSION,
         ),
-        portal=PortalService(a.mongodb, a.neo4j, a.cassandra, a.redis),
+        portal=portal,
+        prode=ProdeService(portal, a.mongodb, a.neo4j),
+        simulador=simulador,
     )
 
 

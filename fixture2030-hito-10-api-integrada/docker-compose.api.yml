@@ -25,7 +25,6 @@ services:
       REDIS_HOST: redis
       INFLUX_URL: http://influxdb:8181
       INFLUX_TOKEN_FILE: /run/secrets/influx_token
-      IRIS_HOST: iris
       API_PORT: "8001"
     volumes:
       # Token de InfluxDB generado en el Hito 8 (excluido del repositorio), solo lectura.
@@ -38,4 +37,3 @@ services:
       - cassandra
       - redis
       - influxdb
-      - iris

@@ -237,3 +237,124 @@ def test_logger_raiz_no_acumula_handlers_en_multiples_apps(adaptadores: Adaptado
         with TestClient(app, raise_server_exceptions=False) as c:
             assert c.get("/health/live").status_code == 200
     assert len(raiz.handlers) == cantidad_inicial
+
+
+def _evento(nivel: str = "INFO", request_id: str = "req-x") -> EventoLog:
+    ahora = datetime.now(UTC)
+    return EventoLog(
+        creado_en=ahora,
+        ventana_hora=ahora.strftime("%Y%m%d%H"),
+        fecha=ahora.strftime("%Y%m%d"),
+        servicio="fixture2030-api",
+        nivel=nivel,
+        logger="fixture2030.test",
+        request_id=request_id,
+        metodo=None,
+        ruta=None,
+        status_http=None,
+        dependencia=None,
+        operacion=None,
+        resultado="ok",
+        duracion_ms=None,
+        mensaje="evento",
+        instancia="test-host",
+    )
+
+
+def test_escritura_parcial_descarta_solo_los_eventos_fallidos():
+    metricas.reiniciar()
+    escrito = threading.Event()
+
+    class EscritorParcial:
+        def escribir_lote_logs(self, eventos, ttl_s):
+            escrito.set()
+            return len(eventos) - 1  # Cassandra respondió, pero 1 INSERT falló
+
+    persistor = PersistorLogsCassandra(escritor=EscritorParcial(), batch_size=10, flush_interval_s=0.05)
+    for _ in range(4):
+        persistor.encolar(_evento())
+    persistor.iniciar()
+    assert escrito.wait(timeout=1.0)
+    persistor.cerrar(timeout_s=1.0)
+
+    prom = metricas.exportar_prometheus()
+    assert "fixture_api_logs_persisted_total 3" in prom
+    assert 'fixture_api_logs_dropped_total{reason="cassandra_error"} 1' in prom
+
+
+def test_cassandra_caida_aplica_backoff_y_cerrar_lo_interrumpe():
+    metricas.reiniciar()
+    llamadas: list[float] = []
+
+    class EscritorCaido:
+        def escribir_lote_logs(self, eventos, ttl_s):
+            llamadas.append(time.monotonic())
+            raise RuntimeError("cassandra caida")
+
+    persistor = PersistorLogsCassandra(
+        escritor=EscritorCaido(),
+        batch_size=1,
+        flush_interval_s=0.01,
+        backoff_inicial_s=5.0,
+    )
+    persistor.iniciar()
+    for _ in range(5):
+        persistor.encolar(_evento())
+    _esperar(lambda: len(llamadas) >= 1)
+    time.sleep(0.3)
+    # Sin backoff, el worker habría intentado los 5 lotes; con backoff espera tras el 1er error.
+    assert len(llamadas) == 1
+
+    inicio = time.monotonic()
+    persistor.cerrar(timeout_s=2.0)
+    assert time.monotonic() - inicio < 1.5  # cerrar() despierta al worker de la espera
+
+    prom = metricas.exportar_prometheus()
+    # Todos los eventos quedan contabilizados como descartados (ninguno se pierde sin registro)
+    total = sum(
+        int(linea.rsplit(" ", 1)[1])
+        for linea in prom.splitlines()
+        if linea.startswith("fixture_api_logs_dropped_total{")
+    )
+    assert total == 5
+
+
+def test_adaptador_cuenta_eventos_con_algun_insert_fallido():
+    from app.adapters.cassandra_adapter import CassandraAdapter
+
+    class Futuro:
+        def __init__(self, error: Exception | None):
+            self._error = error
+
+        def result(self):
+            if self._error:
+                raise self._error
+
+    class SesionFalsa:
+        def __init__(self, fallar_tabla: str | None):
+            self.fallar_tabla = fallar_tabla
+
+        def execute_async(self, stmt, params):
+            return Futuro(RuntimeError("write timeout") if stmt == self.fallar_tabla else None)
+
+    adaptador = CassandraAdapter(Settings(_env_file=None))
+    stmts = {n: n for n in ("insert_log_hora", "insert_log_request", "insert_log_nivel")}
+    adaptador._obtener_preparadas_logs = lambda _s: stmts  # type: ignore[method-assign]
+    eventos = [_evento("INFO"), _evento("ERROR"), _evento("WARNING", request_id="-")]
+
+    # Falla solo la tabla de incidentes: los 2 eventos WARNING/ERROR se cuentan como fallidos.
+    adaptador._obtener_sesion = lambda: SesionFalsa("insert_log_nivel")  # type: ignore[method-assign]
+    assert adaptador.escribir_lote_logs(eventos, 60) == 1
+
+    # Sin fallos: se persisten los 3.
+    adaptador._obtener_sesion = lambda: SesionFalsa(None)  # type: ignore[method-assign]
+    assert adaptador.escribir_lote_logs(eventos, 60) == 3
+
+    # Si fallan todos, se propaga el error para que el persistor lo informe.
+    adaptador._obtener_sesion = lambda: SesionFalsa("insert_log_hora")  # type: ignore[method-assign]
+    try:
+        adaptador.escribir_lote_logs(eventos, 60)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("se esperaba RuntimeError")

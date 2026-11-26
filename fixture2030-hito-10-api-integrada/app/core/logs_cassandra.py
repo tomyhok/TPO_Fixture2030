@@ -25,6 +25,8 @@ from app.core.observabilidad import request_id_actual
 
 NIVELES_INCIDENTE: frozenset[str] = frozenset({"WARNING", "ERROR", "CRITICAL"})
 _AVISO_STDERR_INTERVALO_S = 30.0
+_BACKOFF_INICIAL_S = 1.0
+_BACKOFF_MAXIMO_S = 30.0
 _MAX_LARGO_MENSAJE = 2000
 
 
@@ -59,6 +61,8 @@ class PersistorLogsCassandra:
         batch_size: int = 50,
         flush_interval_s: float = 1.0,
         ttl_s: int = 2592000,
+        backoff_inicial_s: float = _BACKOFF_INICIAL_S,
+        backoff_maximo_s: float = _BACKOFF_MAXIMO_S,
     ) -> None:
         self._escritor = escritor
         self._servicio = servicio
@@ -70,6 +74,12 @@ class PersistorLogsCassandra:
         self._hilo: threading.Thread | None = None
         self._lock_aviso = threading.Lock()
         self._ultimo_aviso_stderr = 0.0
+        # Espera antes de reintentar tras un error de Cassandra (exponencial, con tope).
+        # Evita que el worker reintente conectar en cada lote y retenga el lock de
+        # sesión del adaptador, que también usan las lecturas HTTP de comentarios.
+        self._backoff_inicial_s = max(0.0, backoff_inicial_s)
+        self._backoff_maximo_s = max(self._backoff_inicial_s, backoff_maximo_s)
+        self._backoff_s = 0.0
         metricas.actualizar_cola_logs(0)
 
     def iniciar(self) -> None:
@@ -118,13 +128,31 @@ class PersistorLogsCassandra:
 
     def _vaciar_lote(self, lote: list[EventoLog]) -> None:
         try:
-            persistidos = self._escritor.escribir_lote_logs(lote, self._ttl_s)
-            metricas.registrar_logs_persistidos(int(persistidos))
+            persistidos = int(self._escritor.escribir_lote_logs(lote, self._ttl_s))
         except Exception as exc:  # noqa: BLE001 - telemetría nunca puede romper ni recursar
             metricas.registrar_logs_descartados("cassandra_error", len(lote))
-            self._avisar_stderr(exc, len(lote))
+            self._avisar_stderr(type(exc).__name__, len(lote))
+            self._esperar_backoff()
+            return
 
-    def _avisar_stderr(self, exc: Exception, cantidad: int) -> None:
+        persistidos = max(0, min(persistidos, len(lote)))
+        metricas.registrar_logs_persistidos(persistidos)
+        fallidos = len(lote) - persistidos
+        if fallidos > 0:
+            # Cassandra respondió pero algunos INSERT fallaron: se descartan solo esos.
+            metricas.registrar_logs_descartados("cassandra_error", fallidos)
+            self._avisar_stderr("escritura_parcial", fallidos)
+        self._backoff_s = 0.0
+
+    def _esperar_backoff(self) -> None:
+        if self._backoff_s <= 0:
+            self._backoff_s = self._backoff_inicial_s
+        else:
+            self._backoff_s = min(self._backoff_s * 2, self._backoff_maximo_s)
+        # wait() en vez de sleep(): cerrar() interrumpe la espera de inmediato.
+        self._detener.wait(self._backoff_s)
+
+    def _avisar_stderr(self, causa: str, cantidad: int) -> None:
         ahora = time.monotonic()
         with self._lock_aviso:
             if ahora - self._ultimo_aviso_stderr < _AVISO_STDERR_INTERVALO_S:
@@ -133,7 +161,7 @@ class PersistorLogsCassandra:
         try:
             sys.stderr.write(
                 f"[logs_cassandra] error persistiendo {cantidad} logs en Cassandra: "
-                f"{type(exc).__name__}\n"
+                f"{causa}\n"
             )
             sys.stderr.flush()
         except OSError:

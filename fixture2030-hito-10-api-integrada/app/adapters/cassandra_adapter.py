@@ -269,49 +269,60 @@ class CassandraAdapter:
             return stmts
 
     def escribir_lote_logs(self, eventos: list[EventoLog], ttl_s: int) -> int:
-        """Persiste un micro-lote de logs en paralelo (sin Batch LOGGED multi-partición)."""
+        """Persiste un micro-lote de logs en paralelo (sin Batch LOGGED multi-partición).
+
+        Devuelve cuántos eventos quedaron escritos en todas sus tablas. Si falla solo
+        una parte del lote, el resto se cuenta como persistido; si fallan todos, se
+        propaga la primera excepción para que el persistor la informe.
+        """
         if not eventos:
             return 0
         sesion = self._obtener_sesion()
         stmts = self._obtener_preparadas_logs(sesion)
-        futuros = []
-        for ev in eventos:
+        futuros: list[tuple[int, Any]] = []  # (índice del evento, futuro de su INSERT)
+        for indice, ev in enumerate(eventos):
             id_log = uuid_from_time(ev.creado_en)
-            futuros.append(
-                sesion.execute_async(
-                    stmts["insert_log_hora"],
+            futuros.append((indice, sesion.execute_async(
+                stmts["insert_log_hora"],
+                (
+                    ev.servicio, ev.ventana_hora, id_log, ev.creado_en, ev.nivel, ev.logger,
+                    ev.request_id, ev.metodo, ev.ruta, ev.status_http, ev.dependencia,
+                    ev.operacion, ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
+                ),
+            )))
+            if ev.request_id and ev.request_id != "-":
+                futuros.append((indice, sesion.execute_async(
+                    stmts["insert_log_request"],
                     (
-                        ev.servicio, ev.ventana_hora, id_log, ev.creado_en, ev.nivel, ev.logger,
+                        ev.request_id, id_log, ev.creado_en, ev.servicio, ev.nivel, ev.logger,
+                        ev.metodo, ev.ruta, ev.status_http, ev.dependencia, ev.operacion,
+                        ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
+                    ),
+                )))
+            if ev.nivel in NIVELES_INCIDENTE:
+                futuros.append((indice, sesion.execute_async(
+                    stmts["insert_log_nivel"],
+                    (
+                        ev.nivel, ev.fecha, id_log, ev.creado_en, ev.servicio, ev.logger,
                         ev.request_id, ev.metodo, ev.ruta, ev.status_http, ev.dependencia,
                         ev.operacion, ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
                     ),
-                )
-            )
-            if ev.request_id and ev.request_id != "-":
-                futuros.append(
-                    sesion.execute_async(
-                        stmts["insert_log_request"],
-                        (
-                            ev.request_id, id_log, ev.creado_en, ev.servicio, ev.nivel, ev.logger,
-                            ev.metodo, ev.ruta, ev.status_http, ev.dependencia, ev.operacion,
-                            ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
-                        ),
-                    )
-                )
-            if ev.nivel in NIVELES_INCIDENTE:
-                futuros.append(
-                    sesion.execute_async(
-                        stmts["insert_log_nivel"],
-                        (
-                            ev.nivel, ev.fecha, id_log, ev.creado_en, ev.servicio, ev.logger,
-                            ev.request_id, ev.metodo, ev.ruta, ev.status_http, ev.dependencia,
-                            ev.operacion, ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
-                        ),
-                    )
-                )
-        for futuro in futuros:
-            futuro.result()
-        return len(eventos)
+                )))
+
+        # Se espera a todos los futuros (no se corta en el primer error) para saber
+        # exactamente qué eventos fallaron en alguna de sus tablas.
+        fallidos: set[int] = set()
+        primer_error: Exception | None = None
+        for indice, futuro in futuros:
+            try:
+                futuro.result()
+            except Exception as exc:  # noqa: BLE001 - se informa vía persistor, sin loguear (anti-recursión)
+                fallidos.add(indice)
+                if primer_error is None:
+                    primer_error = exc
+        if primer_error is not None and len(fallidos) == len(eventos):
+            raise primer_error
+        return len(eventos) - len(fallidos)
 
     def leer_logs_por_hora(self, servicio: str, ventana_hora: str, limit: int) -> list[dict[str, Any]]:
         with operacion(DEPENDENCIA, "logs_api_por_hora.select", _traducir):

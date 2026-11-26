@@ -191,6 +191,44 @@
   table.plantel td { padding: 8px 6px; border-bottom: 1px solid var(--line); }
   .tabla-scroll { overflow-x: auto; }
 
+  /* logs del sistema (Cassandra) */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  .kpi small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .kpi b { font-size: 22px; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .kpi.alerta b { color: var(--err); }
+  .logs-barra { margin-bottom: 14px; }
+  .logs-barra .buscador { max-width: 280px; padding: 8px 14px; }
+  .g-logs { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 980px) { .g-logs { grid-template-columns: 1fr; } }
+  .logs-lista { max-height: 640px; overflow: auto; }
+  table.logs { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.logs th { position: sticky; top: 0; background: var(--panel); text-align: left; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 6px; border-bottom: 1px solid var(--line); }
+  table.logs td { padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.logs tr.nuevo td { animation: resaltar 1.6s ease-out; }
+  table.logs tr.sel td { background: #eef2f9; }
+  @keyframes resaltar { from { background: #fff7d6; } }
+  .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; font-variant-numeric: tabular-nums; }
+  td.hora { color: var(--muted); white-space: nowrap; }
+  .nivel { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; letter-spacing: .04em; background: var(--chip); color: var(--muted); }
+  .nivel.WARNING { background: #fdf3e1; color: var(--warn); }
+  .nivel.ERROR, .nivel.CRITICAL { background: #fdecee; color: var(--err); }
+  .origen { font-size: 12px; font-weight: 700; color: var(--navy); white-space: nowrap; }
+  .detalle { overflow-wrap: anywhere; }
+  .detalle small { color: var(--muted); }
+  .rid { border: 0; background: none; padding: 0; margin-top: 2px; color: var(--link); cursor: pointer; text-align: left; }
+  .rid:hover { text-decoration: underline; }
+  @media (max-width: 600px) {
+    table.logs thead { display: none; }
+    table.logs tr { display: grid; grid-template-columns: auto auto 1fr; gap: 4px 10px; align-items: center; padding: 8px 2px; border-bottom: 1px solid var(--line); }
+    table.logs tr.sel { background: #eef2f9; }
+    table.logs td { padding: 0; border: 0; background: transparent !important; }
+    table.logs td.detalle { grid-column: 1 / -1; }
+  }
+  ol.traza { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  ol.traza li { display: grid; grid-template-columns: 64px 1fr; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--panel-2); font-size: 13px; }
+  ol.traza .t { color: var(--muted); }
+
   /* modal y avisos */
   dialog { border: 0; border-radius: 18px; background: var(--panel); color: var(--text); padding: 24px; width: min(420px, calc(100vw - 32px)); box-shadow: 0 24px 60px rgba(10, 31, 68, .25); }
   dialog::backdrop { background: rgba(10, 31, 68, .45); }
@@ -214,6 +252,7 @@
       <a href="#/grupos" data-nav="grupos">Grupos</a>
       <a href="#/selecciones" data-nav="selecciones">Selecciones</a>
       <a href="#/prode" data-nav="prode">Prode</a>
+      <a href="#/logs" data-nav="logs">Logs</a>
       <a href="../demo/">Integración</a>
       <a href="../docs" target="_blank" rel="noopener">API</a>
     </nav>
@@ -372,7 +411,7 @@ async function ruta() {
   limpiarTimers();
   const [_, seccion, id] = (location.hash || "#/").split("/");
   document.querySelectorAll("nav a[data-nav]").forEach(a => a.classList.toggle("activo",
-    a.dataset.nav === (seccion === "selecciones" || seccion === "seleccion" ? "selecciones" : seccion === "prode" ? "prode" : seccion === "grupos" ? "grupos" : seccion === "" || seccion === "partido" ? "fixture" : "")));
+    a.dataset.nav === (seccion === "selecciones" || seccion === "seleccion" ? "selecciones" : seccion === "prode" ? "prode" : seccion === "logs" ? "logs" : seccion === "grupos" ? "grupos" : seccion === "" || seccion === "partido" ? "fixture" : "")));
   const app = $("#app");
   app.innerHTML = `<p class="vacio">Cargando…</p>`;
   try {
@@ -381,6 +420,7 @@ async function ruta() {
     else if (seccion === "selecciones") await vistaSelecciones(app);
     else if (seccion === "prode") await vistaProde(app);
     else if (seccion === "grupos") await vistaGrupos(app);
+    else if (seccion === "logs") await vistaLogs(app);
     else await vistaFixture(app);
   } catch (e) {
     app.innerHTML = `<div class="panel"><h2>No se pudo cargar la página</h2><p>${esc(e.message)}</p><p class="vacio">${esc(e.codigo ?? "")}</p></div>`;
@@ -892,6 +932,198 @@ async function pintarTabla(equipo) {
       <p style="margin:10px 0 0;font-size:13px;color:var(--muted)">${t.total_participantes} participante${t.total_participantes === 1 ? "" : "s"}. A igualdad de puntos, desempata la cantidad de plenos.</p>`
     : `<p class="vacio">${equipo ? "Ningún hincha de esa selección pronosticó todavía." : "Todavía no hay pronósticos."}</p>`)
     + (t.pendientes.length ? `<p class="vacio">Sin puntuar por ahora (Neo4j no respondió): ${t.pendientes.map(esc).join(", ")}.</p>` : "");
+}
+
+// ------------------------------------------------------------------- logs
+// Visor de los logs que la API persiste en Cassandra (logs_api_por_hora / _por_request /
+// _por_nivel). Las consultas de esta pantalla también generan logs: viajan con un
+// X-Request-ID "visor-logs-…" y se ocultan siempre, igual que los archivos estáticos del portal,
+// para no inundar la lista con su propio ruido.
+const PREFIJO_VISOR = "visor-logs-";
+const ORIGENES = { acceso: "HTTP", adaptador: "Base de datos", error: "Error", app: "API", "servicio.simulador": "Simulación", "servicio.prode": "Prode", "servicio.salud": "Salud" };
+const origenLog = (logger) => { const k = String(logger).replace(/^fixture2030\./, ""); return ORIGENES[k] ?? k; };
+const filtroLogs = { modo: "vivo", nivel: "", origen: "", texto: "", pausa: false };
+// Archivos del propio portal (HTML, banderas, logo): mucho volumen y poco interés para seguir el sistema.
+const esEstatico = (it) => it.metodo === "GET" && /^\/(portal\/(?!api\/)|demo\/|favicon\.ico$)/.test(it.ruta ?? "");
+let secuenciaVisor = 0;
+async function apiVisor(ruta, texto = false) {
+  const r = await fetch(ruta, { headers: { Accept: texto ? "text/plain" : "application/json", "X-Request-ID": `${PREFIJO_VISOR}${Date.now().toString(36)}-${++secuenciaVisor}` } });
+  if (!r.ok) throw new ErrorApi(r.status, await r.json().catch(() => null));
+  return texto ? r.text() : r.json();
+}
+const ventanaUTC = () => new Date().toISOString().slice(0, 13).replace(/[-T]/g, ""); // AAAAMMDDHH
+const fechaUTC = () => new Date().toISOString().slice(0, 10).replace(/-/g, "");      // AAAAMMDD
+const horaLog = (iso) => { const d = new Date(iso); return `${d.toLocaleTimeString("es-AR", { hour12: false })}.${String(d.getMilliseconds()).padStart(3, "0")}`; };
+const ms = (v) => `${Number(v).toLocaleString("es-AR", { maximumFractionDigits: 1 })} ms`;
+
+function detalleLog(it) {
+  const dur = it.duracion_ms != null ? ` · ${ms(it.duracion_ms)}` : "";
+  const res = it.resultado && it.resultado !== "ok" ? ` · <span style="color:var(--err)">${esc(it.resultado)}</span>` : "";
+  let html;
+  if (it.metodo) {
+    const s = it.status_http, color = s >= 500 ? "var(--err)" : s >= 400 ? "var(--warn)" : "var(--ok)";
+    html = `<b>${esc(it.metodo)}</b> ${esc(it.ruta)} → <b style="color:${color}">${s ?? "—"}</b>${dur}${res}`;
+  } else if (it.dependencia) {
+    html = `<span class="fuente" style="font-size:12px;color:var(--text)"><i style="background:var(--${esc(it.dependencia)})"></i>${esc(FUENTES[it.dependencia] ?? it.dependencia)}</span> ${esc(it.operacion ?? "")}${dur}${res}`;
+  } else {
+    html = esc(it.mensaje);
+  }
+  if ((it.metodo || it.dependencia) && (it.nivel === "ERROR" || it.nivel === "CRITICAL")) html += `<br><small>${esc(it.mensaje)}</small>`;
+  return html;
+}
+
+async function vistaLogs(app) {
+  const vistos = new Map(); // id_log -> entrada (se recorta a las 1000 más recientes)
+  let nuevos = new Set(), primera = true, generacion = 0, cargando = false, seleccion = null;
+  app.innerHTML = `
+    <h1>Logs del sistema</h1>
+    <p class="sub">Cada request, consulta a una base y paso de las simulaciones queda guardado en Apache Cassandra.
+      La lista se actualiza sola cada 2 segundos; los logs llegan con ~1 s de demora porque la API los escribe en lotes. ${fuente("cassandra")}</p>
+    <div class="kpis" id="lg-kpis"></div>
+    <div class="filtros logs-barra">
+      <button class="filtro" data-modo="vivo" title="Tabla logs_api_por_hora (hora UTC actual)">En vivo · última hora</button>
+      <button class="filtro" data-modo="incidentes" title="Tabla logs_api_por_nivel (WARNING, ERROR y CRITICAL de hoy)">Incidentes de hoy</button>
+      <select id="lg-nivel" aria-label="Nivel"><option value="">Todos los niveles</option><option>INFO</option><option>WARNING</option><option>ERROR</option><option>CRITICAL</option></select>
+      <select id="lg-origen" aria-label="Origen"><option value="">Todos los orígenes</option></select>
+      <input class="buscador" id="lg-texto" placeholder="Buscar ruta, operación, mensaje o request ID" autocomplete="off">
+      <button class="btn sec" id="lg-pausa"></button>
+    </div>
+    <div class="grid g-logs">
+      <div class="panel">
+        <div class="cabpanel"><h2 id="lg-titulo"></h2><small id="lg-estado" style="color:var(--muted)"></small></div>
+        <div class="logs-lista" id="lg-lista"><p class="vacio">Cargando…</p></div>
+      </div>
+      <div class="panel">
+        <div class="cabpanel"><h2>Traza de un request</h2>${fuente("cassandra")}</div>
+        <div id="lg-traza"><p class="vacio">Tocá un request ID de la lista para ver, en orden, todo lo que hizo esa petición: el acceso HTTP y cada consulta a las bases (tabla <code>logs_api_por_request</code>).</p></div>
+      </div>
+    </div>`;
+
+  const pintar = () => {
+    const t = filtroLogs.texto.trim().toLowerCase();
+    const todos = [...vistos.values()];
+    const visibles = todos
+      .filter(it => !it.request_id.startsWith(PREFIJO_VISOR) && !esEstatico(it))
+      .filter(it => !filtroLogs.nivel || it.nivel === filtroLogs.nivel)
+      .filter(it => !filtroLogs.origen || it.logger === filtroLogs.origen)
+      .filter(it => !t || [it.ruta, it.operacion, it.mensaje, it.request_id, it.dependencia].some(v => v && String(v).toLowerCase().includes(t)))
+      .sort((a, b) => b._t - a._t);
+
+    // El selector de origen se arma con los loggers que fueron apareciendo.
+    const sel = $("#lg-origen");
+    const loggers = [...new Set(todos.map(it => it.logger))].sort();
+    if (sel.options.length - 1 !== loggers.length) {
+      sel.innerHTML = `<option value="">Todos los orígenes</option>` + loggers.map(l => `<option value="${esc(l)}">${esc(origenLog(l))}</option>`).join("");
+      sel.value = filtroLogs.origen;
+    }
+
+    $("#lg-titulo").textContent = filtroLogs.modo === "vivo" ? `Última hora (${ventanaUTC().slice(8)} h UTC)` : "Incidentes de hoy";
+    $("#lg-lista").innerHTML = visibles.length
+      ? `<table class="logs"><thead><tr><th>Hora</th><th>Nivel</th><th>Origen</th><th>Detalle</th></tr></thead><tbody>${visibles.slice(0, 500).map(it => `
+          <tr class="${nuevos.has(it.id_log) ? "nuevo" : ""}${seleccion && it.request_id === seleccion ? " sel" : ""}">
+            <td class="hora mono">${esc(horaLog(it.creado_en))}</td>
+            <td><span class="nivel ${esc(it.nivel)}">${esc(it.nivel)}</span></td>
+            <td class="origen">${esc(origenLog(it.logger))}</td>
+            <td class="detalle">${detalleLog(it)}${it.request_id !== "-" ? `<br><button class="rid mono" data-rid="${esc(it.request_id)}">${esc(it.request_id)}</button>` : ""}</td>
+          </tr>`).join("")}</tbody></table>`
+      : `<p class="vacio">${vistos.size ? "Ningún log coincide con los filtros." : filtroLogs.modo === "vivo" ? "Todavía no hay logs en esta hora." : "No hubo incidentes hoy."}</p>`;
+
+    const cuenta = (n) => todos.filter(it => it.nivel === n && !it.request_id.startsWith(PREFIJO_VISOR)).length;
+    const kpi = (titulo, valor, alerta = false) => `<div class="kpi${alerta ? " alerta" : ""}"><small>${titulo}</small><b>${valor}</b></div>`;
+    $("#lg-kpis").innerHTML =
+      kpi("En pantalla", visibles.length.toLocaleString("es-AR")) +
+      kpi("Advertencias", cuenta("WARNING"), cuenta("WARNING") > 0) +
+      kpi("Errores", cuenta("ERROR") + cuenta("CRITICAL"), cuenta("ERROR") + cuenta("CRITICAL") > 0) +
+      ($("#lg-kpis").dataset.metricas ?? "");
+    document.querySelectorAll("[data-modo]").forEach(b => b.classList.toggle("activo", b.dataset.modo === filtroLogs.modo));
+    $("#lg-pausa").textContent = filtroLogs.pausa ? "▶ Reanudar" : "❚❚ Pausar";
+  };
+
+  const cargar = async () => {
+    if (filtroLogs.pausa || cargando) return;
+    cargando = true;
+    const gen = generacion;
+    try {
+      let items;
+      if (filtroLogs.modo === "vivo") {
+        items = (await apiVisor(`/observabilidad/logs?ventana_hora=${ventanaUTC()}&limit=200`)).items;
+      } else {
+        const f = fechaUTC();
+        const rs = await Promise.all(["WARNING", "ERROR", "CRITICAL"].map(n => apiVisor(`/observabilidad/logs/errores?nivel=${n}&fecha=${f}&limit=200`)));
+        items = rs.flatMap(r => r.items);
+      }
+      if (gen !== generacion || !$("#lg-lista")) return; // cambió el modo o se salió de la pantalla
+      nuevos = new Set();
+      for (const it of items) {
+        if (vistos.has(it.id_log)) continue;
+        it._t = Date.parse(it.creado_en);
+        vistos.set(it.id_log, it);
+        if (!primera) nuevos.add(it.id_log);
+      }
+      if (vistos.size > 1000) {
+        [...vistos.values()].sort((a, b) => b._t - a._t).slice(1000).forEach(it => vistos.delete(it.id_log));
+      }
+      primera = false;
+      $("#lg-estado").textContent = `Actualizado ${new Date().toLocaleTimeString("es-AR", { hour12: false })}`;
+      pintar();
+      nuevos = new Set(); // el resaltado se anima una sola vez, no en cada repintado
+    } catch (e) {
+      if ($("#lg-estado")) $("#lg-estado").innerHTML = `<span style="color:var(--err)">Sin conexión con los logs: ${esc(e.message)}</span>`;
+      if (!vistos.size && $("#lg-lista")) $("#lg-lista").innerHTML = `<p class="vacio">No se pudieron leer los logs de Cassandra (${esc(e.codigo ?? e.message)}).</p>`;
+    } finally { cargando = false; }
+  };
+
+  // Contadores del pipeline de logs publicados por la API en /metrics (Prometheus).
+  const cargarMetricas = async () => {
+    if (filtroLogs.pausa) return;
+    try {
+      const txt = await apiVisor("/metrics", true);
+      const suma = (re) => [...txt.matchAll(re)].reduce((a, m) => a + Number(m[1]), 0);
+      const guardados = suma(/^fixture_api_logs_persisted_total (\S+)$/gm);
+      const descartados = suma(/^fixture_api_logs_dropped_total\{[^}]*\} (\S+)$/gm);
+      const cola = suma(/^fixture_api_logs_queue_size (\S+)$/gm);
+      const el = $("#lg-kpis");
+      if (!el) return;
+      el.dataset.metricas =
+        `<div class="kpi" title="fixture_api_logs_persisted_total"><small>Guardados en Cassandra</small><b>${guardados.toLocaleString("es-AR")}</b></div>` +
+        `<div class="kpi${descartados ? " alerta" : ""}" title="fixture_api_logs_dropped_total"><small>Descartados</small><b>${descartados.toLocaleString("es-AR")}</b></div>` +
+        `<div class="kpi" title="fixture_api_logs_queue_size"><small>En cola</small><b>${cola}</b></div>`;
+      pintar();
+    } catch { /* /metrics es opcional para el visor */ }
+  };
+
+  const reiniciar = () => { generacion++; vistos.clear(); nuevos = new Set(); primera = true; pintar(); cargar(); };
+  document.querySelectorAll("[data-modo]").forEach(b => b.onclick = () => { if (filtroLogs.modo !== b.dataset.modo) { filtroLogs.modo = b.dataset.modo; reiniciar(); } });
+  $("#lg-nivel").value = filtroLogs.nivel;
+  $("#lg-nivel").onchange = (e) => { filtroLogs.nivel = e.target.value; pintar(); };
+  $("#lg-origen").onchange = (e) => { filtroLogs.origen = e.target.value; pintar(); };
+  $("#lg-texto").value = filtroLogs.texto;
+  $("#lg-texto").oninput = (e) => { filtroLogs.texto = e.target.value; nuevos = new Set(); pintar(); };
+  $("#lg-pausa").onclick = () => { filtroLogs.pausa = !filtroLogs.pausa; pintar(); if (!filtroLogs.pausa) { cargar(); cargarMetricas(); } };
+
+  $("#lg-lista").addEventListener("click", async (ev) => {
+    const b = ev.target.closest("[data-rid]");
+    if (!b) return;
+    seleccion = b.dataset.rid;
+    pintar();
+    const cont = $("#lg-traza");
+    cont.innerHTML = `<p class="vacio">Cargando traza…</p>`;
+    if (window.innerWidth <= 980) cont.scrollIntoView({ behavior: "smooth", block: "start" });
+    try {
+      const r = await apiVisor(`/observabilidad/logs/request/${encodeURIComponent(seleccion)}?limit=200`);
+      const t0 = r.items.length ? Date.parse(r.items[0].creado_en) : 0;
+      cont.innerHTML = r.items.length
+        ? `<p style="margin:0 0 10px;font-size:13px"><span class="mono">${esc(r.request_id)}</span> · ${r.items.length} evento${r.items.length === 1 ? "" : "s"}</p>
+           <ol class="traza">${r.items.map(it => `<li><span class="t mono">+${Date.parse(it.creado_en) - t0} ms</span>
+             <div><span class="nivel ${esc(it.nivel)}">${esc(it.nivel)}</span> <span class="origen">${esc(origenLog(it.logger))}</span>
+             <div class="detalle">${detalleLog(it)}</div></div></li>`).join("")}</ol>`
+        : `<p class="vacio">No hay eventos para ese request ID.</p>`;
+    } catch (e) { cont.innerHTML = `<p class="vacio">No se pudo leer la traza: ${esc(e.message)}</p>`; }
+  });
+
+  pintar();
+  await Promise.all([cargar(), cargarMetricas()]);
+  timers.push(setInterval(cargar, 2000), setInterval(cargarMetricas, 4000));
 }
 
 // ===================================================================== inicio

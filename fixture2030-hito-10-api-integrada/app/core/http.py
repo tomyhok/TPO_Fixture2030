@@ -60,15 +60,25 @@ def instalar_middleware(app: FastAPI) -> None:
             respuesta = await call_next(request)
         except Exception:  # noqa: BLE001 - último recurso: error interno seguro
             _log_error.exception(
-                "metodo=%s ruta=%s resultado=excepcion_no_controlada", request.method, request.url.path
+                "metodo=%s ruta=%s resultado=excepcion_no_controlada",
+                request.method,
+                request.url.path,
+                extra={
+                    "log_ctx": {
+                        "metodo": request.method,
+                        "ruta": request.url.path,
+                        "status_http": 500,
+                        "resultado": "excepcion_no_controlada",
+                    }
+                },
             )
             respuesta = respuesta_error(ErrorInterno(), request)
         duracion_s = time.perf_counter() - inicio
         duracion_ms = duracion_s * 1000
+        codigo_err = getattr(request.state, "error_codigo", None)
         if not es_metricas:
             ruta_norm = _ruta_plantilla(request)
             metricas.finalizar_request(request.method, ruta_norm, respuesta.status_code, duracion_s)
-            codigo_err = getattr(request.state, "error_codigo", None)
             if codigo_err:
                 metricas.registrar_error_http(request.method, ruta_norm, codigo_err)
         respuesta.headers[HEADER_REQUEST_ID] = request_id
@@ -79,6 +89,15 @@ def instalar_middleware(app: FastAPI) -> None:
             request.url.path,
             respuesta.status_code,
             duracion_ms,
+            extra={
+                "log_ctx": {
+                    "metodo": request.method,
+                    "ruta": request.url.path,
+                    "status_http": respuesta.status_code,
+                    "duracion_ms": round(duracion_ms, 2),
+                    "resultado": codigo_err or "ok",
+                }
+            },
         )
         request_id_actual.reset(token)
         return respuesta
@@ -109,7 +128,19 @@ def instalar_manejadores(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def _inesperado(request: Request, exc: Exception) -> JSONResponse:
-        _log_error.exception("metodo=%s ruta=%s resultado=error_inesperado", request.method, request.url.path)
+        _log_error.exception(
+            "metodo=%s ruta=%s resultado=error_inesperado",
+            request.method,
+            request.url.path,
+            extra={
+                "log_ctx": {
+                    "metodo": request.method,
+                    "ruta": request.url.path,
+                    "status_http": 500,
+                    "resultado": "error_inesperado",
+                }
+            },
+        )
         return respuesta_error(ErrorInterno(), request)
 
 

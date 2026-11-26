@@ -42,7 +42,7 @@ done
 "$PY" "$HITO/scripts/reiniciar_demo.py"
 
 paso "3/5 Cassandra: keyspace, tablas y muestra del Hito 6"
-for f in 01-keyspace 02-tablas 03-carga-muestra; do
+for f in 01-keyspace 02-tablas 03-carga-muestra 07-logs-api; do
   docker exec fixture2030-cassandra cqlsh -f "/scripts/$f.cql" > /dev/null
   echo "$f.cql ok"
 done

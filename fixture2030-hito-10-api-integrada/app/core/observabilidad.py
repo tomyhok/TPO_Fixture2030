@@ -56,3 +56,19 @@ def configurar_logs(nivel: str) -> None:
 
 def logger(nombre: str) -> logging.Logger:
     return logging.getLogger(f"fixture2030.{nombre}")
+
+
+def instalar_handler_logs(handler: logging.Handler) -> None:
+    """Agrega un handler adicional al logger raíz `fixture2030` con el filtro de request_id."""
+    raiz = logging.getLogger("fixture2030")
+    if handler in raiz.handlers:
+        return
+    if not any(isinstance(f, _FiltroRequestId) for f in handler.filters):
+        handler.addFilter(_FiltroRequestId())
+    raiz.addHandler(handler)
+
+
+def desinstalar_handler_logs(handler: logging.Handler) -> None:
+    """Quita un handler registrado en el logger raíz `fixture2030`."""
+    raiz = logging.getLogger("fixture2030")
+    raiz.removeHandler(handler)

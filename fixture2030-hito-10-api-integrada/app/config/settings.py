@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     api_port: int = 8000
     log_level: str = "INFO"
 
+    # --- Persistencia de logs en Cassandra ---
+    logs_cassandra_enabled: bool = True
+    logs_cassandra_servicio: str = "fixture2030-api"
+    logs_cassandra_queue_size: int = Field(2000, ge=10)
+    logs_cassandra_batch_size: int = Field(50, ge=1, le=500)
+    logs_cassandra_flush_interval_s: float = Field(1.0, gt=0)
+    logs_cassandra_ttl_s: int = Field(2592000, ge=0)
+
     # --- Límites de espera comunes (RNF8) ---
     timeout_conexion_s: float = Field(2.0, gt=0)
     timeout_operacion_s: float = Field(5.0, gt=0)

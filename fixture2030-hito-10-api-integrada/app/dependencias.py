@@ -15,6 +15,7 @@ from app.config.settings import Settings
 from app.services.comentarios_service import ComentariosService
 from app.services.equipos_service import EquiposService
 from app.services.estadisticas_service import EstadisticasService
+from app.services.logs_service import LogsService
 from app.services.partidos_service import PartidosService
 from app.services.portal_service import PortalService
 from app.services.prode_service import ProdeService
@@ -53,6 +54,7 @@ class Servicios:
     portal: PortalService
     prode: ProdeService
     simulador: SimuladorService
+    logs: LogsService
 
 
 def crear_adaptadores(settings: Settings) -> Adaptadores:
@@ -92,6 +94,7 @@ def crear_servicios(a: Adaptadores, settings: Settings) -> Servicios:
         portal=portal,
         prode=ProdeService(portal, a.mongodb, a.neo4j),
         simulador=simulador,
+        logs=LogsService(a.cassandra, servicio_default=settings.logs_cassandra_servicio),
     )
 
 

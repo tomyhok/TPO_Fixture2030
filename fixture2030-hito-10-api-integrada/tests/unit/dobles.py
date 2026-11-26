@@ -7,10 +7,13 @@ como lo haría el adaptador real al traducir una excepción del driver.
 """
 
 import json
+import threading
+import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 from app.core.errores import ErrorAPI
+from app.core.logs_cassandra import NIVELES_INCIDENTE
 from app.core.metricas import metricas
 
 
@@ -254,6 +257,73 @@ class CassandraDoble(Doble):
     def __init__(self) -> None:
         super().__init__()
         self.publicados: list[dict[str, Any]] = []
+        self.logs_por_hora: list[dict[str, Any]] = []
+        self.logs_por_request: list[dict[str, Any]] = []
+        self.logs_por_nivel: list[dict[str, Any]] = []
+        self.falla_logs: Exception | None = None
+        self._logs_lock = threading.Lock()
+
+    def escribir_lote_logs(self, eventos, ttl_s: int) -> int:
+        # No llama a _usar() para no contaminar llamadas de dominio ni metricas de negocio.
+        if self.falla_logs is not None:
+            raise self.falla_logs
+        with self._logs_lock:
+            for ev in eventos:
+                id_log = str(uuid.uuid1())
+                fila_base = {
+                    "id_log": id_log,
+                    "creado_en": ev.creado_en,
+                    "servicio": ev.servicio,
+                    "nivel": ev.nivel,
+                    "logger": ev.logger,
+                    "request_id": ev.request_id,
+                    "metodo": ev.metodo,
+                    "ruta": ev.ruta,
+                    "status_http": ev.status_http,
+                    "dependencia": ev.dependencia,
+                    "operacion": ev.operacion,
+                    "resultado": ev.resultado,
+                    "duracion_ms": ev.duracion_ms,
+                    "mensaje": ev.mensaje,
+                    "instancia": ev.instancia,
+                    "ttl_s": ttl_s,
+                }
+                self.logs_por_hora.insert(0, {**fila_base, "ventana_hora": ev.ventana_hora})
+                if ev.request_id and ev.request_id != "-":
+                    self.logs_por_request.append(dict(fila_base))
+                if ev.nivel in NIVELES_INCIDENTE:
+                    self.logs_por_nivel.insert(0, {**fila_base, "fecha": ev.fecha})
+        return len(eventos)
+
+    def leer_logs_por_hora(self, servicio: str, ventana_hora: str, limit: int) -> list[dict[str, Any]]:
+        self._usar("logs_api_por_hora.select")
+        with self._logs_lock:
+            filas = [
+                {k: v for k, v in f.items() if k not in ("ventana_hora", "ttl_s")}
+                for f in self.logs_por_hora
+                if f["servicio"] == servicio and f["ventana_hora"] == ventana_hora
+            ]
+        return filas[:limit]
+
+    def leer_logs_por_request(self, request_id: str, limit: int) -> list[dict[str, Any]]:
+        self._usar("logs_api_por_request.select")
+        with self._logs_lock:
+            filas = [
+                {k: v for k, v in f.items() if k != "ttl_s"}
+                for f in self.logs_por_request
+                if f["request_id"] == request_id
+            ]
+        return filas[:limit]
+
+    def leer_logs_por_nivel(self, nivel: str, fecha: str, limit: int) -> list[dict[str, Any]]:
+        self._usar("logs_api_por_nivel.select")
+        with self._logs_lock:
+            filas = [
+                {k: v for k, v in f.items() if k not in ("fecha", "ttl_s")}
+                for f in self.logs_por_nivel
+                if f["nivel"] == nivel and f["fecha"] == fecha
+            ]
+        return filas[:limit]
 
     def leer_muro_ventanas(self, codigo, ventanas, limit):
         self._usar("leer_muro_ventanas")

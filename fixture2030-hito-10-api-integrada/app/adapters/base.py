@@ -59,6 +59,14 @@ def _registrar(dependencia: str, nombre: str, inicio: float, resultado: str) -> 
         nombre,
         resultado,
         duracion_ms,
+        extra={
+            "log_ctx": {
+                "dependencia": dependencia,
+                "operacion": nombre,
+                "resultado": resultado,
+                "duracion_ms": round(duracion_ms, 2),
+            }
+        },
     )
 
 

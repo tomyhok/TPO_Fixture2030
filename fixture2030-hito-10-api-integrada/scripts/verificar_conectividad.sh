@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =====================================================================
-# Hito 10 - Verificar contenedores y conectividad de las seis fuentes
+# Hito 10 - Verificar contenedores y conectividad de las cinco fuentes
 # Uso (desde fixture2030-hito-10-api-integrada/): bash scripts/verificar_conectividad.sh
 # =====================================================================
 set -uo pipefail

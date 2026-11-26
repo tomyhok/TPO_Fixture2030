@@ -30,7 +30,6 @@ ESCENARIOS = [
     ("Redis", "GET /sesiones/{id} (404)", "/sesiones/S-9999"),
     ("InfluxDB", "GET /estadisticas 30 min @1m", "/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T20:30:00Z&resolucion=1m"),
     ("InfluxDB", "GET /estadisticas 3 h @10s", "/partidos/P-001/estadisticas?desde=2030-06-10T20:00:00Z&hasta=2030-06-10T23:00:00Z&resolucion=10s"),
-    ("IRIS", "GET /partidos-oficiales/{c}", "/partidos-oficiales/P-001"),
     ("Validación", "GET /equipos/arg (400)", "/equipos/arg"),
 ]
 
@@ -78,10 +77,10 @@ def main() -> int:
         "10 de calentamiento descartadas. Latencia medida en el cliente (`time.perf_counter`).",
         f"- **Entorno:** {platform.system()} {platform.release()}, {os.cpu_count()} CPU lógicas, "
         f"Python {platform.python_version()}, Docker Engine {version_docker()} (Docker Desktop). "
-        "API con uvicorn (1 worker) en la notebook; las seis bases en contenedores del `docker-compose.yml` raíz.",
+        "API con uvicorn (1 worker) en la notebook; las cinco bases en contenedores del `docker-compose.yml` raíz.",
         "- **Volumen de datos:** 64 selecciones y 1.472 jugadores (MongoDB); grafo del Hito 5; muestra de "
         "35 comentarios del Hito 6 más los creados por las pruebas; 28.800 puntos de P-001/P-002 en InfluxDB "
-        "(además de los del Hito 8); 3 actas en IRIS.",
+        "(además de los del Hito 8).",
         "- **Configuración:** timeouts de conexión 2 s y de operación 5 s; nivel de log INFO.",
         "",
         "| Fuente | Escenario | Respuestas | p50 (ms) | p95 (ms) | p99 (ms) | máx (ms) |",

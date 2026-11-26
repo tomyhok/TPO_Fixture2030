@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixture 2030 · Integración</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #dde1e8;
+    --accent: #2457d6; --ok: #1e8a4c; --warn: #b7791f; --err: #c0392b; --idle: #9aa3b2;
+    --mongodb: #3f9142; --neo4j: #018bff; --cassandra: #1287b1; --redis: #d82c20; --influxdb: #9b4dca;
+    --code-bg: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1b2029; --text: #e6e9ef; --muted: #9aa3b2; --line: #2d3440;
+      --accent: #6b93ff; --ok: #3ccf7a; --warn: #f0b04a; --err: #ff6b5c; --idle: #5d6677;
+      --code-bg: #141820;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 20px 16px 8px; max-width: 1200px; margin: 0 auto; }
+  header h1 { margin: 0 0 4px; font-size: 22px; }
+  header p { margin: 0; color: var(--muted); }
+  main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 40px; display: grid; gap: 16px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  h2 { margin: 0 0 12px; font-size: 16px; }
+  .fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .salud { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .chip { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; border-left: 4px solid var(--idle); }
+  .chip b { display: block; }
+  .chip small { color: var(--muted); }
+  .chip.up { border-left-color: var(--ok); } .chip.degraded { border-left-color: var(--warn); }
+  .chip.down, .chip.unknown, .chip.not_configured { border-left-color: var(--err); }
+  form { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; align-items: end; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  input { font: inherit; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px;
+          background: var(--bg); color: var(--text); min-width: 0; }
+  button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent);
+           background: var(--accent); color: #fff; cursor: pointer; }
+  button.sec { background: transparent; color: var(--accent); }
+  button:disabled { opacity: .6; cursor: wait; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { fill: var(--text); font: 12px system-ui, sans-serif; }
+  svg .etq { fill: var(--muted); font-size: 11px; }
+  .arista { stroke: var(--line); stroke-width: 2; fill: none; transition: stroke .3s; }
+  .arista.activa { stroke: var(--accent); stroke-dasharray: 6 4; animation: fluir .6s linear infinite; }
+  .arista.ok { stroke: var(--ok); } .arista.err { stroke: var(--err); }
+  .cruce { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 4; fill: none; opacity: .5; transition: all .3s; }
+  .cruce.on { stroke: var(--warn); opacity: 1; stroke-width: 2.5; }
+  .cruce-etq { opacity: 0; transition: opacity .3s; } .cruce-etq.on { opacity: 1; }
+  .nodo rect { fill: var(--panel); stroke-width: 2.5; }
+  .nodo.err rect { stroke-dasharray: 5 3; }
+  @keyframes fluir { to { stroke-dashoffset: -20; } }
+  .pasos { display: grid; gap: 8px; }
+  .paso { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; border-left: 4px solid var(--idle); }
+  .paso.ok { border-left-color: var(--ok); } .paso.warn { border-left-color: var(--warn); } .paso.err { border-left-color: var(--err); }
+  .paso header, .paso .cab { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 0; }
+  .paso code, .mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+  .paso .resumen { margin: 6px 0 0; }
+  .paso .clave { margin-top: 4px; color: var(--muted); font-size: 13px; }
+  .paso .clave b { color: var(--warn); }
+  details pre { background: var(--code-bg); padding: 8px; border-radius: 6px; overflow: auto; max-height: 260px; font-size: 12px; margin: 6px 0 0; }
+  .badge { font-size: 12px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .vista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .tarjeta { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .tarjeta h3 { margin: 0 0 6px; font-size: 14px; }
+  .tarjeta .fuente { font-size: 11px; color: var(--muted); }
+  .tarjeta ul { margin: 0; padding-left: 18px; }
+  .vacio { color: var(--muted); font-style: italic; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { text-align: left; padding: 3px 6px; border-bottom: 1px solid var(--line); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Fixture 2030 · Cómo se comunican las cinco bases</h1>
+  <p>Las bases no se hablan directamente: la API las integra mediante <b>claves de negocio compartidas</b>
+     (<span class="mono">codigo_partido</span>, <span class="mono">codigo_iso</span>, <span class="mono">id_usuario</span>).
+     Este front ejecuta un recorrido que encadena las lecturas y muestra qué clave lleva de una base a otra.
+     <a href="../portal/">Portal del Fixture</a> · <a href="../docs">Swagger</a></p>
+</header>
+<main>
+  <section>
+    <div class="fila" style="justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">Estado de las fuentes <span class="badge" id="salud-meta">sin consultar</span></h2>
+      <button class="sec" id="btn-salud" type="button">Verificar conectividad</button>
+    </div>
+    <div class="salud" id="salud"></div>
+  </section>
+
+  <section>
+    <h2>Recorrido integrado de un partido</h2>
+    <form id="form">
+      <label>Partido <input name="partido" value="P-001" pattern="^P-\d{3}$" required></label>
+      <label>Sesión del hincha (Redis) <input name="sesion" value="S-0001" pattern="^S-\d{4,}$" required></label>
+      <label>Ventana de comentarios (AAAAMMDDHHMM) <input name="ventana" value="203006152016" pattern="^\d{12}$" required></label>
+      <label>Estadísticas desde (UTC) <input name="desde" value="2030-06-10T20:00:00Z" required></label>
+      <label>Estadísticas hasta (UTC) <input name="hasta" value="2030-06-10T20:30:00Z" required></label>
+      <button id="btn-recorrido" type="submit">Ejecutar recorrido</button>
+    </form>
+  </section>
+
+  <div class="grid2">
+    <section>
+      <h2>Mapa de integración</h2>
+      <svg id="mapa" viewBox="0 0 560 420" role="img" aria-label="Diagrama de la API conectada a las cinco bases"></svg>
+      <p class="etq" style="color:var(--muted);font-size:13px;margin:6px 0 0">
+        Líneas sólidas: consulta API → base. Líneas punteadas naranjas: dato de una base que se usa como clave para consultar otra.
+      </p>
+    </section>
+    <section>
+      <h2>Pasos ejecutados</h2>
+      <div class="pasos" id="pasos"><p class="vacio">Ejecutá el recorrido para ver cada consulta.</p></div>
+    </section>
+  </div>
+
+  <section>
+    <h2>Vista integrada del partido</h2>
+    <div class="vista" id="vista"><p class="vacio">Todavía no hay datos combinados.</p></div>
+  </section>
+</main>
+
+<script>
+const BASES = {
+  neo4j:     { nombre: "Neo4j",     modelo: "grafos",       x: 280, y: 50 },
+  redis:     { nombre: "Redis",     modelo: "clave/valor",  x: 70,  y: 210 },
+  mongodb:   { nombre: "MongoDB",   modelo: "documental",   x: 490, y: 210 },
+  cassandra: { nombre: "Cassandra", modelo: "col. anchas",  x: 150, y: 370 },
+  influxdb:  { nombre: "InfluxDB",  modelo: "series temp.", x: 410, y: 370 },
+};
+const HUB = { x: 280, y: 210 };
+// Relaciones entre bases por clave compartida (se encienden cuando el dato aparece).
+const CRUCES = [
+  { id: "neo4j-mongodb",     de: "neo4j",     a: "mongodb",   etq: "id_jugador → codigo_iso" },
+  { id: "cassandra-mongodb", de: "cassandra", a: "mongodb",   etq: "equipo_apoyado" },
+  { id: "influxdb-mongodb",  de: "influxdb",  a: "mongodb",   etq: "tag equipo" },
+  { id: "redis-cassandra",   de: "redis",     a: "cassandra", etq: "usuario_id = id_usuario" },
+];
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// ------------------------------------------------------------------ mapa SVG
+function dibujarMapa() {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = $("#mapa");
+  let html = "";
+  // Punto de control: el punto medio empujado hacia afuera del hub, para que la curva no tape las aristas.
+  const control = (a, b, k) => {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const dx = mx - HUB.x, dy = my - HUB.y, n = Math.hypot(dx, dy) || 1;
+    return [mx + dx / n * k, my + dy / n * k];
+  };
+  for (const c of CRUCES) {
+    const a = BASES[c.de], b = BASES[c.a];
+    const [mx, my] = control(a, b, 70);
+    html += `<path id="cruce-${c.id}" class="cruce" d="M${a.x},${a.y} Q${mx},${my} ${b.x},${b.y}"/>`;
+  }
+  for (const [k, b] of Object.entries(BASES)) {
+    html += `<line id="arista-${k}" class="arista" x1="${HUB.x}" y1="${HUB.y}" x2="${b.x}" y2="${b.y}"/>`;
+  }
+  for (const c of CRUCES) {
+    const a = BASES[c.de], b = BASES[c.a];
+    const [mx, my] = control(a, b, 35);
+    html += `<text id="cruce-etq-${c.id}" class="etq cruce-etq" x="${mx}" y="${my + 4}" text-anchor="middle" style="fill:var(--warn);paint-order:stroke;stroke:var(--panel);stroke-width:4px">${c.etq}</text>`;
+  }
+  html += `<g><rect x="${HUB.x - 70}" y="${HUB.y - 26}" width="140" height="52" rx="10" fill="var(--accent)"/>
+    <text x="${HUB.x}" y="${HUB.y - 4}" text-anchor="middle" style="fill:#fff;font-weight:600">API FastAPI</text>
+    <text x="${HUB.x}" y="${HUB.y + 13}" text-anchor="middle" style="fill:#fff;font-size:11px">adaptadores · /metrics</text></g>`;
+  for (const [k, b] of Object.entries(BASES)) {
+    html += `<g class="nodo" id="nodo-${k}"><rect x="${b.x - 62}" y="${b.y - 24}" width="124" height="48" rx="8" stroke="var(--${k})"/>
+      <text x="${b.x}" y="${b.y - 4}" text-anchor="middle" style="font-weight:600">${b.nombre}</text>
+      <text id="nodo-txt-${k}" class="etq" x="${b.x}" y="${b.y + 13}" text-anchor="middle">${b.modelo}</text></g>`;
+  }
+  svg.innerHTML = html;
+}
+function marcarArista(base, estado) {
+  const el = document.getElementById("arista-" + base);
+  el.classList.remove("activa", "ok", "err");
+  if (estado) el.classList.add(estado);
+  document.getElementById("nodo-" + base).classList.toggle("err", estado === "err");
+}
+function marcarNodoTexto(base, texto) { document.getElementById("nodo-txt-" + base).textContent = texto; }
+function encenderCruce(id, on = true) {
+  document.getElementById("cruce-" + id)?.classList.toggle("on", on);
+  document.getElementById("cruce-etq-" + id)?.classList.toggle("on", on);
+}
+function reiniciarMapa() {
+  for (const k of Object.keys(BASES)) { marcarArista(k, null); marcarNodoTexto(k, BASES[k].modelo); }
+  for (const c of CRUCES) encenderCruce(c.id, false);
+}
+
+// ------------------------------------------------------------------ HTTP
+async function llamar(base, ruta) {
+  marcarArista(base, "activa");
+  const t0 = performance.now();
+  let status = 0, cuerpo = null, requestId = null;
+  try {
+    const r = await fetch(ruta, { headers: { Accept: "application/json" } });
+    status = r.status; requestId = r.headers.get("X-Request-ID");
+    cuerpo = await r.json().catch(() => null);
+  } catch (e) {
+    cuerpo = { error: { codigo: "SIN_RESPUESTA", mensaje: String(e) } };
+  }
+  const ms = performance.now() - t0;
+  const ok = status >= 200 && status < 300;
+  marcarArista(base, ok ? "ok" : "err");
+  marcarNodoTexto(base, `${status || "—"} · ${ms.toFixed(0)} ms`);
+  return { base, ruta, status, ok, ms, requestId, cuerpo };
+}
+
+// ------------------------------------------------------------------ pasos
+function agregarPaso(res, resumen, clave) {
+  const cont = $("#pasos");
+  if (cont.querySelector(".vacio")) cont.innerHTML = "";
+  const clase = res.ok ? "ok" : (res.status === 404 ? "warn" : "err");
+  const err = res.cuerpo?.error;
+  const div = document.createElement("div");
+  div.className = "paso " + clase;
+  div.innerHTML = `
+    <div class="cab"><b style="color:var(--${res.base})">${BASES[res.base].nombre}</b>
+      <span class="badge">${res.status || "sin respuesta"} · ${res.ms.toFixed(0)} ms</span></div>
+    <code>GET ${esc(res.ruta)}</code>
+    <p class="resumen">${err ? `<b>${esc(err.codigo)}</b>: ${esc(err.mensaje)}` : resumen}</p>
+    ${clave ? `<div class="clave">Clave que pasa a la siguiente base: ${clave}</div>` : ""}
+    <details><summary class="etq" style="color:var(--muted);font-size:12px;cursor:pointer">
+      Respuesta JSON${res.requestId ? ` · X-Request-ID ${esc(res.requestId.slice(0, 8))}…` : ""}</summary>
+      <pre>${esc(JSON.stringify(res.cuerpo, null, 2))}</pre></details>`;
+  cont.appendChild(div);
+}
+
+// ------------------------------------------------------------------ recorrido
+async function recorrido(p) {
+  reiniciarMapa();
+  $("#pasos").innerHTML = "";
+  const enc = encodeURIComponent;
+  const isoDesde = new Map(); // codigo_iso -> set de bases que lo aportaron
+  const sumarIso = (iso, base) => { if (!iso) return; if (!isoDesde.has(iso)) isoDesde.set(iso, new Set()); isoDesde.get(iso).add(base); };
+
+  // 1. Redis: el hincha entra con su sesión.
+  const rRedis = await llamar("redis", `/sesiones/${enc(p.sesion)}`);
+  const usuario = rRedis.ok ? rRedis.cuerpo.usuario_id : null;
+  agregarPaso(rRedis, rRedis.ok ? `Sesión <b>${esc(rRedis.cuerpo.estado)}</b> del usuario <b>${esc(usuario)}</b> (rol ${esc(rRedis.cuerpo.rol)}), expira en ${rRedis.cuerpo.ttl_restante_s}s.` : "",
+    usuario ? `<b>usuario_id=${esc(usuario)}</b> → se busca en los comentarios de Cassandra` : null);
+
+  // 2. Neo4j: el partido en el grafo (estado, sede, árbitro) y sus eventos.
+  const rPar = await llamar("neo4j", "/portal/api/partidos");
+  const partido = rPar.ok ? rPar.cuerpo.find(x => x.codigo_partido === p.partido) ?? null : null;
+  agregarPaso(rPar, partido ? `Partido <b>${esc(partido.codigo_partido)}</b>: ${esc(partido.sede?.nombre ?? "")}, ${esc(partido.fecha)}, estado <b>${esc(partido.estado)}</b>` +
+      `${partido.arbitro ? `, árbitro ${esc(partido.arbitro.nombre)} ${esc(partido.arbitro.apellido)}` : ""} ((Arbitro)-[:DIRIGE]->(Partido)-[:SE_JUEGA_EN]->(Sede)).`
+      : (rPar.ok ? `No existe el partido ${esc(p.partido)} en el grafo.` : ""),
+    `<b>codigo_partido=${esc(p.partido)}</b> → mismo identificador en Cassandra e InfluxDB`);
+
+  const rNeo = await llamar("neo4j", `/partidos/${enc(p.partido)}/eventos?limit=50`);
+  const eventos = rNeo.ok ? rNeo.cuerpo.eventos : [];
+  for (const ev of eventos) sumarIso(ev.jugador?.id_jugador?.split("-")[0], "neo4j");
+  const isoNeo = [...isoDesde.keys()];
+  agregarPaso(rNeo, rNeo.ok ? `${eventos.length} eventos en el grafo (Jugador)-[:PROTAGONIZA]->(Evento)-[:CORRESPONDE_A]->(Partido).` : "",
+    isoNeo.length ? `<b>id_jugador</b> (${eventos.filter(e => e.jugador).map(e => esc(e.jugador.id_jugador)).join(", ")}) → prefijo <b>codigo_iso</b> ${isoNeo.join(", ")} → MongoDB` : null);
+
+  // 3. Cassandra: muro de comentarios de la ventana.
+  const rCas = await llamar("cassandra", `/partidos/${enc(p.partido)}/comentarios?ventana=${enc(p.ventana)}&limit=50`);
+  const comentarios = rCas.ok ? rCas.cuerpo.items : [];
+  for (const c of comentarios) sumarIso(c.equipo_apoyado, "cassandra");
+  const delUsuario = usuario ? comentarios.filter(c => c.id_usuario === usuario) : [];
+  if (delUsuario.length) encenderCruce("redis-cassandra");
+  const isoCas = [...new Set(comentarios.map(c => c.equipo_apoyado).filter(Boolean))];
+  agregarPaso(rCas, rCas.ok ? `${comentarios.length} comentarios en la ventana ${esc(p.ventana)} (4 particiones por shard).` +
+      (usuario ? ` ${delUsuario.length} son del usuario de la sesión (${esc(usuario)}).` : "") : "",
+    isoCas.length ? `<b>equipo_apoyado</b> ${isoCas.map(esc).join(", ")} → MongoDB` : null);
+
+  // 4. InfluxDB: estadísticas temporales.
+  const rInf = await llamar("influxdb", `/partidos/${enc(p.partido)}/estadisticas?desde=${enc(p.desde)}&hasta=${enc(p.hasta)}&resolucion=1m`);
+  const series = rInf.ok ? rInf.cuerpo.series : [];
+  for (const s of series) sumarIso(s.equipo, "influxdb");
+  agregarPaso(rInf, rInf.ok ? `${series.length} series (${series.map(s => `${esc(s.equipo)}: ${s.puntos.length} puntos`).join(", ") || "sin puntos"}) agregadas con date_bin a 1 minuto.` : "",
+    series.length ? `<b>tag equipo</b> ${series.map(s => esc(s.equipo)).join(", ")} → MongoDB` : null);
+
+  // 5. MongoDB: ficha de cada selección descubierta en las otras bases.
+  const fichas = [];
+  if (!isoDesde.size) {
+    agregarPaso({ base: "mongodb", ruta: "/equipos/{codigo_iso}", status: 0, ok: false, ms: 0, requestId: null,
+      cuerpo: { error: { codigo: "SIN_CLAVES", mensaje: "Ninguna base devolvió un codigo_iso para consultar." } } }, "", null);
+    marcarArista("mongodb", "err");
+  }
+  const resMongo = await Promise.all([...isoDesde.keys()].map(iso => llamar("mongodb", `/equipos/${enc(iso)}`)));
+  resMongo.forEach((r, i) => {
+    const iso = [...isoDesde.keys()][i];
+    const origen = [...isoDesde.get(iso)];
+    if (r.ok) { fichas.push({ ...r.cuerpo, origen }); origen.forEach(b => encenderCruce(`${b}-mongodb`)); }
+    agregarPaso(r, r.ok ? `<b>${esc(r.cuerpo.nombre)}</b> (${esc(r.cuerpo.confederacion)}, grupo ${esc(r.cuerpo.grupo)}, ranking ${r.cuerpo.ranking_fifa}). Clave obtenida desde: ${origen.map(b => BASES[b].nombre).join(", ")}.` : "", null);
+  });
+  const okMongo = resMongo.filter(r => r.ok).length;
+  if (resMongo.length) { marcarArista("mongodb", okMongo ? "ok" : "err"); marcarNodoTexto("mongodb", `${okMongo}/${resMongo.length} fichas`); }
+
+  pintarVista({ p, sesion: rRedis.ok ? rRedis.cuerpo : null, partido, eventos, comentarios, delUsuario, series, fichas });
+}
+
+function pintarVista(d) {
+  const t = (titulo, fuente, cuerpo) => `<div class="tarjeta"><h3>${titulo}</h3><div class="fuente">${fuente}</div>${cuerpo}</div>`;
+  const vacio = (m) => `<p class="vacio">${m}</p>`;
+  let html = "";
+  html += t(`Partido ${esc(d.p.partido)}`, "Neo4j · nodo Partido", d.partido
+    ? `<p>${esc(d.partido.sede?.nombre ?? "")} · ${esc(d.partido.fecha)} · <b>${esc(d.partido.estado)}</b>` +
+      `${d.partido.arbitro ? `<br>Árbitro: ${esc(d.partido.arbitro.nombre)} ${esc(d.partido.arbitro.apellido)} (${esc(d.partido.arbitro.rango ?? "")})` : ""}</p>`
+    : vacio("El partido no está en el grafo."));
+  html += t("Selecciones involucradas", "MongoDB · claves de Neo4j, Cassandra e InfluxDB", d.fichas.length
+    ? `<table><tr><th>ISO</th><th>Nombre</th><th>DT</th><th>Rank</th><th>Origen</th></tr>${d.fichas.map(f =>
+        `<tr><td>${esc(f.codigo_iso)}</td><td>${esc(f.nombre)}${f.pais_anfitrion ? " 🏟" : ""}</td><td>${esc(f.director_tecnico ?? "—")}</td><td>${f.ranking_fifa}</td><td>${f.origen.map(b => BASES[b].nombre).join(", ")}</td></tr>`).join("")}</table>`
+    : vacio("No se pudo resolver ninguna selección."));
+  const cron = [
+    ...d.eventos.map(e => ({ min: e.minuto, txt: `${esc(e.tipo)}${e.jugador ? ` · ${esc(e.jugador.nombre)} (${esc(e.jugador.id_jugador)})` : ""}`, src: "Neo4j" })),
+  ].sort((a, b) => a.min - b.min);
+  html += t("Cronología", "Neo4j (grafo)", cron.length
+    ? `<ul>${cron.map(c => `<li><b>${c.min}'</b> ${c.txt} <span class="badge">${c.src}</span></li>`).join("")}</ul>`
+    : vacio("Sin eventos."));
+  const porEquipo = {};
+  for (const c of d.comentarios) porEquipo[c.equipo_apoyado ?? "—"] = (porEquipo[c.equipo_apoyado ?? "—"] ?? 0) + 1;
+  html += t("Muro de hinchas", "Cassandra + Redis (sesión)", d.comentarios.length
+    ? `<p>${Object.entries(porEquipo).map(([k, v]) => `${esc(k)}: <b>${v}</b>`).join(" · ")}</p>
+       ${d.sesion ? `<p>Usuario de la sesión <b>${esc(d.sesion.usuario_id)}</b>: ${d.delUsuario.length} comentarios propios.</p>` : ""}
+       <ul>${d.comentarios.slice(0, 4).map(c => `<li><b>${esc(c.usuario_alias ?? c.id_usuario)}</b> (${c.minuto_partido ?? "?"}'): ${esc(c.texto)}</li>`).join("")}</ul>`
+    : vacio("Sin comentarios en la ventana."));
+  html += t("Estadísticas en vivo", "InfluxDB · último punto de cada serie", d.series.length
+    ? `<table><tr><th>Equipo</th><th>Posesión</th><th>Pases</th><th>Tiros</th><th>Usuarios</th></tr>${d.series.map(s => {
+        const u = s.puntos.at(-1) ?? {};
+        return `<tr><td>${esc(s.equipo)}</td><td>${u.posesion_pct_prom?.toFixed(1) ?? "—"}%</td><td>${u.pases_completados_max ?? "—"}</td><td>${u.tiros_max ?? "—"}</td><td>${u.usuarios_activos_max ?? "—"}</td></tr>`;
+      }).join("")}</table>`
+    : vacio("Sin puntos en el intervalo."));
+  $("#vista").innerHTML = html;
+}
+
+// ------------------------------------------------------------------ salud
+async function verificarSalud() {
+  const btn = $("#btn-salud"); btn.disabled = true;
+  try {
+    const r = await fetch("/health/dependencias?refrescar=true");
+    const d = await r.json();
+    $("#salud-meta").textContent = `global: ${d.estado} · ${new Date(d.verificado_en).toLocaleTimeString()}`;
+    $("#salud").innerHTML = d.dependencias.map(x => `<div class="chip ${x.estado}">
+      <b style="color:var(--${x.nombre})">${BASES[x.nombre]?.nombre ?? esc(x.nombre)}</b>
+      <small>${esc(x.estado)}${x.latencia_ms != null ? ` · ${x.latencia_ms.toFixed(0)} ms` : ""}${x.motivo ? ` · ${esc(x.motivo)}` : ""}</small></div>`).join("");
+  } catch (e) {
+    $("#salud-meta").textContent = "la API no responde";
+    $("#salud").innerHTML = `<p class="vacio">No se pudo consultar /health/dependencias: ${esc(e)}</p>`;
+  } finally { btn.disabled = false; }
+}
+
+$("#btn-salud").addEventListener("click", verificarSalud);
+$("#form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const btn = $("#btn-recorrido"); btn.disabled = true;
+  try { await recorrido(Object.fromEntries(new FormData(ev.target))); }
+  finally { btn.disabled = false; }
+});
+dibujarMapa();
+verificarSalud();
+</script>
+</body>
+</html>

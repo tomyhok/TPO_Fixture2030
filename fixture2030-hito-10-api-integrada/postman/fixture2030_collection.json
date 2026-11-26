@@ -105,26 +105,6 @@
       ]
     },
     {
-      "name": "IRIS",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{base_url}}/partidos-oficiales/P-009"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Estado esperado\", function () { pm.expect([200]).to.include(pm.response.code); });",
-              "pm.test(\"Trazabilidad\", function () { pm.response.to.have.header(\"X-Request-ID\"); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "Ausente",
       "request": {
         "method": "GET",

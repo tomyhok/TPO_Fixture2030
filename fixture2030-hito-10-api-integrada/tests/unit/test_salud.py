@@ -16,13 +16,12 @@ from app.dependencias import Adaptadores
 from app.main import crear_app
 from tests.unit.conftest import sin_llamadas
 
-FUENTES = {"mongodb", "neo4j", "cassandra", "redis", "influxdb", "iris"}
+FUENTES = {"mongodb", "neo4j", "cassandra", "redis", "influxdb"}
 
 
 def _settings(**cambios) -> Settings:
     base = {
         "neo4j_password": "x",
-        "iris_password": "x",
         "influx_token": "x",
         "health_cache_ttl_s": 60,
     }
@@ -79,12 +78,12 @@ def test_diagnostico_distingue_caida_timeout_y_error_inesperado(crear_cliente, a
 
 
 def test_fuente_sin_configurar_no_se_consulta(crear_cliente, adaptadores):
-    cuerpo = crear_cliente(iris_password="", influx_token="<completar>").get("/health/dependencias").json()
+    cuerpo = crear_cliente(neo4j_password="", influx_token="<completar>").get("/health/dependencias").json()
     por_nombre = {d["nombre"]: d for d in cuerpo["dependencias"]}
-    assert por_nombre["iris"]["estado"] == "not_configured"
-    assert por_nombre["iris"]["motivo"] == "FALTA_CONFIGURACION:IRIS_PASSWORD"
-    assert por_nombre["iris"]["latencia_ms"] is None
-    assert adaptadores.iris.llamadas == []
+    assert por_nombre["neo4j"]["estado"] == "not_configured"
+    assert por_nombre["neo4j"]["motivo"] == "FALTA_CONFIGURACION:NEO4J_PASSWORD"
+    assert por_nombre["neo4j"]["latencia_ms"] is None
+    assert adaptadores.neo4j.llamadas == []
     assert por_nombre["influxdb"]["estado"] == "not_configured"
     assert cuerpo["estado"] == "degraded"
 

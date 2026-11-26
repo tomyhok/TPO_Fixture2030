@@ -9,7 +9,6 @@ from app.main import crear_app
 from tests.unit.dobles import (
     CassandraDoble,
     InfluxDoble,
-    IrisDoble,
     MongoDoble,
     Neo4jDoble,
     RedisDoble,
@@ -24,7 +23,6 @@ def adaptadores() -> Adaptadores:
         cassandra=CassandraDoble(),
         redis=RedisDoble(),
         influxdb=InfluxDoble(),
-        iris=IrisDoble(),
     )
 
 

@@ -10,13 +10,15 @@ Las sentencias son preparadas (parametrizadas) y se crean una sola vez.
 
 import threading
 import uuid
+import zlib
 from datetime import UTC, datetime
 from typing import Any
 
 from cassandra import OperationTimedOut, ReadTimeout, Unavailable, WriteTimeout
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, NoHostAvailable, Session
 from cassandra.policies import DCAwareRoundRobinPolicy
-from cassandra.query import dict_factory
+from cassandra.query import BatchStatement, BatchType, dict_factory
+from cassandra.util import uuid_from_time
 
 from app.adapters.base import no_disponible, operacion, timeout
 from app.config.settings import Settings
@@ -37,6 +39,23 @@ CQL_MURO_CURSOR = (
     f"SELECT {COLUMNAS_MURO} FROM comentarios_por_partido "
     "WHERE id_partido = ? AND ventana = ? AND shard = ? AND id_comentario < ? LIMIT ?"
 )
+# Portal: escritura doble del Hito 6 (muro por partido + historial por usuario) en un batch LOGGED.
+CQL_INSERT_MURO = (
+    "INSERT INTO comentarios_por_partido (id_partido, ventana, shard, id_comentario, id_usuario, "
+    "usuario_alias, equipo_apoyado, texto, idioma, estado_moderacion, minuto_partido, creado_en) "
+    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+)
+CQL_INSERT_USUARIO = (
+    "INSERT INTO comentarios_por_usuario (id_usuario, periodo, id_comentario, id_partido, texto, "
+    "estado_moderacion, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?)"
+)
+
+
+def shard_de(id_usuario: str) -> int:
+    """Mismo criterio que el productor del Hito 6: crc32(id_usuario) % 4."""
+    return zlib.crc32(id_usuario.encode("utf-8")) % SHARDS
+
+
 def _traducir(exc: Exception) -> ErrorAPI | None:
     if isinstance(exc, (OperationTimedOut, ReadTimeout, WriteTimeout)):
         return timeout(DEPENDENCIA)
@@ -107,6 +126,8 @@ class CassandraAdapter:
             self._preparadas = {
                 "muro": sesion.prepare(CQL_MURO),
                 "muro_cursor": sesion.prepare(CQL_MURO_CURSOR),
+                "insert_muro": sesion.prepare(CQL_INSERT_MURO),
+                "insert_usuario": sesion.prepare(CQL_INSERT_USUARIO),
             }
             self._cluster, self._sesion = cluster, sesion
             return sesion
@@ -132,6 +153,43 @@ class CassandraAdapter:
         filas.sort(key=lambda f: _orden_timeuuid(f["id_comentario"]), reverse=True)
         hay_mas = len(filas) > limit
         return [_fila(f, codigo_partido, ventana) for f in filas[:limit]], hay_mas
+
+    # ----------------------------------------------------------------- portal
+    def leer_muro_ventanas(self, codigo_partido: str, ventanas: list[str], limit: int) -> list[dict[str, Any]]:
+        """Portal: últimos comentarios de varias ventanas (4 particiones por ventana, en paralelo)."""
+        with operacion(DEPENDENCIA, "comentarios_por_partido.select_ventanas", _traducir):
+            sesion = self._obtener_sesion()
+            stmt = self._preparadas["muro"]
+            futuros = [
+                (v, sesion.execute_async(stmt, (codigo_partido, v, shard, limit)))
+                for v in ventanas
+                for shard in range(SHARDS)
+            ]
+            filas = [(v, f) for v, futuro in futuros for f in futuro.result()]
+        filas.sort(key=lambda par: _orden_timeuuid(par[1]["id_comentario"]), reverse=True)
+        return [_fila(f, codigo_partido, v) for v, f in filas[:limit]]
+
+    def publicar_comentario(self, c: dict[str, Any]) -> dict[str, Any]:
+        """Inserta en comentarios_por_partido y comentarios_por_usuario (batch LOGGED)."""
+        ahora = datetime.now(UTC)
+        id_comentario = uuid_from_time(ahora)
+        ventana = ahora.strftime("%Y%m%d%H%M")
+        with operacion(DEPENDENCIA, "comentarios.insert", _traducir):
+            sesion = self._obtener_sesion()
+            batch = BatchStatement(batch_type=BatchType.LOGGED)
+            batch.add(self._preparadas["insert_muro"], (
+                c["codigo_partido"], ventana, shard_de(c["id_usuario"]), id_comentario, c["id_usuario"],
+                c["usuario_alias"], c["equipo_apoyado"], c["texto"], "es", "publicado", c["minuto_partido"], ahora,
+            ))
+            batch.add(self._preparadas["insert_usuario"], (
+                c["id_usuario"], ahora.strftime("%Y%m"), id_comentario, c["codigo_partido"], c["texto"],
+                "publicado", ahora,
+            ))
+            sesion.execute(batch)
+        return {
+            **c, "id_comentario": str(id_comentario), "ventana": ventana, "idioma": "es",
+            "estado_moderacion": "publicado", "creado_en": ahora,
+        }
 
     def ping(self) -> None:
         with operacion(DEPENDENCIA, "ping", _traducir):

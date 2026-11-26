@@ -15,11 +15,11 @@ Svc = Annotated[Servicios, Depends(servicios)]
 @router.get(
     "/health",
     response_model=Salud,
-    summary="CU16 - Disponibilidad de las seis fuentes",
+    summary="CU16 - Disponibilidad de las cinco fuentes",
     description=(
         "Ejecuta una operación trivial en cada fuente, en paralelo y con el timeout de cada "
         "adaptador. 200 si todas responden; 503 si al menos una falla, indicando cuál. "
-        "Consulta las seis bases en cada llamada: para sondeos frecuentes usar /health/ready."
+        "Consulta las cinco bases en cada llamada: para sondeos frecuentes usar /health/ready."
     ),
     responses={503: {"model": Salud, "description": "Al menos una fuente no está disponible."}},
 )

@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     timeout_conexion_s: float = Field(2.0, gt=0)
     timeout_operacion_s: float = Field(5.0, gt=0)
 
+    # --- Simulación de partidos del portal ---
+    # Duración real de los 90 minutos (más el descuento) al iniciar un partido desde el portal.
+    simulacion_duracion_s: float = Field(60.0, ge=0)
+
     # --- MongoDB (Hito 4) ---
     mongo_host: str = "127.0.0.1"
     mongo_port: int = 27017
@@ -66,16 +70,9 @@ class Settings(BaseSettings):
     # fixture2030-influxDB/scripts/inicializacion.sh (excluido del repositorio).
     influx_token_file: Path = RAIZ_HITO.parent / "fixture2030-influxDB" / ".influxdb3-token"
 
-    # --- InterSystems IRIS (Hito 9) ---
-    iris_host: str = "127.0.0.1"
-    iris_port: int = 1972
-    iris_namespace: str = "USER"
-    iris_user: str = "fixture_api"
-    iris_password: SecretStr = SecretStr("")
-
     # --- Diagnóstico de salud (Hito 11) ---
     # El chequeo profundo de /health/ready y /health/dependencias se reutiliza
-    # durante este tiempo para no consultar las seis bases en cada llamada.
+    # durante este tiempo para no consultar las cinco bases en cada llamada.
     health_cache_ttl_s: float = Field(10.0, ge=0)
     # Un ping exitoso que tarda más que esto marca la fuente como "degraded".
     health_umbral_lento_ms: float = Field(1000.0, gt=0)
@@ -106,12 +103,6 @@ class Settings(BaseSettings):
                 ("INFLUX_URL", self.influx_url),
                 ("INFLUX_DATABASE", self.influx_database),
                 ("INFLUX_TOKEN", self.token_influx()),
-            ),
-            "iris": vacias(
-                ("IRIS_HOST", self.iris_host),
-                ("IRIS_NAMESPACE", self.iris_namespace),
-                ("IRIS_USER", self.iris_user),
-                ("IRIS_PASSWORD", self.iris_password.get_secret_value()),
             ),
         }
 

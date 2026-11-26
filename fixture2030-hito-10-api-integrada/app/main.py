@@ -16,9 +16,10 @@ from fastapi.staticfiles import StaticFiles
 from app import VERSION
 from app.config.settings import Settings, obtener_settings
 from app.core.http import instalar_manejadores, instalar_middleware, instalar_openapi
-from app.core.observabilidad import configurar_logs, logger
+from app.core.logs_cassandra import CassandraLogHandler, PersistorLogsCassandra
+from app.core.observabilidad import configurar_logs, desinstalar_handler_logs, instalar_handler_logs, logger
 from app.dependencias import Adaptadores, crear_adaptadores, crear_servicios
-from app.routes import comentarios, equipos, estadisticas, partidos, portal, salud, sesiones
+from app.routes import comentarios, equipos, estadisticas, logs, partidos, portal, salud, sesiones
 
 
 DESCRIPCION = """Cinco lecturas representativas, una por motor: MongoDB, Neo4j,
@@ -43,11 +44,35 @@ def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None 
     async def ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
         propios = adaptadores or crear_adaptadores(settings)
         app.state.servicios = crear_servicios(propios, settings)
+        persistor_logs: PersistorLogsCassandra | None = None
+        handler_logs: CassandraLogHandler | None = None
+        if settings.logs_cassandra_enabled and hasattr(propios.cassandra, "escribir_lote_logs"):
+            persistor_logs = PersistorLogsCassandra(
+                escritor=propios.cassandra,
+                servicio=settings.logs_cassandra_servicio,
+                queue_size=settings.logs_cassandra_queue_size,
+                batch_size=settings.logs_cassandra_batch_size,
+                flush_interval_s=settings.logs_cassandra_flush_interval_s,
+                ttl_s=settings.logs_cassandra_ttl_s,
+            )
+            persistor_logs.iniciar()
+            handler_logs = CassandraLogHandler(
+                persistor_logs,
+                servicio=settings.logs_cassandra_servicio,
+            )
+            instalar_handler_logs(handler_logs)
+        app.state.persistor_logs = persistor_logs
         log.info("api_iniciada version=%s", VERSION)
-        yield
-        app.state.servicios.simulador.cerrar()  # detiene las simulaciones antes de cerrar las bases
-        propios.cerrar()
-        log.info("api_detenida")
+        try:
+            yield
+        finally:
+            app.state.servicios.simulador.cerrar()  # detiene las simulaciones antes de cerrar las bases
+            log.info("api_detenida")
+            if handler_logs is not None:
+                desinstalar_handler_logs(handler_logs)
+            if persistor_logs is not None:
+                persistor_logs.cerrar(timeout_s=2.0)
+            propios.cerrar()
 
     app = FastAPI(
         title="Fixture 2030 - API REST integrada",
@@ -59,7 +84,7 @@ def crear_app(adaptadores: Adaptadores | None = None, settings: Settings | None 
     )
     instalar_middleware(app)
     instalar_manejadores(app)
-    for modulo in (equipos, partidos, comentarios, sesiones, estadisticas, salud):
+    for modulo in (equipos, partidos, comentarios, sesiones, estadisticas, salud, logs):
         app.include_router(modulo.router)
     # Portal del Fixture (/portal) y diagrama de integración (/demo): páginas estáticas
     # que consumen la API desde el navegador. Las rutas /portal/api quedan fuera de OpenAPI.

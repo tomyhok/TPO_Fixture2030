@@ -57,6 +57,10 @@ class RegistroMetricas:
             self._db_hist_sum: dict[tuple[str, str], float] = {}
             self._db_hist_count: dict[tuple[str, str], int] = {}
 
+            self._logs_persisted: int = 0
+            self._logs_dropped: dict[str, int] = {}
+            self._logs_queue_size: int = 0
+
     # ------------------------------------------------------- Instrumentación HTTP
     def iniciar_request(self) -> None:
         with self._lock:
@@ -104,6 +108,23 @@ class RegistroMetricas:
             self._db_hist_sum[clave_hist] += max(0.0, duracion_s)
             self._db_hist_count[clave_hist] += 1
 
+    # ------------------------------------------------ Instrumentación Persistencia Logs
+    def registrar_logs_persistidos(self, cantidad: int = 1) -> None:
+        if cantidad <= 0:
+            return
+        with self._lock:
+            self._logs_persisted += cantidad
+
+    def registrar_logs_descartados(self, motivo: str, cantidad: int = 1) -> None:
+        if cantidad <= 0:
+            return
+        with self._lock:
+            self._logs_dropped[motivo] = self._logs_dropped.get(motivo, 0) + cantidad
+
+    def actualizar_cola_logs(self, tamano: int) -> None:
+        with self._lock:
+            self._logs_queue_size = max(0, tamano)
+
     # ------------------------------------------------- Exportación Prometheus 0.0.4
     def exportar_prometheus(self, diagnostico: Any = None) -> str:
         with self._lock:
@@ -118,6 +139,9 @@ class RegistroMetricas:
             db_hist_buckets = {k: list(v) for k, v in self._db_hist_buckets.items()}
             db_hist_sum = dict(self._db_hist_sum)
             db_hist_count = dict(self._db_hist_count)
+            logs_persisted = self._logs_persisted
+            logs_dropped = dict(self._logs_dropped)
+            logs_queue_size = self._logs_queue_size
 
         lineas: list[str] = []
 
@@ -248,6 +272,27 @@ class RegistroMetricas:
             etiquetas_base = _formatear_labels({"db": db, "operation": op})
             lineas.append(f"fixture_db_operation_duration_seconds_sum{etiquetas_base} {total_sum:.6f}")
             lineas.append(f"fixture_db_operation_duration_seconds_count{etiquetas_base} {total_count}")
+
+        # 6. Persistencia asíncrona de logs en Cassandra
+        lineas.extend(
+            [
+                "# HELP fixture_api_logs_persisted_total Total de logs persistidos en Cassandra.",
+                "# TYPE fixture_api_logs_persisted_total counter",
+                f"fixture_api_logs_persisted_total {logs_persisted}",
+                "# HELP fixture_api_logs_dropped_total Total de logs descartados por cola llena, error o cierre.",
+                "# TYPE fixture_api_logs_dropped_total counter",
+            ]
+        )
+        for motivo, total in sorted(logs_dropped.items()):
+            etiquetas = _formatear_labels({"reason": motivo})
+            lineas.append(f"fixture_api_logs_dropped_total{etiquetas} {total}")
+        lineas.extend(
+            [
+                "# HELP fixture_api_logs_queue_size Cantidad de eventos de log actualmente en cola hacia Cassandra.",
+                "# TYPE fixture_api_logs_queue_size gauge",
+                f"fixture_api_logs_queue_size {logs_queue_size}",
+            ]
+        )
 
         return "\n".join(lineas) + "\n"
 

@@ -14,7 +14,7 @@ import zlib
 from datetime import UTC, datetime
 from typing import Any
 
-from cassandra import OperationTimedOut, ReadTimeout, Unavailable, WriteTimeout
+from cassandra import ConsistencyLevel, OperationTimedOut, ReadTimeout, Unavailable, WriteTimeout
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, NoHostAvailable, Session
 from cassandra.policies import DCAwareRoundRobinPolicy
 from cassandra.query import BatchStatement, BatchType, dict_factory
@@ -23,6 +23,7 @@ from cassandra.util import uuid_from_time
 from app.adapters.base import no_disponible, operacion, timeout
 from app.config.settings import Settings
 from app.core.errores import ErrorAPI
+from app.core.logs_cassandra import NIVELES_INCIDENTE, EventoLog
 
 DEPENDENCIA = "cassandra"
 SHARDS = 4  # mismo valor que fija el productor del Hito 6: crc32(id_usuario) % 4
@@ -48,6 +49,38 @@ CQL_INSERT_MURO = (
 CQL_INSERT_USUARIO = (
     "INSERT INTO comentarios_por_usuario (id_usuario, periodo, id_comentario, id_partido, texto, "
     "estado_moderacion, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?)"
+)
+
+# Persistencia de logs operativos de la API (3 tablas guiadas por consulta)
+CQL_INSERT_LOG_HORA = (
+    "INSERT INTO logs_api_por_hora (servicio, ventana_hora, id_log, creado_en, nivel, logger, "
+    "request_id, metodo, ruta, status_http, dependencia, operacion, resultado, duracion_ms, "
+    "mensaje, instancia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?"
+)
+CQL_INSERT_LOG_REQUEST = (
+    "INSERT INTO logs_api_por_request (request_id, id_log, creado_en, servicio, nivel, logger, "
+    "metodo, ruta, status_http, dependencia, operacion, resultado, duracion_ms, mensaje, instancia) "
+    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?"
+)
+CQL_INSERT_LOG_NIVEL = (
+    "INSERT INTO logs_api_por_nivel (nivel, fecha, id_log, creado_en, servicio, logger, "
+    "request_id, metodo, ruta, status_http, dependencia, operacion, resultado, duracion_ms, "
+    "mensaje, instancia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?"
+)
+CQL_SELECT_LOGS_HORA = (
+    "SELECT id_log, creado_en, servicio, nivel, logger, request_id, metodo, ruta, status_http, "
+    "dependencia, operacion, resultado, duracion_ms, mensaje, instancia "
+    "FROM logs_api_por_hora WHERE servicio = ? AND ventana_hora = ? LIMIT ?"
+)
+CQL_SELECT_LOGS_REQUEST = (
+    "SELECT id_log, creado_en, servicio, nivel, logger, request_id, metodo, ruta, status_http, "
+    "dependencia, operacion, resultado, duracion_ms, mensaje, instancia "
+    "FROM logs_api_por_request WHERE request_id = ? LIMIT ?"
+)
+CQL_SELECT_LOGS_NIVEL = (
+    "SELECT id_log, creado_en, servicio, nivel, logger, request_id, metodo, ruta, status_http, "
+    "dependencia, operacion, resultado, duracion_ms, mensaje, instancia "
+    "FROM logs_api_por_nivel WHERE nivel = ? AND fecha = ? LIMIT ?"
 )
 
 
@@ -88,12 +121,36 @@ def _fila(fila: dict[str, Any], codigo_partido: str, ventana: str) -> dict[str, 
     }
 
 
+def _fila_log(fila: dict[str, Any]) -> dict[str, Any]:
+    creado = fila["creado_en"]
+    if creado is not None and creado.tzinfo is None:
+        creado = creado.replace(tzinfo=UTC)
+    return {
+        "id_log": str(fila["id_log"]),
+        "creado_en": creado,
+        "servicio": fila["servicio"],
+        "nivel": fila["nivel"],
+        "logger": fila["logger"],
+        "request_id": fila["request_id"],
+        "metodo": fila["metodo"],
+        "ruta": fila["ruta"],
+        "status_http": fila["status_http"],
+        "dependencia": fila["dependencia"],
+        "operacion": fila["operacion"],
+        "resultado": fila["resultado"],
+        "duracion_ms": fila["duracion_ms"],
+        "mensaje": fila["mensaje"],
+        "instancia": fila["instancia"],
+    }
+
+
 class CassandraAdapter:
     def __init__(self, settings: Settings):
         self._settings = settings
         self._cluster: Cluster | None = None
         self._sesion: Session | None = None
         self._preparadas: dict[str, Any] = {}
+        self._preparadas_logs: dict[str, Any] = {}
         self._lock = threading.Lock()
 
     def _obtener_sesion(self) -> Session:
@@ -190,6 +247,103 @@ class CassandraAdapter:
             **c, "id_comentario": str(id_comentario), "ventana": ventana, "idioma": "es",
             "estado_moderacion": "publicado", "creado_en": ahora,
         }
+
+    # ------------------------------------------------- logs operativos API
+    def _obtener_preparadas_logs(self, sesion: Session) -> dict[str, Any]:
+        if self._preparadas_logs:
+            return self._preparadas_logs
+        with self._lock:
+            if self._preparadas_logs:
+                return self._preparadas_logs
+            stmts = {
+                "insert_log_hora": sesion.prepare(CQL_INSERT_LOG_HORA),
+                "insert_log_request": sesion.prepare(CQL_INSERT_LOG_REQUEST),
+                "insert_log_nivel": sesion.prepare(CQL_INSERT_LOG_NIVEL),
+                "select_logs_hora": sesion.prepare(CQL_SELECT_LOGS_HORA),
+                "select_logs_request": sesion.prepare(CQL_SELECT_LOGS_REQUEST),
+                "select_logs_nivel": sesion.prepare(CQL_SELECT_LOGS_NIVEL),
+            }
+            for nombre in ("insert_log_hora", "insert_log_request", "insert_log_nivel"):
+                stmts[nombre].consistency_level = ConsistencyLevel.ONE
+            self._preparadas_logs = stmts
+            return stmts
+
+    def escribir_lote_logs(self, eventos: list[EventoLog], ttl_s: int) -> int:
+        """Persiste un micro-lote de logs en paralelo (sin Batch LOGGED multi-partición).
+
+        Devuelve cuántos eventos quedaron escritos en todas sus tablas. Si falla solo
+        una parte del lote, el resto se cuenta como persistido; si fallan todos, se
+        propaga la primera excepción para que el persistor la informe.
+        """
+        if not eventos:
+            return 0
+        sesion = self._obtener_sesion()
+        stmts = self._obtener_preparadas_logs(sesion)
+        futuros: list[tuple[int, Any]] = []  # (índice del evento, futuro de su INSERT)
+        for indice, ev in enumerate(eventos):
+            id_log = uuid_from_time(ev.creado_en)
+            futuros.append((indice, sesion.execute_async(
+                stmts["insert_log_hora"],
+                (
+                    ev.servicio, ev.ventana_hora, id_log, ev.creado_en, ev.nivel, ev.logger,
+                    ev.request_id, ev.metodo, ev.ruta, ev.status_http, ev.dependencia,
+                    ev.operacion, ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
+                ),
+            )))
+            if ev.request_id and ev.request_id != "-":
+                futuros.append((indice, sesion.execute_async(
+                    stmts["insert_log_request"],
+                    (
+                        ev.request_id, id_log, ev.creado_en, ev.servicio, ev.nivel, ev.logger,
+                        ev.metodo, ev.ruta, ev.status_http, ev.dependencia, ev.operacion,
+                        ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
+                    ),
+                )))
+            if ev.nivel in NIVELES_INCIDENTE:
+                futuros.append((indice, sesion.execute_async(
+                    stmts["insert_log_nivel"],
+                    (
+                        ev.nivel, ev.fecha, id_log, ev.creado_en, ev.servicio, ev.logger,
+                        ev.request_id, ev.metodo, ev.ruta, ev.status_http, ev.dependencia,
+                        ev.operacion, ev.resultado, ev.duracion_ms, ev.mensaje, ev.instancia, ttl_s,
+                    ),
+                )))
+
+        # Se espera a todos los futuros (no se corta en el primer error) para saber
+        # exactamente qué eventos fallaron en alguna de sus tablas.
+        fallidos: set[int] = set()
+        primer_error: Exception | None = None
+        for indice, futuro in futuros:
+            try:
+                futuro.result()
+            except Exception as exc:  # noqa: BLE001 - se informa vía persistor, sin loguear (anti-recursión)
+                fallidos.add(indice)
+                if primer_error is None:
+                    primer_error = exc
+        if primer_error is not None and len(fallidos) == len(eventos):
+            raise primer_error
+        return len(eventos) - len(fallidos)
+
+    def leer_logs_por_hora(self, servicio: str, ventana_hora: str, limit: int) -> list[dict[str, Any]]:
+        with operacion(DEPENDENCIA, "logs_api_por_hora.select", _traducir):
+            sesion = self._obtener_sesion()
+            stmt = self._obtener_preparadas_logs(sesion)["select_logs_hora"]
+            filas = list(sesion.execute(stmt, (servicio, ventana_hora, limit)))
+        return [_fila_log(f) for f in filas]
+
+    def leer_logs_por_request(self, request_id: str, limit: int) -> list[dict[str, Any]]:
+        with operacion(DEPENDENCIA, "logs_api_por_request.select", _traducir):
+            sesion = self._obtener_sesion()
+            stmt = self._obtener_preparadas_logs(sesion)["select_logs_request"]
+            filas = list(sesion.execute(stmt, (request_id, limit)))
+        return [_fila_log(f) for f in filas]
+
+    def leer_logs_por_nivel(self, nivel: str, fecha: str, limit: int) -> list[dict[str, Any]]:
+        with operacion(DEPENDENCIA, "logs_api_por_nivel.select", _traducir):
+            sesion = self._obtener_sesion()
+            stmt = self._obtener_preparadas_logs(sesion)["select_logs_nivel"]
+            filas = list(sesion.execute(stmt, (nivel, fecha, limit)))
+        return [_fila_log(f) for f in filas]
 
     def ping(self) -> None:
         with operacion(DEPENDENCIA, "ping", _traducir):

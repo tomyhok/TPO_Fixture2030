@@ -1,0 +1,11 @@
+{
+  "name": "tpo-fixture2030",
+  "private": true,
+  "description": "Atajos para levantar los motores y la API del Hito 10, que sirve el portal en http://127.0.0.1:8000/",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "api": "node scripts/dev.mjs --sin-docker",
+    "motores": "docker compose up -d",
+    "detener": "docker compose stop"
+  }
+}

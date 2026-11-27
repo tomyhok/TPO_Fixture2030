@@ -30,4 +30,7 @@ if (-not $apiPort) { $apiPort = "8000" }
 
 New-Item -ItemType Directory -Force logs | Out-Null
 Write-Host "API en http://${apiHost}:${apiPort}  -  Swagger UI: http://${apiHost}:${apiPort}/docs"
-& $py -m uvicorn app.main:app --host $apiHost --port $apiPort --no-access-log 2>&1 | Tee-Object -FilePath logs\api.log -Append
+# uvicorn escribe sus logs por stderr. En Windows PowerShell 5.1, "2>&1" sobre un ejecutable
+# con ErrorActionPreference=Stop corta el script en la primera línea; cmd /c une los flujos antes.
+$ErrorActionPreference = "Continue"
+cmd /c "$py -m uvicorn app.main:app --host $apiHost --port $apiPort --no-access-log 2>&1" | Tee-Object -FilePath logs\api.log -Append
